@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, LayoutDashboard, LogOut, ShieldCheck, Store, User as UserIcon } from "lucide-react";
+import { Bell, CircleDollarSign, LayoutDashboard, LogOut, ShieldCheck, Store, User as UserIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -78,6 +78,14 @@ export function UserMenu({ fullName, email, avatarUrl, role, isSeller }: UserMen
             Notifications
           </Link>
         </DropdownMenuItem>
+        {(isSeller || role === "seller") && (
+          <DropdownMenuItem asChild>
+            <Link href="/dashboard/sales" className="cursor-pointer">
+              <CircleDollarSign className="mr-2 h-4 w-4" />
+              Sales & earnings
+            </Link>
+          </DropdownMenuItem>
+        )}
         {!isSeller && role !== "seller" && role !== "admin" && role !== "super_admin" && (
           <DropdownMenuItem asChild>
             <Link href="/dashboard/become-seller" className="cursor-pointer">

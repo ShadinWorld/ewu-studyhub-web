@@ -1,11 +1,11 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Star, Download, FileText, BadgeCheck, Eye } from "lucide-react";
+import { Star, Download, FileText, BadgeCheck, Eye, Clock3, CheckCircle2, XCircle, ShoppingBag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatBDT } from "@/lib/utils";
 import { RESOURCE_CATEGORY_LABELS } from "@/lib/constants";
 import { SaveResourceButton } from "@/components/files/save-resource-button";
-import type { ResourceCategory, FilePricingType } from "@/types/database.types";
+import type { ResourceCategory, FilePricingType, PurchaseStatus } from "@/types/database.types";
 
 export interface ResourceCardData {
   id: string;
@@ -21,11 +21,59 @@ export interface ResourceCardData {
   seller_name?: string | null;
   views_count?: number;
   saved?: boolean;
+  purchaseStatus?: PurchaseStatus | null;
+  rejectionReason?: string | null;
+}
+
+function StatusBadge({ file }: { file: ResourceCardData }) {
+  if (file.pricing_type === "free") {
+    return <Badge variant="success" className="rounded-full px-2.5 shadow-sm">FREE</Badge>;
+  }
+  if (file.purchaseStatus === "completed") {
+    return <Badge className="rounded-full bg-emerald-600 px-2.5 text-white shadow-sm hover:bg-emerald-600"><CheckCircle2 className="mr-1 h-3.5 w-3.5" />PURCHASED</Badge>;
+  }
+  if (file.purchaseStatus === "pending") {
+    return <Badge className="rounded-full bg-amber-500 px-2.5 text-white shadow-sm hover:bg-amber-500"><Clock3 className="mr-1 h-3.5 w-3.5" />PAYMENT PENDING</Badge>;
+  }
+  if (file.purchaseStatus === "failed") {
+    return <Badge variant="destructive" className="rounded-full px-2.5 shadow-sm"><XCircle className="mr-1 h-3.5 w-3.5" />PAYMENT REJECTED</Badge>;
+  }
+  if (file.purchaseStatus === "refunded") {
+    return <Badge variant="secondary" className="rounded-full px-2.5 shadow-sm">REFUNDED</Badge>;
+  }
+  return <Badge variant="default" className="rounded-full px-2.5 shadow-sm">{formatBDT(file.price_cents)}</Badge>;
+}
+
+function ActionArea({ file }: { file: ResourceCardData }) {
+  if (file.purchaseStatus === "pending") {
+    return (
+      <div className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-amber-500/10 px-3 text-xs font-semibold text-amber-700 dark:text-amber-300">
+        <Clock3 className="h-3.5 w-3.5" /> Waiting for approval
+      </div>
+    );
+  }
+  if (file.purchaseStatus === "completed" || file.pricing_type === "free") {
+    return (
+      <>
+        <a href={`/api/files/${file.id}/view`} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90">
+          <Eye className="h-3.5 w-3.5" /> View
+        </a>
+        <a href={`/api/files/${file.id}/download`} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground" aria-label="Download resource">
+          <Download className="h-3.5 w-3.5" />
+        </a>
+      </>
+    );
+  }
+  return (
+    <Link href={`/checkout/${file.id}`} className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90">
+      <ShoppingBag className="h-3.5 w-3.5" /> {file.purchaseStatus === "failed" ? "Buy again" : `Buy ${formatBDT(file.price_cents)}`}
+    </Link>
+  );
 }
 
 export function ResourceCard({ file }: { file: ResourceCardData }) {
   return (
-    <article className="group flex min-w-0 flex-col overflow-hidden rounded-xl border bg-card shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
+    <article className="group flex min-w-0 flex-col overflow-hidden rounded-2xl border bg-card shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-xl">
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
         <Link href={`/files/${file.id}`} aria-label={`Open ${file.title}`} className="absolute inset-0">
           {file.thumbnail_url ? (
@@ -37,32 +85,28 @@ export function ResourceCard({ file }: { file: ResourceCardData }) {
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             />
           ) : (
-            <div className="flex h-full items-center justify-center bg-gradient-to-br from-muted to-accent/50 text-muted-foreground">
+            <div className="flex h-full items-center justify-center bg-gradient-to-br from-primary/10 via-accent/50 to-muted text-muted-foreground">
               <FileText className="h-10 w-10" />
             </div>
           )}
         </Link>
-        <div className="absolute left-2 top-2 flex max-w-[70%] gap-1.5">
-          {file.course_code && (
-            <Badge variant="secondary" className="font-mono shadow-sm">{file.course_code}</Badge>
-          )}
-        </div>
-        <div className="absolute right-2 top-2 flex items-center gap-1.5">
+        <div className="absolute inset-x-2 top-2 z-10 flex items-start justify-between gap-2">
+          <div className="min-w-0 max-w-[78%]"><StatusBadge file={file} /></div>
           <SaveResourceButton fileId={file.id} saved={Boolean(file.saved)} />
-          <Badge variant={file.pricing_type === "free" ? "success" : "default"} className="shadow-sm">
-            {file.pricing_type === "free" ? "Free" : formatBDT(file.price_cents)}
-          </Badge>
         </div>
+        {file.course_code && (
+          <div className="absolute bottom-2 left-2 z-10">
+            <Badge variant="secondary" className="rounded-full bg-background/90 font-mono text-[11px] shadow-sm backdrop-blur">{file.course_code}</Badge>
+          </div>
+        )}
       </div>
 
-      <div className="flex min-h-[154px] flex-1 flex-col p-3.5">
+      <div className="flex min-h-[178px] flex-1 flex-col p-3.5 sm:p-4">
         <Link href={`/files/${file.id}`} className="block min-w-0">
-          <Badge variant="outline" className="mb-2 w-fit text-[11px] font-normal">
+          <Badge variant="outline" className="mb-2 w-fit rounded-full text-[11px] font-normal">
             {RESOURCE_CATEGORY_LABELS[file.category]}
           </Badge>
-          <h3 className="line-clamp-2 text-sm font-semibold leading-snug transition-colors group-hover:text-primary">
-            {file.title}
-          </h3>
+          <h3 className="line-clamp-2 text-sm font-bold leading-snug transition-colors group-hover:text-primary">{file.title}</h3>
         </Link>
 
         {file.seller_name && (
@@ -78,11 +122,13 @@ export function ResourceCard({ file }: { file: ResourceCardData }) {
             {file.average_rating.toFixed(1)} ({file.reviews_count})
           </span>
           <span className="flex items-center gap-2">
-            {file.views_count != null && (
-              <span className="flex items-center gap-1"><Eye className="h-3.5 w-3.5" />{file.views_count}</span>
-            )}
+            {file.views_count != null && <span className="flex items-center gap-1"><Eye className="h-3.5 w-3.5" />{file.views_count}</span>}
             <span className="flex items-center gap-1"><Download className="h-3.5 w-3.5" />{file.downloads_count}</span>
           </span>
+        </div>
+
+        <div className="mt-3 flex gap-2">
+          <ActionArea file={file} />
         </div>
       </div>
     </article>
@@ -92,15 +138,15 @@ export function ResourceCard({ file }: { file: ResourceCardData }) {
 export function ResourceCardGrid({ files }: { files: ResourceCardData[] }) {
   if (files.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-16 text-center">
-        <FileText className="h-8 w-8 text-muted-foreground" />
-        <p className="mt-3 text-sm font-medium">No resources found</p>
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed bg-muted/20 px-6 py-16 text-center">
+        <FileText className="h-9 w-9 text-muted-foreground" />
+        <p className="mt-3 text-sm font-semibold">No resources found</p>
         <p className="mt-1 max-w-sm text-sm text-muted-foreground">Try a different search or filter, or check back later.</p>
       </div>
     );
   }
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {files.map((file) => <ResourceCard key={file.id} file={file} />)}
     </div>
   );

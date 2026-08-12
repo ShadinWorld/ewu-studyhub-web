@@ -20,6 +20,9 @@ export default async function DashboardPage() {
     .eq("id", user.id)
     .single();
 
+  const isAdmin = Boolean(profile && ["admin", "super_admin"].includes(profile.role));
+  if (isAdmin) redirect("/admin");
+
   const isSeller = Boolean(profile?.is_seller || profile?.role === "seller");
 
   if (!isSeller) {
@@ -37,24 +40,35 @@ export default async function DashboardPage() {
     const completedCount = (purchases ?? []).filter((p) => p.status === "completed").length;
 
     return (
-      <div className="container py-10">
-        <div>
-          <h1 className="text-2xl font-bold">Student Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back, {profile?.full_name}.</p>
+      <div className="container py-8 sm:py-10">
+        <div className="rounded-2xl border bg-gradient-to-br from-primary/10 via-background to-background p-5 shadow-sm sm:p-7">
+          <p className="text-sm font-semibold text-primary">Your StudyHub</p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">Welcome back, {profile?.full_name || "Student"} 👋</h1>
+          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">Everything important is one tap away: purchases, saved resources, notifications and your seller journey.</p>
         </div>
 
-        <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
           <StatCard icon={<ShoppingBag className="h-5 w-5" />} label="Recent purchases" value={String(purchases?.length ?? 0)} />
           <StatCard icon={<ClockIcon />} label="Pending payments" value={String(pendingCount ?? 0)} />
           <StatCard icon={<Heart className="h-5 w-5" />} label="Saved resources" value={String(savedCount ?? 0)} />
           <StatCard icon={<CheckIcon />} label="Approved in recent list" value={String(completedCount)} />
         </div>
 
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Button asChild><Link href="/search">Browse resources</Link></Button>
-          <Button asChild variant="outline"><Link href="/purchases">My Purchases</Link></Button>
-          <Button asChild variant="outline"><Link href="/saved">Saved</Link></Button>
-          <Button asChild variant="outline"><Link href="/dashboard/become-seller"><Upload className="mr-2 h-4 w-4" />Become a seller</Link></Button>
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <Button asChild className="h-12"><Link href="/search">Browse resources</Link></Button>
+          <Button asChild variant="outline" className="h-12"><Link href="/purchases">My Purchases</Link></Button>
+          <Button asChild variant="outline" className="h-12"><Link href="/saved">Saved</Link></Button>
+          <Button asChild variant="outline" className="h-12"><Link href="/notifications">Notifications</Link></Button>
+        </div>
+
+        <div className="mt-4 rounded-xl border bg-muted/20 p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-semibold">Want to earn from your notes?</p>
+              <p className="text-sm text-muted-foreground">Become a verified seller and start uploading resources.</p>
+            </div>
+            <Button asChild variant="secondary"><Link href="/dashboard/become-seller"><Upload className="mr-2 h-4 w-4" />Become a seller</Link></Button>
+          </div>
         </div>
 
         <div className="mt-10">
@@ -102,26 +116,28 @@ export default async function DashboardPage() {
   const totalDownloads = (myFiles ?? []).reduce((sum, f) => sum + f.downloads_count, 0);
 
   return (
-    <div className="container py-10">
-      <div>
-        <h1 className="text-2xl font-bold">Seller Dashboard</h1>
-        <p className="text-muted-foreground">Welcome back, {profile?.full_name}.</p>
+    <div className="container py-8 sm:py-10">
+      <div className="rounded-2xl border bg-gradient-to-br from-emerald-500/10 via-background to-background p-5 shadow-sm sm:p-7">
+        <p className="text-sm font-semibold text-primary">Seller workspace</p>
+        <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">Welcome back, {profile?.full_name || "Seller"} 💰</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Track sales, earnings, uploads and payouts without hunting through menus.</p>
       </div>
 
-      <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard icon={<DollarSign className="h-5 w-5" />} label="Total revenue" value={formatBDT(totalRevenue)} />
         <StatCard icon={<Wallet className="h-5 w-5" />} label="Wallet balance" value={formatBDT(profile?.wallet_balance_cents ?? 0)} />
         <StatCard icon={<Download className="h-5 w-5" />} label="Total downloads" value={String(totalDownloads)} />
         <StatCard icon={<Eye className="h-5 w-5" />} label="Followers" value={String(profile?.followers_count ?? 0)} />
       </div>
 
-      <div className="mt-6 flex flex-wrap gap-3">
-        <Button asChild><Link href="/dashboard/upload"><Upload className="mr-2 h-4 w-4" />Upload resource</Link></Button>
-        <Button asChild variant="outline"><Link href="/dashboard/payment-settings">Payment Settings</Link></Button>
-        <Button asChild variant="outline"><Link href="/purchases">My Purchases</Link></Button>
-        <Button asChild variant="outline"><Link href="/notifications">Notifications</Link></Button>
-        {pendingPayoutCount ? <span className="inline-flex items-center rounded-md border px-3 py-2 text-sm text-amber-600">{pendingPayoutCount} payout pending</span> : null}
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Button asChild className="h-12"><Link href="/dashboard/upload"><Upload className="mr-2 h-4 w-4" />Upload</Link></Button>
+        <Button asChild variant="outline" className="h-12"><Link href="/dashboard/sales">Sales & earnings</Link></Button>
+        <Button asChild variant="outline" className="h-12"><Link href="/dashboard/payment-settings">Payment settings</Link></Button>
+        <Button asChild variant="outline" className="h-12"><Link href="/purchases">Purchases</Link></Button>
+        <Button asChild variant="outline" className="h-12"><Link href="/notifications">Notifications</Link></Button>
       </div>
+      {pendingPayoutCount ? <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm font-medium text-amber-800 dark:text-amber-200">{pendingPayoutCount} payout request{pendingPayoutCount === 1 ? "" : "s"} is waiting for admin review.</div> : null}
 
       <div className="mt-10">
         <h2 className="mb-4 text-xl font-semibold">Your uploads</h2>

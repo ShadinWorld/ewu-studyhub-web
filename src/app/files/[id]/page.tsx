@@ -199,7 +199,7 @@ export default async function FileDetailPage({ params }: { params: { id: string 
               {canDownloadDirectly ? (
                 <div className="mt-4 grid gap-2 sm:grid-cols-2">
                   <Button asChild size="lg">
-                    <a href={`/files/${file.id}#resource-access`}>View resource</a>
+                    <a href={`/api/files/${file.id}/view`} target="_blank" rel="noopener noreferrer">View resource</a>
                   </Button>
                   <Button asChild size="lg" variant="outline">
                     <a href={`/api/files/${file.id}/download`}>

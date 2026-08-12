@@ -74,7 +74,16 @@
 }
 
 @media (max-width: 767px) {
+  html {
+    scroll-padding-bottom: 6rem;
+  }
+
   body {
-    padding-bottom: 4.25rem;
+    padding-bottom: 5.5rem;
+    overflow-x: hidden;
+  }
+
+  a, button, input, select, textarea {
+    -webkit-tap-highlight-color: transparent;
   }
 }

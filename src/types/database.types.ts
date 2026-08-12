@@ -34,7 +34,7 @@ export type NotificationType =
   | "seller_rejected"
   | "purchase_pending"
   | "purchase_approved"
-  | "purchase_rejected";
+  | "purchase_rejected" | "payout_requested" | "payment_submitted";
 
 // ----------------------------------------------------------------------------
 // ROW TYPES - one per table, in schema order
@@ -189,6 +189,11 @@ export interface Purchase {
   status: PurchaseStatus;
   payment_method: string | null;
   payment_reference: string | null;
+  buyer_bkash_number: string | null;
+  payment_submitted_at: string | null;
+  approved_at: string | null;
+  approved_by: string | null;
+  rejection_reason: string | null;
   invoice_number: string | null;
   created_at: string;
 }
@@ -426,6 +431,10 @@ export interface Database {
       };
       complete_seller_payout: {
         Args: { p_payout_id: string } & Record<string, unknown>;
+        Returns: void;
+      };
+      reject_seller_payout: {
+        Args: { p_payout_id: string; p_reason: string } & Record<string, unknown>;
         Returns: void;
       };
       request_seller_payout: {

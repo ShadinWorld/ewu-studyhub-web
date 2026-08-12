@@ -87,9 +87,10 @@ export default async function CoursesPage({
           ) : (
             <>
               <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {(courses ?? []).map((course) => (
+                {(courses ?? []).map((course, index) => (
                   <CourseCard
                     key={course.id}
+                    index={index}
                     course={{
                       ...course,
                       departmentName: departmentNameById.get(course.department_id),

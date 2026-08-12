@@ -34,6 +34,18 @@ export async function RecentlyViewed() {
   const courseCodes = new Map((courses ?? []).map((course) => [course.id, course.course_code]));
   const sellerNames = new Map((sellers ?? []).map((seller) => [seller.id, seller.full_name]));
   const byId = new Map((files ?? []).map((file) => [file.id, file]));
+  const { data: purchases } = await supabase
+    .from("purchases")
+    .select("file_id, status, created_at")
+    .eq("buyer_id", user.id)
+    .in("file_id", fileIds)
+    .order("created_at", { ascending: false });
+  const purchaseStatusByFileId = new Map<string, "pending" | "completed" | "failed" | "refunded">();
+  for (const purchase of purchases ?? []) {
+    if (purchase.file_id && !purchaseStatusByFileId.has(purchase.file_id) && ["pending", "completed", "failed", "refunded"].includes(String(purchase.status))) {
+      purchaseStatusByFileId.set(purchase.file_id, purchase.status as "pending" | "completed" | "failed" | "refunded");
+    }
+  }
   const resources: ResourceCardData[] = fileIds
     .map((id) => byId.get(id))
     .filter((file): file is NonNullable<typeof file> => Boolean(file))
@@ -41,6 +53,7 @@ export async function RecentlyViewed() {
       ...file,
       course_code: file.course_id ? courseCodes.get(file.course_id) : null,
       seller_name: sellerNames.get(file.seller_id) ?? null,
+      purchaseStatus: purchaseStatusByFileId.get(file.id) ?? null,
     }));
 
   if (!resources.length) return null;

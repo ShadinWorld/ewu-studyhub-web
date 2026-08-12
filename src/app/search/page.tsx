@@ -90,9 +90,19 @@ export default async function SearchPage({
   ]);
 
   let savedIds = new Set<string>();
+  const purchaseStatusByFileId = new Map<string, "pending" | "completed" | "failed" | "refunded">();
   if (user && (files ?? []).length) {
-    const { data: saved } = await supabase.from("wishlists").select("file_id").eq("profile_id", user.id).in("file_id", (files ?? []).map((file) => file.id));
+    const fileIds = (files ?? []).map((file) => file.id);
+    const [{ data: saved }, { data: purchases }] = await Promise.all([
+      supabase.from("wishlists").select("file_id").eq("profile_id", user.id).in("file_id", fileIds),
+      supabase.from("purchases").select("file_id, status, created_at").eq("buyer_id", user.id).in("file_id", fileIds).order("created_at", { ascending: false }),
+    ]);
     savedIds = new Set((saved ?? []).map((row) => row.file_id));
+    for (const purchase of purchases ?? []) {
+      if (purchase.file_id && !purchaseStatusByFileId.has(purchase.file_id) && ["pending", "completed", "failed", "refunded"].includes(String(purchase.status))) {
+        purchaseStatusByFileId.set(purchase.file_id, purchase.status as "pending" | "completed" | "failed" | "refunded");
+      }
+    }
   }
 
   const courseCodeById = new Map((courses ?? []).map((course) => [course.id, course.course_code]));
@@ -102,6 +112,7 @@ export default async function SearchPage({
     course_code: file.course_id ? courseCodeById.get(file.course_id) : null,
     seller_name: sellerNameById.get(file.seller_id) ?? null,
     saved: savedIds.has(file.id),
+    purchaseStatus: purchaseStatusByFileId.get(file.id) ?? null,
   }));
 
   const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 1;

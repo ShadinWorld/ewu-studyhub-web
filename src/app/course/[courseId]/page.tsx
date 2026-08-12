@@ -93,10 +93,27 @@ export default async function CourseDetailPage({
     for (const s of sellers ?? []) sellerNameById.set(s.id, s.full_name);
   }
 
+  const { data: { user } } = await supabase.auth.getUser();
+  const purchaseStatusByFileId = new Map<string, "pending" | "completed" | "failed" | "refunded">();
+  if (user && (files ?? []).length) {
+    const { data: purchases } = await supabase
+      .from("purchases")
+      .select("file_id, status, created_at")
+      .eq("buyer_id", user.id)
+      .in("file_id", (files ?? []).map((f) => f.id))
+      .order("created_at", { ascending: false });
+    for (const purchase of purchases ?? []) {
+      if (purchase.file_id && !purchaseStatusByFileId.has(purchase.file_id) && ["pending", "completed", "failed", "refunded"].includes(String(purchase.status))) {
+        purchaseStatusByFileId.set(purchase.file_id, purchase.status as "pending" | "completed" | "failed" | "refunded");
+      }
+    }
+  }
+
   const resources: ResourceCardData[] = (files ?? []).map((f) => ({
     ...f,
     course_code: course.course_code,
     seller_name: sellerNameById.get(f.seller_id) ?? null,
+    purchaseStatus: purchaseStatusByFileId.get(f.id) ?? null,
   }));
 
   // Years for the filter dropdown - derived from all published resources for this course

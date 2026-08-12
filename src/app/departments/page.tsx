@@ -52,8 +52,8 @@ export default async function DepartmentsPage() {
             </div>
           ) : (
             <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {departmentsWithCounts.map((department) => (
-                <DepartmentCard key={department.id} department={department} />
+              {departmentsWithCounts.map((department, index) => (
+                <DepartmentCard key={department.id} department={department} index={index} />
               ))}
             </div>
           )}

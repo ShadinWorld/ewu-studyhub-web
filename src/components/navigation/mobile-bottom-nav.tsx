@@ -1,31 +1,48 @@
+"use client";
+
 import Link from "next/link";
-import { BookOpen, Home, Search, TrendingUp, Bookmark } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { BookOpen, Home, LayoutDashboard, Search, ShoppingBag } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const items = [
   { href: "/", label: "Home", icon: Home },
   { href: "/courses", label: "Courses", icon: BookOpen },
   { href: "/search", label: "Search", icon: Search },
-  { href: "/trending", label: "Trending", icon: TrendingUp },
-  { href: "/saved", label: "Saved", icon: Bookmark },
+  { href: "/purchases", label: "Purchases", icon: ShoppingBag },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
 ];
 
 export function MobileBottomNav() {
+  const pathname = usePathname();
+
   return (
     <nav
-      aria-label="Mobile navigation"
-      className="fixed inset-x-0 bottom-0 z-50 border-t bg-background/95 px-2 pb-[env(safe-area-inset-bottom)] pt-2 backdrop-blur md:hidden"
+      aria-label="Primary mobile navigation"
+      className="fixed inset-x-0 bottom-0 z-[60] border-t border-border/80 bg-background/95 px-2 pb-[max(env(safe-area-inset-bottom),0.35rem)] pt-1.5 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur-xl md:hidden"
     >
-      <div className="mx-auto grid max-w-md grid-cols-5 gap-1">
-        {items.map(({ href, label, icon: Icon }) => (
-          <Link
-            key={href}
-            href={href}
-            className="flex min-h-12 flex-col items-center justify-center gap-1 rounded-md text-[11px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-          >
-            <Icon className="h-4 w-4" />
-            <span>{label}</span>
-          </Link>
-        ))}
+      <div className="mx-auto grid max-w-lg grid-cols-5 gap-1">
+        {items.map(({ href, label, icon: Icon }) => {
+          const active = href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+          return (
+            <Link
+              key={href}
+              href={href}
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "flex min-h-[4.15rem] flex-col items-center justify-center gap-1 rounded-xl px-1 text-[11px] font-semibold transition-all active:scale-95",
+                active
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:bg-accent hover:text-foreground"
+              )}
+            >
+              <span className={cn("flex h-9 w-9 items-center justify-center rounded-full transition-colors", active && "bg-primary text-primary-foreground shadow-sm")}>
+                <Icon className="h-5 w-5" strokeWidth={active ? 2.4 : 2} />
+              </span>
+              <span className="leading-none">{label}</span>
+            </Link>
+          );
+        })}
       </div>
     </nav>
   );

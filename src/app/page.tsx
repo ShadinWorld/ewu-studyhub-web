@@ -9,6 +9,9 @@ import {
   Sparkles,
   TrendingUp,
   Upload,
+  ShoppingBag,
+  Bookmark,
+  LayoutDashboard,
 } from "lucide-react";
 
 import { Navbar } from "@/components/layout/navbar";
@@ -31,6 +34,7 @@ import { RESOURCE_CATEGORIES } from "@/lib/constants";
 
 async function TrendingFiles() {
   const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
   const { data: files } = await supabase
     .from("files")
@@ -102,12 +106,28 @@ async function TrendingFiles() {
     ])
   );
 
+  const purchaseStatusByFileId = new Map<string, "pending" | "completed" | "failed" | "refunded">();
+  if (user) {
+    const { data: purchases } = await supabase
+      .from("purchases")
+      .select("file_id, status, created_at")
+      .eq("buyer_id", user.id)
+      .in("file_id", files.map((file) => file.id))
+      .order("created_at", { ascending: false });
+    for (const purchase of purchases ?? []) {
+      if (purchase.file_id && !purchaseStatusByFileId.has(purchase.file_id) && ["pending", "completed", "failed", "refunded"].includes(String(purchase.status))) {
+        purchaseStatusByFileId.set(purchase.file_id, purchase.status as "pending" | "completed" | "failed" | "refunded");
+      }
+    }
+  }
+
   const resources: ResourceCardData[] = files.map((file) => ({
     ...file,
     course_code: file.course_id
       ? courseCodes.get(file.course_id) ?? null
       : null,
     seller_name: sellerNames.get(file.seller_id) ?? null,
+    purchaseStatus: purchaseStatusByFileId.get(file.id) ?? null,
   }));
 
   return <ResourceCardGrid files={resources} />;
@@ -191,10 +211,11 @@ async function DepartmentsPreview() {
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {topDepartments.map((department) => (
+      {topDepartments.map((department, index) => (
         <DepartmentCard
           key={department.id}
           department={department}
+          index={index}
         />
       ))}
     </div>
@@ -281,9 +302,10 @@ async function PopularCourses() {
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {orderedCourses.map((course) => (
+      {orderedCourses.map((course, index) => (
         <CourseCard
           key={course.id}
+          index={index}
           course={{
             ...course,
             departmentName: departmentNames.get(
@@ -322,6 +344,30 @@ function BrowseCategoryLinks() {
 /* -------------------------------------------------------------------------- */
 /* Homepage                                                                   */
 /* -------------------------------------------------------------------------- */
+
+async function PersonalizedShortcuts() {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  return (
+    <section className="container -mt-4 relative z-10 pb-2">
+      <div className="rounded-2xl border bg-background/95 p-4 shadow-lg backdrop-blur sm:p-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-primary">Quick access</p>
+            <p className="mt-1 text-sm text-muted-foreground">Jump straight to the things you use most.</p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:flex">
+            <Button asChild variant="outline" className="h-10"><Link href="/purchases"><ShoppingBag className="h-4 w-4" />Purchases</Link></Button>
+            <Button asChild variant="outline" className="h-10"><Link href="/saved"><Bookmark className="h-4 w-4" />Saved</Link></Button>
+            <Button asChild className="h-10"><Link href="/dashboard"><LayoutDashboard className="h-4 w-4" />Dashboard</Link></Button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 export default function HomePage() {
   return (
@@ -396,6 +442,8 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+
+        <PersonalizedShortcuts />
 
         {/* ------------------------------------------------------------------ */}
         {/* Browse by Resource Type                                             */}
