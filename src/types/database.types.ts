@@ -22,8 +22,19 @@ export type TransactionType = "purchase" | "commission" | "payout" | "refund" | 
 export type ReportReason = "wrong_course" | "fake_file" | "duplicate" | "blank_pdf" | "copyright" | "spam" | "other";
 export type ReportStatus = "open" | "in_review" | "resolved" | "dismissed";
 export type NotificationType =
-  | "upload_approved" | "upload_rejected" | "purchase_completed" | "payout_completed"
-  | "review_received" | "new_follower" | "trending_file" | "report_update";
+  | "upload_approved"
+  | "upload_rejected"
+  | "purchase_completed"
+  | "payout_completed"
+  | "review_received"
+  | "new_follower"
+  | "trending_file"
+  | "report_update"
+  | "seller_approved"
+  | "seller_rejected"
+  | "purchase_pending"
+  | "purchase_approved"
+  | "purchase_rejected";
 
 // ----------------------------------------------------------------------------
 // ROW TYPES - one per table, in schema order

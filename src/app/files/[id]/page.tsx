@@ -57,8 +57,19 @@ export default async function FileDetailPage({ params }: { params: { id: string 
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
-    purchaseStatus = (purchase?.status as typeof purchaseStatus) ?? null;
-    rejectionReason = purchase?.rejection_reason ?? null;
+    const rawPurchaseStatus = purchase?.status;
+    if (
+      rawPurchaseStatus === "pending" ||
+      rawPurchaseStatus === "completed" ||
+      rawPurchaseStatus === "failed" ||
+      rawPurchaseStatus === "refunded"
+    ) {
+      purchaseStatus = rawPurchaseStatus;
+    }
+    rejectionReason =
+      typeof purchase?.rejection_reason === "string"
+        ? purchase.rejection_reason
+        : null;
   }
 
   if (user) {
