@@ -81,6 +81,7 @@ export interface Profile {
   student_id_document_url: string | null;
   is_seller: boolean;
   seller_bio: string | null;
+  seller_bkash_number: string | null;
   wallet_balance_cents: number;
   followers_count: number;
   following_count: number;
@@ -426,6 +427,14 @@ export interface Database {
       };
       update_platform_payment_settings: {
         Args: { p_bkash_number: string; p_default_commission_percent: number } & Record<string, unknown>;
+        Returns: void;
+      };
+      save_seller_bkash_number: {
+        Args: { p_bkash_number: string } & Record<string, unknown>;
+        Returns: void;
+      };
+      request_seller_verification: {
+        Args: { p_university_email: string; p_bkash_number: string } & Record<string, unknown>;
         Returns: void;
       };
     };

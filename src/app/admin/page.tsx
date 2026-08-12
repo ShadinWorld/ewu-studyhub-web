@@ -5,13 +5,15 @@ import { formatBDT } from "@/lib/utils";
 export default async function AdminOverviewPage() {
   const supabase = createClient();
 
-  const [{ count: pendingCount }, { count: userCount }, { count: publishedCount }, { count: reportCount }, { count: sellerReqCount }] =
+  const [{ count: pendingCount }, { count: userCount }, { count: publishedCount }, { count: reportCount }, { count: sellerReqCount }, { count: paymentReqCount }, { count: payoutReqCount }] =
     await Promise.all([
       supabase.from("files").select("id", { count: "exact", head: true }).eq("visibility", "draft"),
       supabase.from("profiles").select("id", { count: "exact", head: true }),
       supabase.from("files").select("id", { count: "exact", head: true }).eq("visibility", "published"),
       supabase.from("reports").select("id", { count: "exact", head: true }).eq("status", "open"),
       supabase.from("profiles").select("id", { count: "exact", head: true }).eq("student_id_verification_status", "pending"),
+      supabase.from("purchases").select("id", { count: "exact", head: true }).eq("status", "pending").eq("payment_method", "bkash"),
+      supabase.from("payouts").select("id", { count: "exact", head: true }).eq("status", "pending"),
     ]);
 
   const { data: revenueRows } = await supabase
@@ -26,6 +28,8 @@ export default async function AdminOverviewPage() {
       <StatCard label="Published files" value={String(publishedCount ?? 0)} />
       <StatCard label="Open reports" value={String(reportCount ?? 0)} highlight={(reportCount ?? 0) > 0} />
       <StatCard label="Pending seller requests" value={String(sellerReqCount ?? 0)} highlight={(sellerReqCount ?? 0) > 0} />
+      <StatCard label="Payment requests" value={String(paymentReqCount ?? 0)} highlight={(paymentReqCount ?? 0) > 0} />
+      <StatCard label="Payout requests" value={String(payoutReqCount ?? 0)} highlight={(payoutReqCount ?? 0) > 0} />
       <StatCard label="Total users" value={String(userCount ?? 0)} />
       <StatCard label="Platform commission earned" value={formatBDT(totalCommission)} />
     </div>

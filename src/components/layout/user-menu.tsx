@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LayoutDashboard, LogOut, ShieldCheck, Store, User as UserIcon } from "lucide-react";
+import { Bell, LayoutDashboard, LogOut, ShieldCheck, Store, User as UserIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -70,6 +70,12 @@ export function UserMenu({ fullName, email, avatarUrl, role, isSeller }: UserMen
           <Link href="/dashboard" className="cursor-pointer">
             <LayoutDashboard className="mr-2 h-4 w-4" />
             Dashboard
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/notifications" className="cursor-pointer">
+            <Bell className="mr-2 h-4 w-4" />
+            Notifications
           </Link>
         </DropdownMenuItem>
         {!isSeller && role !== "seller" && role !== "admin" && role !== "super_admin" && (

@@ -63,6 +63,22 @@ export function BecomeSellerForm({ profile }: { profile: Profile }) {
         </p>
       </div>
 
+      <div className="space-y-2">
+        <Label htmlFor="bkash_number">Seller bKash number</Label>
+        <Input
+          id="bkash_number"
+          name="bkash_number"
+          inputMode="numeric"
+          placeholder="01XXXXXXXXX"
+          pattern="01[0-9]{9}"
+          maxLength={11}
+          required
+        />
+        <p className="text-xs text-muted-foreground">
+          This is where your approved seller earnings will be sent. You can update it later from Payment Settings.
+        </p>
+      </div>
+
       {state?.error && (
         <p role="alert" className="text-sm text-destructive">
           {state.error}

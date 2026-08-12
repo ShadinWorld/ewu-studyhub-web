@@ -52,8 +52,8 @@ export async function requestPayout(formData: FormData) {
 
   const amount = Number(formData.get("amount_bdt"));
 
-  if (!Number.isFinite(amount) || amount <= 0) {
-    throw new Error("Enter a valid payout amount.");
+  if (!Number.isFinite(amount) || amount < 20) {
+    throw new Error("Minimum payout is BDT 20.");
   }
 
   const { error } = await supabase.rpc("request_seller_payout", {

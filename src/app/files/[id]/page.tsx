@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import { Star, Download, FileText, Lock } from "lucide-react";
+import { Star, Download, FileText, Lock, CheckCircle2, Clock3, XCircle } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Badge } from "@/components/ui/badge";
@@ -46,16 +46,19 @@ export default async function FileDetailPage({ params }: { params: { id: string 
     data: { user },
   } = await supabase.auth.getUser();
 
-  let alreadyPurchased = false;
+  let purchaseStatus: "pending" | "completed" | "failed" | "refunded" | null = null;
+  let rejectionReason: string | null = null;
   if (user) {
     const { data: purchase } = await supabase
       .from("purchases")
-      .select("id")
+      .select("id, status, rejection_reason, created_at")
       .eq("file_id", params.id)
       .eq("buyer_id", user.id)
-      .eq("status", "completed")
+      .order("created_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
-    alreadyPurchased = Boolean(purchase);
+    purchaseStatus = (purchase?.status as typeof purchaseStatus) ?? null;
+    rejectionReason = purchase?.rejection_reason ?? null;
   }
 
   if (user) {
@@ -63,6 +66,9 @@ export default async function FileDetailPage({ params }: { params: { id: string 
   }
 
   const isFree = file.pricing_type === "free";
+  const alreadyPurchased = purchaseStatus === "completed";
+  const paymentPending = purchaseStatus === "pending";
+  const paymentRejected = purchaseStatus === "failed";
   const canDownloadDirectly = isFree || alreadyPurchased;
 
   let previewUrl: string | null = null;
@@ -82,7 +88,7 @@ export default async function FileDetailPage({ params }: { params: { id: string 
         <div className="grid gap-8 lg:grid-cols-3">
           <div className="lg:col-span-2">
             {/* Preview area — NEVER the full file for paid, unpurchased content */}
-            <div className="aspect-[4/3] overflow-hidden rounded-lg border bg-muted relative">
+            <div id="resource-access" className="aspect-[4/3] overflow-hidden rounded-lg border bg-muted relative">
               {file.thumbnail_url ? (
                 <Image src={file.thumbnail_url} alt={file.title} fill className="object-cover" />
               ) : (
@@ -143,11 +149,66 @@ export default async function FileDetailPage({ params }: { params: { id: string 
                 {isFree ? "Free" : formatBDT(file.price_cents)}
               </p>
 
-              <form action={`/api/files/${file.id}/download`} method="get" className="mt-4">
-                <Button type="submit" className="w-full" size="lg">
-                  {canDownloadDirectly ? "Download now" : `Buy for ${formatBDT(file.price_cents)}`}
+              {alreadyPurchased && (
+                <div className="mt-4 rounded-lg border border-primary/30 bg-primary/5 p-4">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                    <div>
+                      <p className="font-semibold">Payment approved</p>
+                      <p className="mt-1 text-sm text-muted-foreground">You already own this resource. No need to buy it again.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {paymentPending && (
+                <div className="mt-4 rounded-lg border border-amber-500/40 bg-amber-500/10 p-4">
+                  <div className="flex items-start gap-3">
+                    <Clock3 className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
+                    <div>
+                      <p className="font-semibold">Payment pending</p>
+                      <p className="mt-1 text-sm text-muted-foreground">Your payment is already submitted and is waiting for admin verification. Please do not pay again.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {paymentRejected && (
+                <div className="mt-4 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+                  <div className="flex items-start gap-3">
+                    <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+                    <div>
+                      <p className="font-semibold">Payment rejected</p>
+                      <p className="mt-1 text-sm text-muted-foreground">{rejectionReason || "The previous payment could not be verified."} You can submit a new payment below.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {canDownloadDirectly ? (
+                <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                  <Button asChild size="lg">
+                    <a href={`/files/${file.id}#resource-access`}>View resource</a>
+                  </Button>
+                  <Button asChild size="lg" variant="outline">
+                    <a href={`/api/files/${file.id}/download`}>
+                      <Download className="mr-2 h-4 w-4" />
+                      Download
+                    </a>
+                  </Button>
+                </div>
+              ) : paymentPending ? (
+                <Button type="button" className="mt-4 w-full" size="lg" disabled>
+                  <Clock3 className="mr-2 h-4 w-4" />
+                  Payment pending — don't buy again
                 </Button>
-              </form>
+              ) : (
+                <Button asChild className="mt-4 w-full" size="lg">
+                  <a href={`/checkout/${file.id}`}>
+                    {paymentRejected ? "Try payment again" : `Buy for ${formatBDT(file.price_cents)}`}
+                  </a>
+                </Button>
+              )}
 
               <div className="mt-6 flex items-center gap-3 border-t pt-4">
                 {seller?.avatar_url ? (

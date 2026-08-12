@@ -30,6 +30,7 @@ export function SellerRequestCard({ request }: { request: any }) {
           <p className="font-medium">{request.full_name} (@{request.username})</p>
           <p className="text-sm text-muted-foreground">{request.university_email}</p>
           <p className="text-xs text-muted-foreground">Student ID: {request.student_id}</p>
+          <p className="text-xs text-muted-foreground">bKash: {request.seller_bkash_number || "Not provided"}</p>
         </div>
         <div className="flex gap-2">
           <Button size="sm" disabled={isPending} onClick={() => act(() => approveSeller(request.id), "Seller approved")}>

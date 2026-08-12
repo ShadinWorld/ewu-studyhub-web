@@ -6,7 +6,7 @@ export default async function AdminSellersPage() {
 
   const { data: requests } = await supabase
     .from("profiles")
-    .select("id, full_name, username, university_email, student_id, created_at")
+    .select("id, full_name, username, university_email, student_id, seller_bkash_number, created_at")
     .eq("student_id_verification_status", "pending")
     .order("created_at", { ascending: true });
 
