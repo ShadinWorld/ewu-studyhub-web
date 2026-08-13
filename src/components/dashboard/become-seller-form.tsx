@@ -17,10 +17,11 @@ function SubmitButton() {
 }
 
 type Profile = {
-  is_seller: boolean;
-  role: string;
-  university_email: string | null;
-  student_id_verification_status: string;
+  is_seller?: boolean;
+  role?: string;
+  university_email?: string | null;
+  student_id_verification_status?: string;
+  account_email?: string | null;
 } | null;
 
 export function BecomeSellerForm({ profile }: { profile: Profile }) {
@@ -55,11 +56,12 @@ export function BecomeSellerForm({ profile }: { profile: Profile }) {
         <Input
           id="universityEmail"
           name="universityEmail"
-          placeholder="2022-3-60-070@std.ewubd.edu"
+          placeholder="Your EWU student email (e.g. 2022-3-60-070@std.ewubd.edu)"
+          defaultValue={profile?.university_email ?? (profile?.account_email?.toLowerCase().endsWith("@std.ewubd.edu") ? profile.account_email : "")}
           required
         />
         <p className="text-xs text-muted-foreground">
-          Use your official EWU student ID email — this is what proves you're a real EWU student.
+          Your signup email can be any valid email. To become a seller, you must provide and verify your official EWU student email.
         </p>
       </div>
 

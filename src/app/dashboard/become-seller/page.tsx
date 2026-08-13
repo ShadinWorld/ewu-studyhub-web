@@ -25,7 +25,7 @@ export default async function BecomeSellerPage() {
       <p className="mb-8 text-muted-foreground">
         Only verified EWU students can upload and sell resources — this keeps the marketplace trustworthy.
       </p>
-      <BecomeSellerForm profile={profile} />
+      <BecomeSellerForm profile={{ ...profile, account_email: user.email ?? null }} />
     </div>
   );
 }

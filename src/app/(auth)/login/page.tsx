@@ -29,7 +29,7 @@ function LoginForm() {
       <Card className="w-full max-w-md animate-slide-up">
         <CardHeader>
           <CardTitle className="text-2xl">Welcome back</CardTitle>
-          <CardDescription>Log in to your EWU StudyHub account.</CardDescription>
+          <CardDescription>Use your email or phone number and password.</CardDescription>
         </CardHeader>
         <CardContent>
           {justConfirmed && (
@@ -39,8 +39,8 @@ function LoginForm() {
           )}
           <form action={formAction} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" name="email" type="email" required autoComplete="email" />
+              <Label htmlFor="identifier">Email or phone number</Label>
+              <Input id="identifier" name="identifier" type="text" required autoComplete="username" placeholder="Email or 01XXXXXXXXX" />
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">

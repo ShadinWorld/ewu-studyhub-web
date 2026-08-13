@@ -93,6 +93,7 @@ export interface Profile {
   is_seller: boolean;
   seller_bio: string | null;
   seller_bkash_number: string | null;
+  phone_number: string | null; // normalized Bangladesh number: +8801XXXXXXXXX
   wallet_balance_cents: number;
   followers_count: number;
   following_count: number;
@@ -316,6 +317,24 @@ export interface RecentlyViewed {
   viewed_at: string;
 }
 
+export type SupportTicketCategory = "suggestion" | "complaint" | "general" | "payment" | "resource" | "seller" | "account" | "purchase";
+export type SupportTicketStatus = "new" | "in_review" | "resolved";
+
+export interface SupportTicket {
+  id: string;
+  user_id: string;
+  category: SupportTicketCategory;
+  subject: string | null;
+  message: string;
+  page_path: string | null;
+  status: SupportTicketStatus;
+  admin_reply: string | null;
+  replied_by: string | null;
+  replied_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Notification {
   id: string;
   profile_id: string;
@@ -403,6 +422,7 @@ export interface Database {
       wishlists: Table<Wishlist>;
       recently_viewed: Table<RecentlyViewed>;
       notifications: Table<Notification>;
+      support_tickets: Table<SupportTicket>;
       file_daily_stats: Table<FileDailyStat>;
       platform_daily_stats: Table<PlatformDailyStat>;
     };

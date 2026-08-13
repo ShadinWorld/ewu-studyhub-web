@@ -56,11 +56,23 @@ export default async function SearchPage({
   const courseCode = safeFilterValue(params.courseCode ?? "");
   let matchedCourseIds: string[] = [];
 
+  const normalizedSearch = q.replace(/[^a-z0-9]/gi, "").toLowerCase();
+  const codeMatch = normalizedSearch.match(/^([a-z]{2,8})(\d{3})$/);
+
   if (q || courseCode) {
     let courseQuery = supabase.from("courses").select("id");
-    if (courseCode) courseQuery = courseQuery.ilike("course_code", `%${courseCode}%`);
-    else courseQuery = courseQuery.or(`course_code.ilike.%${q}%,course_name.ilike.%${q}%`);
-    const { data: courses } = await courseQuery.limit(100);
+    if (courseCode) {
+      const normalizedCode = courseCode.replace(/[^a-z0-9]/gi, "");
+      const codeMatch = normalizedCode.match(/^([a-z]{2,8})(\d{3})$/);
+      const pattern = codeMatch ? `%${codeMatch[1]}%${codeMatch[2]}%` : `%${courseCode}%`;
+      courseQuery = courseQuery.ilike("course_code", pattern);
+    } else if (codeMatch) {
+      const codePattern = `%${codeMatch[1]}%${codeMatch[2]}%`;
+      courseQuery = courseQuery.or(`course_code.ilike.${codePattern},course_name.ilike.%${q}%`);
+    } else {
+      courseQuery = courseQuery.or(`course_code.ilike.%${q}%,course_name.ilike.%${q}%`);
+    }
+    const { data: courses } = await courseQuery.limit(200);
     matchedCourseIds = (courses ?? []).map((course) => course.id);
   }
 

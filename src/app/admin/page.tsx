@@ -7,7 +7,7 @@ import { formatBDT } from "@/lib/utils";
 
 export default async function AdminOverviewPage() {
   const supabase = createClient();
-  const [{ count: pendingCount }, { count: userCount }, { count: publishedCount }, { count: reportCount }, { count: sellerReqCount }, { count: paymentReqCount }, { count: payoutReqCount }] =
+  const [{ count: pendingCount }, { count: userCount }, { count: publishedCount }, { count: reportCount }, { count: sellerReqCount }, { count: paymentReqCount }, { count: payoutReqCount }, { count: supportCount }] =
     await Promise.all([
       supabase.from("files").select("id", { count: "exact", head: true }).eq("visibility", "draft"),
       supabase.from("profiles").select("id", { count: "exact", head: true }),
@@ -16,6 +16,7 @@ export default async function AdminOverviewPage() {
       supabase.from("profiles").select("id", { count: "exact", head: true }).eq("student_id_verification_status", "pending"),
       supabase.from("purchases").select("id", { count: "exact", head: true }).eq("status", "pending").eq("payment_method", "bkash"),
       supabase.from("payouts").select("id", { count: "exact", head: true }).eq("status", "pending"),
+      supabase.from("support_tickets").select("id", { count: "exact", head: true }).in("status", ["new", "in_review"]),
     ]);
 
   const { data: revenueRows } = await supabase.from("purchases").select("commission_cents").eq("status", "completed");
@@ -26,6 +27,7 @@ export default async function AdminOverviewPage() {
     { href: "/admin/uploads", label: "Upload reviews", count: pendingCount ?? 0, icon: FileCheck2, tone: "border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300" },
     { href: "/admin/payouts", label: "Payout requests", count: payoutReqCount ?? 0, icon: Wallet, tone: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" },
     { href: "/admin/reports", label: "Open reports", count: reportCount ?? 0, icon: Flag, tone: "border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300" },
+    { href: "/admin/support", label: "Feedback & support", count: supportCount ?? 0, icon: AlertCircle, tone: "border-cyan-500/30 bg-cyan-500/10 text-cyan-700 dark:text-cyan-300" },
   ];
 
   return (
@@ -58,7 +60,7 @@ export default async function AdminOverviewPage() {
         <StatCard label="Published resources" value={String(publishedCount ?? 0)} icon={<Files className="h-4 w-4" />} />
         <StatCard label="Total users" value={String(userCount ?? 0)} icon={<Users className="h-4 w-4" />} />
         <StatCard label="Platform commission" value={formatBDT(totalCommission)} icon={<CreditCard className="h-4 w-4" />} />
-        <StatCard label="Total pending actions" value={String((pendingCount ?? 0) + (reportCount ?? 0) + (sellerReqCount ?? 0) + (paymentReqCount ?? 0) + (payoutReqCount ?? 0))} icon={<AlertCircle className="h-4 w-4" />} highlight />
+        <StatCard label="Total pending actions" value={String((pendingCount ?? 0) + (reportCount ?? 0) + (sellerReqCount ?? 0) + (paymentReqCount ?? 0) + (payoutReqCount ?? 0) + (supportCount ?? 0))} icon={<AlertCircle className="h-4 w-4" />} highlight />
       </section>
 
       <div className="flex flex-wrap gap-2">

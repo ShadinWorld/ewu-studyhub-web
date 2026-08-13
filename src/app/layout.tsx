@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/shared/theme-provider";
 import { Toaster } from "sonner";
 import { MobileBottomNav } from "@/components/navigation/mobile-bottom-nav";
+import { WhatsAppSupportButton } from "@/components/support/whatsapp-support-button";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -23,6 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           {children}
           <MobileBottomNav />
+          <WhatsAppSupportButton />
           <Toaster richColors position="top-center" />
         </ThemeProvider>
       </body>

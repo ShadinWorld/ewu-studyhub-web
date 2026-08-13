@@ -25,7 +25,7 @@ export default function ForgotPasswordPage() {
       <Card className="w-full max-w-md animate-slide-up">
         <CardHeader>
           <CardTitle className="text-2xl">Reset your password</CardTitle>
-          <CardDescription>We'll email you a link to reset it.</CardDescription>
+          <CardDescription>Enter the email and phone number linked to your account. We’ll send a reset link to that email — no OTP required.</CardDescription>
         </CardHeader>
         <CardContent>
           {state?.success ? (
@@ -33,8 +33,12 @@ export default function ForgotPasswordPage() {
           ) : (
             <form action={formAction} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" name="email" type="email" required autoComplete="email" />
+                <Label htmlFor="email">Account email</Label>
+                <Input id="email" name="email" type="email" required autoComplete="email" placeholder="you@example.com" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone number</Label>
+                <Input id="phone" name="phone" type="tel" inputMode="numeric" required autoComplete="tel" placeholder="01XXXXXXXXX" pattern="01[0-9]{9}" maxLength={11} />
               </div>
               {state?.error && (
                 <p role="alert" className="text-sm text-destructive">

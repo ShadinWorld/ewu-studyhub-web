@@ -26,7 +26,7 @@ export function Footer() {
         <div className="flex flex-col gap-2">
           <h4 className="font-semibold mb-1">Support</h4>
           <Link href="/legal/academic-integrity" className="text-muted-foreground hover:text-foreground">Academic Integrity</Link>
-          <Link href="/contact" className="text-muted-foreground hover:text-foreground">Contact</Link>
+          <Link href="/support" className="text-muted-foreground hover:text-foreground">Support & Feedback</Link>
         </div>
       </div>
       <div className="container py-6 border-t text-xs text-muted-foreground">

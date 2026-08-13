@@ -5,10 +5,7 @@ import {
   BookOpen,
   FileText,
   Search,
-  ShieldCheck,
   Sparkles,
-  TrendingUp,
-  Upload,
   ShoppingBag,
   Bookmark,
   LayoutDashboard,
@@ -27,6 +24,7 @@ import { CourseCard } from "@/components/courses/course-card";
 import { RecentlyViewed } from "@/components/files/recently-viewed";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { RESOURCE_CATEGORIES } from "@/lib/constants";
+import { SupportFormCard } from "@/components/support/support-form";
 
 /* -------------------------------------------------------------------------- */
 /* Trending Resources                                                         */
@@ -210,7 +208,7 @@ async function DepartmentsPreview() {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
       {topDepartments.map((department, index) => (
         <DepartmentCard
           key={department.id}
@@ -468,53 +466,6 @@ export default function HomePage() {
         </section>
 
         {/* ------------------------------------------------------------------ */}
-        {/* Platform Benefits                                                   */}
-        {/* ------------------------------------------------------------------ */}
-
-        <section className="container py-12 sm:py-16">
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-xl border bg-card p-5 shadow-sm">
-              <ShieldCheck className="h-6 w-6 text-primary" />
-
-              <h3 className="mt-4 font-semibold">
-                EWU-first catalog
-              </h3>
-
-              <p className="mt-1 text-sm text-muted-foreground">
-                Find resources connected to real EWU departments
-                and courses.
-              </p>
-            </div>
-
-            <div className="rounded-xl border bg-card p-5 shadow-sm">
-              <TrendingUp className="h-6 w-6 text-primary" />
-
-              <h3 className="mt-4 font-semibold">
-                Discover useful resources
-              </h3>
-
-              <p className="mt-1 text-sm text-muted-foreground">
-                Explore popular and highly rated academic resources
-                from the EWU community.
-              </p>
-            </div>
-
-            <div className="rounded-xl border bg-card p-5 shadow-sm">
-              <Upload className="h-6 w-6 text-primary" />
-
-              <h3 className="mt-4 font-semibold">
-                Share your resources
-              </h3>
-
-              <p className="mt-1 text-sm text-muted-foreground">
-                Upload your notes, projects and other academic
-                resources to help fellow students.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* ------------------------------------------------------------------ */}
         {/* Popular Courses                                                     */}
         {/* ------------------------------------------------------------------ */}
 
@@ -657,6 +608,24 @@ export default function HomePage() {
         {/* ------------------------------------------------------------------ */}
 
         <RecentlyViewed />
+
+        {/* ------------------------------------------------------------------ */}
+        {/* Feedback & Support                                                   */}
+        {/* ------------------------------------------------------------------ */}
+
+        <section className="container pb-12">
+          <div className="rounded-3xl border bg-gradient-to-br from-accent/50 via-background to-background p-5 sm:p-7">
+            <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+              <div>
+                <p className="text-sm font-semibold text-primary">Your feedback matters</p>
+                <h2 className="mt-1 text-2xl font-bold tracking-tight">Found a problem or have an idea?</h2>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">Students and sellers can send suggestions, complaints, payment issues or anything that needs admin attention. We’ll keep your request in one place so it can be followed up.</p>
+                <Link href="/support" className="mt-4 inline-flex text-sm font-semibold text-primary hover:underline">Open Support Center <ArrowRight className="ml-1 h-4 w-4" /></Link>
+              </div>
+              <SupportFormCard pagePath="/" />
+            </div>
+          </div>
+        </section>
 
         {/* ------------------------------------------------------------------ */}
         {/* Upload CTA                                                          */}

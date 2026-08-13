@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { formatBDT } from "@/lib/utils";
 import { ReviewSection } from "@/components/reviews/review-section";
+import { ReportResourceButton } from "@/components/files/report-resource-button";
 
 export default async function FileDetailPage({ params }: { params: { id: string } }) {
   const supabase = createClient();
@@ -221,7 +222,11 @@ export default async function FileDetailPage({ params }: { params: { id: string 
                 </Button>
               )}
 
-              <div className="mt-6 flex items-center gap-3 border-t pt-4">
+              <div className="mt-6 border-t pt-4">
+                <ReportResourceButton fileId={file.id} />
+              </div>
+
+              <div className="mt-4 flex items-center gap-3 border-t pt-4">
                 {seller?.avatar_url ? (
                   <Image
                     src={seller.avatar_url}

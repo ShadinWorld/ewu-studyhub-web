@@ -10,6 +10,7 @@ export const signupSchema = z
       .max(30)
       .regex(/^[a-z0-9_]+$/, "Lowercase letters, numbers, underscores only"),
     email: z.string().trim().email(),
+    phone: z.string().trim().regex(/^01[0-9]{9}$/, "Enter a valid 11-digit Bangladesh phone number"),
     password: z.string().min(8, "At least 8 characters"),
     confirmPassword: z.string(),
   })
@@ -19,12 +20,13 @@ export const signupSchema = z
   });
 
 export const loginSchema = z.object({
-  email: z.string().trim().email(),
+  identifier: z.string().trim().min(3, "Enter your email or phone number"),
   password: z.string().min(1, "Password is required"),
 });
 
 export const forgotPasswordSchema = z.object({
   email: z.string().trim().email(),
+  phone: z.string().trim().regex(/^01[0-9]{9}$/, "Enter the phone number used for this account"),
 });
 
 export const uploadFileSchema = z.object({

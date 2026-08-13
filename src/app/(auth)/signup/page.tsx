@@ -25,7 +25,7 @@ export default function SignupPage() {
       <Card className="w-full max-w-md animate-slide-up">
         <CardHeader>
           <CardTitle className="text-2xl">Create your account</CardTitle>
-          <CardDescription>Join EWU StudyHub with your university email.</CardDescription>
+          <CardDescription>Create your EWU StudyHub account with the email and phone number you can access.</CardDescription>
         </CardHeader>
         <CardContent>
           {state?.success ? (
@@ -42,14 +42,22 @@ export default function SignupPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" name="email" type="email" required autoComplete="email" />
+                <Input id="email" name="email" type="email" required autoComplete="email" placeholder="you@example.com" />
                 <p className="text-xs text-muted-foreground">
                   Any email works to browse and buy. Want to sell? Verify your EWU student ID after signing up.
                 </p>
               </div>
               <div className="space-y-2">
+                <Label htmlFor="phone">Phone number</Label>
+                <Input id="phone" name="phone" type="tel" inputMode="numeric" required autoComplete="tel" placeholder="01XXXXXXXXX" pattern="01[0-9]{9}" maxLength={11} />
+                <p className="text-xs text-muted-foreground">Use a phone number you can access. You’ll need it for phone login and password recovery.</p>
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <Input id="password" name="password" type="password" required minLength={8} autoComplete="new-password" />
+              </div>
+              <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs leading-5 text-muted-foreground">
+                <strong className="text-foreground">Please remember your email and phone number.</strong> You’ll use them to log in, recover your password, and keep your account accessible.
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm password</Label>
