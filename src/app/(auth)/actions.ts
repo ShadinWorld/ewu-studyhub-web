@@ -9,7 +9,6 @@ export type FormState = { error?: string; success?: string } | undefined;
 export async function signupAction(_prevState: FormState, formData: FormData): Promise<FormState> {
   const raw = {
     fullName: formData.get("fullName"),
-    username: formData.get("username"),
     email: formData.get("email"),
     phone: formData.get("phone"),
     password: formData.get("password"),
@@ -23,13 +22,6 @@ export async function signupAction(_prevState: FormState, formData: FormData): P
 
   const supabase = createClient();
   const normalizedPhone = normalizeBangladeshPhone(parsed.data.phone);
-
-  const { data: existing } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("username", parsed.data.username)
-    .maybeSingle();
-  if (existing) return { error: "That username is already taken." };
 
   const { data: existingPhone } = await supabase
     .from("profiles")
@@ -45,7 +37,7 @@ export async function signupAction(_prevState: FormState, formData: FormData): P
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
-      data: { full_name: parsed.data.fullName, username: parsed.data.username, phone_number: normalizedPhone },
+      data: { full_name: parsed.data.fullName, phone_number: normalizedPhone },
     },
   });
 

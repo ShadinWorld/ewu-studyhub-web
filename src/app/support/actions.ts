@@ -13,7 +13,7 @@ export async function createSupportTicket(formData: FormData) {
 
   const category = String(formData.get("category") ?? "general").trim();
   const message = String(formData.get("message") ?? "").trim();
-  const subject = String(formData.get("subject") ?? "").trim() || null;
+  const subject = null;
   const pagePath = String(formData.get("page_path") ?? "/support").trim().slice(0, 300);
 
   if (!categories.has(category)) throw new Error("Invalid support category.");

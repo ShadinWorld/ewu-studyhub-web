@@ -23,7 +23,6 @@ import { DepartmentCard } from "@/components/departments/department-card";
 import { CourseCard } from "@/components/courses/course-card";
 import { RecentlyViewed } from "@/components/files/recently-viewed";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
-import { RESOURCE_CATEGORIES } from "@/lib/constants";
 import { SupportFormCard } from "@/components/support/support-form";
 
 /* -------------------------------------------------------------------------- */
@@ -321,24 +320,6 @@ async function PopularCourses() {
 /* Resource Categories                                                        */
 /* -------------------------------------------------------------------------- */
 
-function BrowseCategoryLinks() {
-  const popularCategories = RESOURCE_CATEGORIES.slice(0, 6);
-
-  return (
-    <div className="flex flex-wrap gap-2">
-      {popularCategories.map(([value, label]) => (
-        <Link
-          key={value}
-          href={`/search?category=${value}`}
-          className="rounded-full border bg-card px-3.5 py-2 text-sm font-medium transition-colors hover:border-primary hover:bg-accent hover:text-accent-foreground"
-        >
-          {label}
-        </Link>
-      ))}
-    </div>
-  );
-}
-
 /* -------------------------------------------------------------------------- */
 /* Homepage                                                                   */
 /* -------------------------------------------------------------------------- */
@@ -444,26 +425,10 @@ export default function HomePage() {
         <PersonalizedShortcuts />
 
         {/* ------------------------------------------------------------------ */}
-        {/* Browse by Resource Type                                             */}
+        {/* Recently Viewed                                                     */}
         {/* ------------------------------------------------------------------ */}
 
-        <section className="border-b bg-background">
-          <div className="container py-6">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm font-semibold">
-                  Browse by resource type
-                </p>
-
-                <p className="text-xs text-muted-foreground">
-                  Jump straight to what you need.
-                </p>
-              </div>
-
-              <BrowseCategoryLinks />
-            </div>
-          </div>
-        </section>
+        <RecentlyViewed />
 
         {/* ------------------------------------------------------------------ */}
         {/* Popular Courses                                                     */}
@@ -602,12 +567,6 @@ export default function HomePage() {
             <TrendingFiles />
           </Suspense>
         </section>
-
-        {/* ------------------------------------------------------------------ */}
-        {/* Recently Viewed                                                     */}
-        {/* ------------------------------------------------------------------ */}
-
-        <RecentlyViewed />
 
         {/* ------------------------------------------------------------------ */}
         {/* Feedback & Support                                                   */}

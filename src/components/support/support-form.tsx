@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { createSupportTicket } from "@/app/support/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export function SupportForm({ pagePath = "/support", compact = false, defaultCategory = "general" }: { pagePath?: string; compact?: boolean; defaultCategory?: string }) {
@@ -29,7 +28,7 @@ export function SupportForm({ pagePath = "/support", compact = false, defaultCat
       className="space-y-4"
     >
       <input type="hidden" name="page_path" value={pagePath} />
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div>
         <div className="space-y-2">
           <Label htmlFor="support-category">What do you need help with?</Label>
           <select id="support-category" name="category" defaultValue={defaultCategory} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
@@ -42,10 +41,6 @@ export function SupportForm({ pagePath = "/support", compact = false, defaultCat
             <option value="seller">Seller / payout problem</option>
             <option value="account">Account problem</option>
           </select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="support-subject">Subject <span className="text-muted-foreground">(optional)</span></Label>
-          <Input id="support-subject" name="subject" placeholder="Short description" maxLength={160} />
         </div>
       </div>
       <div className="space-y-2">

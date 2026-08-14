@@ -31,8 +31,8 @@ export async function submitBkashPayment(formData: FormData): Promise<void> {
     throw new Error("Enter a valid 11-digit bKash number.");
   }
 
-  if (transactionId.length < 6 || transactionId.length > 100) {
-    throw new Error("Enter a valid bKash transaction ID.");
+  if (transactionId.length > 100) {
+    throw new Error("Transaction ID is too long.");
   }
 
   const { data: file } = await supabase

@@ -21,8 +21,8 @@ export async function ReviewSection({ fileId }: { fileId: string }) {
 
   const reviewerIds = Array.from(new Set((reviews ?? []).map((review) => review.reviewer_id)));
   const { data: profiles } = reviewerIds.length
-    ? await createAdminClient().from("profiles").select("id, full_name, username, avatar_url").in("id", reviewerIds)
-    : { data: [] as { id: string; full_name: string | null; username: string | null; avatar_url: string | null }[] };
+    ? await createAdminClient().from("profiles").select("id, full_name, avatar_url").in("id", reviewerIds)
+    : { data: [] as { id: string; full_name: string | null; avatar_url: string | null }[] };
 
   const profileById = new Map((profiles ?? []).map((profile) => [profile.id, profile]));
   let existingReview: { rating: number; comment: string | null } | null = null;
@@ -85,7 +85,7 @@ export async function ReviewSection({ fileId }: { fileId: string }) {
             <article key={review.id} className="rounded-xl border p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="text-sm font-semibold">{profile?.full_name || profile?.username || "EWU Student"}</p>
+                  <p className="text-sm font-semibold">{profile?.full_name || "EWU Student"}</p>
                   <p className="mt-1 text-xs text-muted-foreground">{new Date(review.created_at).toLocaleDateString("en-BD", { year: "numeric", month: "short", day: "numeric" })}</p>
                 </div>
                 <Stars rating={review.rating} />

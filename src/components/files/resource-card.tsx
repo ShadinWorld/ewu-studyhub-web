@@ -101,12 +101,12 @@ export function ResourceCard({ file }: { file: ResourceCardData }) {
         )}
       </div>
 
-      <div className="flex min-h-[178px] flex-1 flex-col p-3.5 sm:p-4">
+      <div className="flex min-h-[168px] flex-1 flex-col p-3 sm:min-h-[178px] sm:p-4">
         <Link href={`/files/${file.id}`} className="block min-w-0">
           <Badge variant="outline" className="mb-2 w-fit rounded-full text-[11px] font-normal">
             {RESOURCE_CATEGORY_LABELS[file.category]}
           </Badge>
-          <h3 className="line-clamp-2 text-sm font-bold leading-snug transition-colors group-hover:text-primary">{file.title}</h3>
+          <h3 className="line-clamp-3 text-[13px] font-bold leading-snug sm:text-sm transition-colors group-hover:text-primary">{file.title}</h3>
         </Link>
 
         {file.seller_name && (
@@ -146,7 +146,7 @@ export function ResourceCardGrid({ files }: { files: ResourceCardData[] }) {
     );
   }
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
       {files.map((file) => <ResourceCard key={file.id} file={file} />)}
     </div>
   );

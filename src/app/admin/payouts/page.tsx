@@ -10,7 +10,7 @@ export default async function AdminPayoutsPage() {
   const supabase = createClient();
   const { data: payouts } = await supabase
     .from("payouts")
-    .select("id, seller_id, amount_cents, status, payment_method, payment_account_number, created_at, processed_at, profiles(full_name, username)")
+    .select("id, seller_id, amount_cents, status, payment_method, payment_account_number, created_at, processed_at, profiles(full_name)")
     .order("created_at", { ascending: false });
 
   const rows = payouts ?? [];
@@ -29,14 +29,14 @@ export default async function AdminPayoutsPage() {
       <Mini label="Completed" value={String(completed.length)} />
     </div>
     {rows.length ? <div className="space-y-3">{rows.map(p => {
-      const seller = p.profiles as { full_name?: string; username?: string } | null;
+      const seller = p.profiles as { full_name?: string } | null;
       const isPending = p.status === "pending";
       return <Card key={p.id} className={isPending ? "border-amber-500/30" : ""}>
         <CardContent className="p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <p className="font-semibold">{seller?.full_name ?? seller?.username ?? p.seller_id}</p>
+                <p className="font-semibold">{seller?.full_name ?? p.seller_id}</p>
                 <Badge variant={isPending ? "secondary" : "outline"} className="capitalize">{p.status}</Badge>
               </div>
               <div className="mt-2 grid gap-1 text-sm text-muted-foreground sm:grid-cols-2 lg:grid-cols-4">

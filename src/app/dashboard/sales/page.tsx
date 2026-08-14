@@ -17,7 +17,7 @@ export default async function SellerSalesPage() {
 
   const { data: sales } = await supabase
     .from("purchases")
-    .select("id, file_id, buyer_id, amount_cents, seller_earning_cents, commission_cents, status, payment_method, payment_reference, created_at, payment_submitted_at, approved_at, files(title), profiles!purchases_buyer_id_fkey(full_name, username)")
+    .select("id, file_id, buyer_id, amount_cents, seller_earning_cents, commission_cents, status, payment_method, payment_reference, created_at, payment_submitted_at, approved_at, files(title), profiles!purchases_buyer_id_fkey(full_name)")
     .in("file_id", (await supabase.from("files").select("id").eq("seller_id", user.id)).data?.map(f => f.id) ?? [])
     .order("created_at", { ascending: false })
     .limit(100);
@@ -51,8 +51,8 @@ export default async function SellerSalesPage() {
       <div className="mt-8 space-y-3">
         {rows.length ? rows.map((sale) => {
           const file = sale.files as { title?: string | null } | null;
-          const buyer = sale.profiles as { full_name?: string | null; username?: string | null } | null;
-          const buyerName = buyer?.full_name || buyer?.username || "Student";
+          const buyer = sale.profiles as { full_name?: string | null } | null;
+          const buyerName = buyer?.full_name || "Student";
           const completedSale = sale.status === "completed";
           const pendingSale = sale.status === "pending";
           const failedSale = sale.status === "failed";

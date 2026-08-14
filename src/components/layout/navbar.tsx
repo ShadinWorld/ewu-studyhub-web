@@ -14,12 +14,12 @@ export async function Navbar() {
 
   let isAdmin = false;
   let unreadNotificationCount = 0;
-  let profile: { full_name: string | null; avatar_url: string | null; role: UserRole; is_seller: boolean } | null = null;
+  let profile: { full_name: string | null; avatar_url: string | null; role: UserRole; is_seller: boolean; phone_number: string | null } | null = null;
 
   if (user) {
     const { data } = await supabase
       .from("profiles")
-      .select("full_name, avatar_url, role, is_seller")
+      .select("full_name, avatar_url, role, is_seller, phone_number")
       .eq("id", user.id)
       .single();
     profile = data;
@@ -82,6 +82,7 @@ export async function Navbar() {
               <UserMenu
                 fullName={profile?.full_name ?? null}
                 email={user.email ?? null}
+                phoneNumber={profile?.phone_number ?? null}
                 avatarUrl={profile?.avatar_url ?? null}
                 role={profile?.role ?? "student"}
                 isSeller={Boolean(profile?.is_seller || profile?.role === "seller")}

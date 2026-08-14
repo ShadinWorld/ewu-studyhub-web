@@ -21,6 +21,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const links = [
     ["/admin", "Overview"],
     ["/admin/uploads", "Pending Uploads"],
+    ["/admin/resources", "All Resources"],
     ["/admin/sellers", "Seller Requests"],
     ["/admin/payments", "Payments"],
     ["/admin/payouts", "Payouts"],

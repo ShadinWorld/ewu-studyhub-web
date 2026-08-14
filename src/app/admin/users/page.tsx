@@ -5,7 +5,7 @@ export default async function AdminUsersPage() {
   const supabase = createClient();
   const { data: users } = await supabase
     .from("profiles")
-    .select("id, full_name, username, role, is_seller, created_at")
+    .select("id, full_name, role, is_seller, created_at")
     .order("created_at", { ascending: false })
     .limit(100);
 
@@ -15,7 +15,6 @@ export default async function AdminUsersPage() {
         <thead className="bg-muted/50 text-left">
           <tr>
             <th className="p-3">Name</th>
-            <th className="p-3">Username</th>
             <th className="p-3">Role</th>
             <th className="p-3">Joined</th>
           </tr>
@@ -24,7 +23,6 @@ export default async function AdminUsersPage() {
           {(users ?? []).map((u) => (
             <tr key={u.id} className="border-t">
               <td className="p-3">{u.full_name}</td>
-              <td className="p-3 text-muted-foreground">@{u.username}</td>
               <td className="p-3">
                 <RoleSelect userId={u.id} currentRole={u.role} />
               </td>

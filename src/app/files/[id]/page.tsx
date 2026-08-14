@@ -39,7 +39,7 @@ export default async function FileDetailPage({ params }: { params: { id: string 
 
   const { data: seller } = await admin
     .from("profiles")
-    .select("username, full_name, avatar_url")
+    .select("full_name, avatar_url")
     .eq("id", file.seller_id)
     .maybeSingle();
 
@@ -240,7 +240,6 @@ export default async function FileDetailPage({ params }: { params: { id: string 
                 )}
                 <div>
                   <p className="text-sm font-medium">{seller?.full_name}</p>
-                  <p className="text-xs text-muted-foreground">@{seller?.username}</p>
                 </div>
               </div>
             </div>

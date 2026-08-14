@@ -69,8 +69,8 @@ export default async function CheckoutPage({ params }: { params: { fileId: strin
                 <Input id="buyer_bkash_number" name="buyer_bkash_number" inputMode="numeric" placeholder="01XXXXXXXXX" required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="payment_reference">bKash Transaction ID</Label>
-                <Input id="payment_reference" name="payment_reference" placeholder="e.g. 8A7B6C5D4E" required />
+                <Label htmlFor="payment_reference">bKash Transaction ID <span className="text-muted-foreground">(optional)</span></Label>
+                <Input id="payment_reference" name="payment_reference" placeholder="e.g. 8A7B6C5D4E" />
               </div>
               <p className="text-xs text-muted-foreground">Your payment will remain pending until an admin checks the transaction. Access is granted only after approval.</p>
               <Button type="submit" className="w-full" size="lg">Submit payment for verification</Button>

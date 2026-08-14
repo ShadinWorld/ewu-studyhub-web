@@ -27,7 +27,7 @@ export function SellerRequestCard({ request }: { request: any }) {
     <Card>
       <CardContent className="flex items-center justify-between p-4">
         <div>
-          <p className="font-medium">{request.full_name} (@{request.username})</p>
+          <p className="font-medium">{request.full_name}</p>
           <p className="text-sm text-muted-foreground">{request.university_email}</p>
           <p className="text-xs text-muted-foreground">Student ID: {request.student_id}</p>
           <p className="text-xs text-muted-foreground">bKash: {request.seller_bkash_number || "Not provided"}</p>

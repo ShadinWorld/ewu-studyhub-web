@@ -9,7 +9,7 @@ export default async function ReportsPage() {
     .select(
       `id, reason, details, status, created_at,
        file:files (id, title),
-       reporter:profiles!reports_reporter_id_fkey (full_name, username)`
+       reporter:profiles!reports_reporter_id_fkey (full_name)`
     )
     .eq("status", "open")
     .order("created_at", { ascending: true });

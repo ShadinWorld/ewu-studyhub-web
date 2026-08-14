@@ -28,7 +28,7 @@ export function CourseCard({
     <Link
       href={`/course/${course.id}`}
       className={cn(
-        "group relative flex min-h-[190px] flex-col justify-between overflow-hidden rounded-2xl border bg-gradient-to-br p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        "group relative flex min-h-[172px] flex-col justify-between sm:min-h-[190px] overflow-hidden rounded-2xl border bg-gradient-to-br p-3.5 shadow-sm sm:p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         tones[index % tones.length]
       )}
     >
@@ -40,10 +40,10 @@ export function CourseCard({
           </span>
           {course.credit != null && <Badge variant="secondary" className="rounded-full">{course.credit} credits</Badge>}
         </div>
-        <h3 className="mt-4 line-clamp-2 text-base font-bold leading-snug">{course.course_name}</h3>
+        <h3 className="mt-3 line-clamp-3 text-sm font-bold leading-snug sm:mt-4 sm:text-base">{course.course_name}</h3>
         {course.departmentName && <p className="mt-2 truncate text-xs font-medium text-muted-foreground">{course.departmentName}</p>}
       </div>
-      <div className="relative mt-5 flex items-center justify-between gap-3">
+      <div className="relative mt-4 flex items-center justify-between gap-2 sm:mt-5 sm:gap-3">
         <span className="flex items-center gap-1.5 rounded-full bg-background/80 px-2.5 py-1.5 text-xs font-semibold text-muted-foreground">
           <FileText className="h-3.5 w-3.5" /> {course.resourceCount} resources
         </span>

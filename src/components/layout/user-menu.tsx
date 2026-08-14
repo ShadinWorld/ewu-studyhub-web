@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, CircleDollarSign, LayoutDashboard, LogOut, ShieldCheck, Store, User as UserIcon } from "lucide-react";
+import { Bell, CircleDollarSign, LayoutDashboard, LogOut, ShieldCheck, Store, User as UserIcon, Contact } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -20,6 +20,7 @@ type Role = UserRole;
 interface UserMenuProps {
   fullName: string | null;
   email: string | null;
+  phoneNumber: string | null;
   avatarUrl: string | null;
   role: Role;
   isSeller: boolean;
@@ -43,7 +44,7 @@ function initials(name: string | null, email: string | null) {
   return (email ?? "?")[0]?.toUpperCase() ?? "?";
 }
 
-export function UserMenu({ fullName, email, avatarUrl, role, isSeller }: UserMenuProps) {
+export function UserMenu({ fullName, email, phoneNumber, avatarUrl, role, isSeller }: UserMenuProps) {
   const { label, icon } = roleLabel(role, isSeller);
 
   return (
@@ -59,6 +60,7 @@ export function UserMenu({ fullName, email, avatarUrl, role, isSeller }: UserMen
           <div className="flex flex-col gap-1">
             <p className="text-sm font-medium leading-none">{fullName || "Unnamed user"}</p>
             <p className="text-xs leading-none text-muted-foreground break-all">{email}</p>
+            {phoneNumber && <p className="text-xs leading-none text-muted-foreground">{phoneNumber}</p>}
             <Badge variant="secondary" className="mt-2 w-fit gap-1">
               {icon}
               {label}
@@ -66,6 +68,12 @@ export function UserMenu({ fullName, email, avatarUrl, role, isSeller }: UserMen
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link href="/account" className="cursor-pointer">
+            <Contact className="mr-2 h-4 w-4" />
+            Account
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href="/dashboard" className="cursor-pointer">
             <LayoutDashboard className="mr-2 h-4 w-4" />

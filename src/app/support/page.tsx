@@ -1,20 +1,11 @@
 import Link from "next/link";
-import { AlertTriangle, CreditCard, MessageCircle, ShieldQuestion, Store, Lightbulb, FileWarning } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { SupportFormCard } from "@/components/support/support-form";
-
-const quickLinks = [
-  ["Payment help", "payment", CreditCard],
-  ["Purchase help", "purchase", ShieldQuestion],
-  ["Resource issue", "resource", FileWarning],
-  ["Seller / payout", "seller", Store],
-  ["Complaint", "complaint", AlertTriangle],
-  ["Suggestion", "suggestion", Lightbulb],
-] as const;
 
 export default async function SupportPage({ searchParams }: { searchParams?: { category?: string } }) {
   const supabase = createClient();
@@ -38,16 +29,9 @@ export default async function SupportPage({ searchParams }: { searchParams?: { c
             <div><p className="text-sm font-semibold text-primary">EWU StudyHub Support</p><h1 className="mt-1 text-2xl font-bold sm:text-3xl">Need help? We’re here.</h1><p className="mt-2 max-w-2xl text-sm text-muted-foreground">Send a suggestion, complaint, payment issue, purchase problem or seller question. You can also use the floating WhatsApp button for a faster chat.</p></div>
           </div>
           <div className="mt-5 grid gap-2 sm:grid-cols-3">
-            <a href="https://wa.me/8801716529460" target="_blank" rel="noopener noreferrer" className="rounded-xl border bg-card p-3 text-sm font-semibold hover:bg-accent">💬 Chat on WhatsApp</a>
+            <a href="https://wa.me/8801636050980" target="_blank" rel="noopener noreferrer" className="rounded-xl border bg-card p-3 text-sm font-semibold hover:bg-accent">💬 Chat on WhatsApp</a>
             <Link href="/purchases" className="rounded-xl border bg-card p-3 text-sm font-semibold hover:bg-accent">🛍️ Check purchases</Link>
             <Link href="/dashboard" className="rounded-xl border bg-card p-3 text-sm font-semibold hover:bg-accent">👤 Open dashboard</Link>
-          </div>
-        </section>
-
-        <section className="mt-8">
-          <h2 className="text-lg font-bold">What can we help with?</h2>
-          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-            {quickLinks.map(([label, category, Icon]) => <Link key={category} href={`/support?category=${category}`} className="rounded-2xl border bg-card p-4 text-sm font-semibold shadow-sm hover:-translate-y-0.5 hover:shadow-md"><Icon className="mb-3 h-5 w-5 text-primary" />{label}</Link>)}
           </div>
         </section>
 

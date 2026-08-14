@@ -79,7 +79,6 @@ export interface Profile {
   university_id: string | null;
   department_id: string | null;
   full_name: string;
-  username: string;
   avatar_url: string | null;
   bio: string | null;
   role: UserRole;

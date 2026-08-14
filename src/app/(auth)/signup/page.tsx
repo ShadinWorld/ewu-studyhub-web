@@ -25,7 +25,7 @@ export default function SignupPage() {
       <Card className="w-full max-w-md animate-slide-up">
         <CardHeader>
           <CardTitle className="text-2xl">Create your account</CardTitle>
-          <CardDescription>Create your EWU StudyHub account with the email and phone number you can access.</CardDescription>
+          <CardDescription>Create your EWU StudyHub account with the email, phone number, and password you want to keep for this account.</CardDescription>
         </CardHeader>
         <CardContent>
           {state?.success ? (
@@ -35,10 +35,6 @@ export default function SignupPage() {
               <div className="space-y-2">
                 <Label htmlFor="fullName">Full name</Label>
                 <Input id="fullName" name="fullName" required autoComplete="name" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
-                <Input id="username" name="username" required placeholder="e.g. rafiul_cse" pattern="[a-z0-9_]+" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -57,7 +53,7 @@ export default function SignupPage() {
                 <Input id="password" name="password" type="password" required minLength={8} autoComplete="new-password" />
               </div>
               <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs leading-5 text-muted-foreground">
-                <strong className="text-foreground">Please remember your email and phone number.</strong> You’ll use them to log in, recover your password, and keep your account accessible.
+                <strong className="text-foreground">Please save your email, phone number, and password.</strong> You’ll need them to log in and recover your account later.
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm password</Label>

@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatBDT } from "@/lib/utils";
 import { approvePayment, rejectPayment } from "./actions";
 
-type Profile = { full_name?: string | null; username?: string | null };
+type Profile = { full_name?: string | null };
 type FileRow = { title?: string | null; seller_id?: string | null };
 
 function asProfile(value: unknown): Profile | null {
@@ -24,7 +24,7 @@ function statusLabel(status: string) {
 
 export default async function AdminPaymentsPage() {
   const supabase = createClient();
-  const select = "id, buyer_id, file_id, amount_cents, status, payment_reference, buyer_bkash_number, payment_submitted_at, rejection_reason, invoice_number, files(title, seller_id), profiles!purchases_buyer_id_fkey(full_name, username)";
+  const select = "id, buyer_id, file_id, amount_cents, status, payment_reference, buyer_bkash_number, payment_submitted_at, rejection_reason, invoice_number, files(title, seller_id), profiles!purchases_buyer_id_fkey(full_name)";
 
   const [{ data: pendingRows }, { data: historyRows }] = await Promise.all([
     supabase.from("purchases").select(select).eq("status", "pending").eq("payment_method", "bkash").order("payment_submitted_at", { ascending: true }),
@@ -34,7 +34,7 @@ export default async function AdminPaymentsPage() {
   const allRows = [...(pendingRows ?? []), ...(historyRows ?? [])];
   const sellerIds = Array.from(new Set(allRows.map(r => asFile(r.files)?.seller_id).filter((id): id is string => Boolean(id))));
   const [{ data: sellers }, { data: sellerSettings }] = await Promise.all([
-    sellerIds.length ? supabase.from("profiles").select("id, full_name, username").in("id", sellerIds) : Promise.resolve({ data: [] as { id: string; full_name: string | null; username: string | null }[] }),
+    sellerIds.length ? supabase.from("profiles").select("id, full_name").in("id", sellerIds) : Promise.resolve({ data: [] as { id: string; full_name: string | null }[] }),
     sellerIds.length ? supabase.from("seller_payment_settings").select("seller_id, bkash_number").in("seller_id", sellerIds) : Promise.resolve({ data: [] as { seller_id: string; bkash_number: string | null }[] }),
   ]);
   const sellerMap = new Map((sellers ?? []).map(s => [s.id, s]));
@@ -44,7 +44,7 @@ export default async function AdminPaymentsPage() {
     const buyer = asProfile(payment.profiles);
     const file = asFile(payment.files);
     const seller = file?.seller_id ? sellerMap.get(file.seller_id) : null;
-    const sellerName = seller?.full_name || seller?.username || "—";
+    const sellerName = seller?.full_name || "—";
     const sellerBkash = file?.seller_id ? sellerPaymentMap.get(file.seller_id) ?? "Not set" : "—";
     return <Card key={payment.id} className={pending ? "border-amber-500/30" : ""}>
       <CardHeader>
@@ -56,7 +56,7 @@ export default async function AdminPaymentsPage() {
       <CardContent className="space-y-4">
         <div className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
           <Info label="Amount" value={formatBDT(payment.amount_cents)} />
-          <Info label="Buyer" value={buyer?.full_name || buyer?.username || payment.buyer_id} />
+          <Info label="Buyer" value={buyer?.full_name || payment.buyer_id} />
           <Info label="Sender bKash" value={payment.buyer_bkash_number ?? "—"} />
           <Info label="Transaction ID" value={payment.payment_reference ?? "—"} />
           <Info label="Seller" value={sellerName} />

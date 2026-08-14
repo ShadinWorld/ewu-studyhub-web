@@ -32,7 +32,7 @@ export function DepartmentCard({
     <Link
       href={`/departments/${department.id}`}
       className={cn(
-        "group relative flex min-h-[190px] flex-col justify-between overflow-hidden rounded-2xl border bg-gradient-to-br p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        "group relative flex min-h-[172px] flex-col justify-between sm:min-h-[190px] overflow-hidden rounded-2xl border bg-gradient-to-br p-3.5 shadow-sm sm:p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         tones[tone]
       )}
     >
@@ -46,9 +46,9 @@ export function DepartmentCard({
             {department.short_name}
           </span>
         </div>
-        <h3 className="mt-5 line-clamp-2 text-lg font-bold leading-snug">{department.name}</h3>
+        <h3 className="mt-4 line-clamp-3 text-sm font-bold leading-snug sm:mt-5 sm:text-lg">{department.name}</h3>
       </div>
-      <div className="relative mt-5 flex items-end justify-between gap-3">
+      <div className="relative mt-4 flex items-end justify-between gap-2 sm:mt-5 sm:gap-3">
         <div className="flex flex-wrap gap-2 text-xs font-medium text-muted-foreground">
           <span className="inline-flex items-center gap-1 rounded-full bg-background/75 px-2.5 py-1">
             <BookOpen className="h-3.5 w-3.5" /> {department.courseCount} courses

@@ -9,7 +9,7 @@ export default async function PendingUploadsPage() {
     .select(
       `id, title, description, category, file_kind, pricing_type, price_cents,
        file_size_bytes, page_count, created_at, storage_path,
-       seller:profiles!files_seller_id_fkey (full_name, username)`
+       seller:profiles!files_seller_id_fkey (full_name)`
     )
     .eq("visibility", "draft")
     .order("created_at", { ascending: true });

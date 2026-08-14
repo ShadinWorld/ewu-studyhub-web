@@ -3,12 +3,6 @@ import { z } from "zod";
 export const signupSchema = z
   .object({
     fullName: z.string().trim().min(2, "Name is too short").max(100),
-    username: z
-      .string()
-      .trim()
-      .min(3)
-      .max(30)
-      .regex(/^[a-z0-9_]+$/, "Lowercase letters, numbers, underscores only"),
     email: z.string().trim().email(),
     phone: z.string().trim().regex(/^01[0-9]{9}$/, "Enter a valid 11-digit Bangladesh phone number"),
     password: z.string().min(8, "At least 8 characters"),
@@ -61,12 +55,6 @@ export const universityEmailSchema = z.object({
 
 export const searchQuerySchema = z.object({
   q: z.string().trim().max(200).optional(),
-  courseCode: z.string().trim().max(20).optional(),
-  departmentId: z.string().uuid().optional(),
-  teacherId: z.string().uuid().optional(),
-  year: z.coerce.number().int().optional(),
-  pricing: z.enum(["free", "paid", "all"]).default("all"),
-  sort: z.enum(["newest", "popular", "trending", "top_rated"]).default("newest"),
   page: z.coerce.number().int().min(1).default(1),
 });
 

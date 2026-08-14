@@ -2,7 +2,7 @@
 
 import { MessageCircle } from "lucide-react";
 
-const configuredNumber = process.env.NEXT_PUBLIC_ADMIN_WHATSAPP_NUMBER || "01716529460";
+const configuredNumber = process.env.NEXT_PUBLIC_ADMIN_WHATSAPP_NUMBER || "01636050980";
 const whatsappNumber = configuredNumber.replace(/\D/g, "").replace(/^0/, "880");
 const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent("Hello EWU StudyHub Admin, I need help regarding my account or a marketplace issue.")}`;
 
