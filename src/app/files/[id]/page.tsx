@@ -16,8 +16,9 @@ import { RESOURCE_CATEGORY_LABELS } from "@/lib/constants";
 import { ReviewSection } from "@/components/reviews/review-section";
 import { ReportResourceButton } from "@/components/files/report-resource-button";
 import { ResourceDetailActions } from "@/components/files/resource-detail-actions";
-import { StickyResourceActionBar } from "@/components/files/sticky-resource-action-bar";
 import { QualityIndicator } from "@/components/files/quality-indicator";
+import { ResourceAccessCard } from "@/components/files/resource-access-card";
+import { StarSummary } from "@/components/files/star-summary";
 import type { ResourceCardData } from "@/components/files/resource-card";
 import { ResourceCardGrid } from "@/components/files/resource-card";
 import type { FilePricingType } from "@/types/database.types";
@@ -27,10 +28,6 @@ function formatBytes(bytes: number | null) {
   const units = ["B", "KB", "MB", "GB"];
   const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
   return `${(bytes / 1024 ** index).toFixed(index === 0 ? 0 : 1)} ${units[index]}`;
-}
-
-function StarSummary({ rating, count }: { rating: number; count: number }) {
-  return <div className="flex flex-wrap items-center gap-2"><span className="flex items-center gap-1.5 text-sm font-semibold"><Star className="h-4 w-4 fill-amber-400 text-amber-400" />{rating.toFixed(1)}</span><span className="text-sm text-muted-foreground">{count} {count === 1 ? "review" : "reviews"}</span></div>;
 }
 
 function DetailRow({ icon: Icon, label, value }: { icon: typeof FileText; label: string; value: React.ReactNode }) {
@@ -105,7 +102,7 @@ export default async function FileDetailPage({ params }: { params: { id: string 
     file.reviews_count > 0 ? `${Number(file.average_rating).toFixed(1)}★ from verified student feedback` : "Student feedback can help you judge quality",
   ].slice(0, 4);
 
-  return <div className="flex min-h-screen flex-col pb-20 lg:pb-0"><Navbar /><main className="container flex-1 py-6 sm:py-10">
+  return <div className="flex min-h-screen flex-col"><Navbar /><main className="container flex-1 py-6 sm:py-10">
     <nav className="mb-5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground" aria-label="Breadcrumb"><Link href="/" className="hover:text-foreground">Home</Link><span>/</span><Link href="/courses" className="hover:text-foreground">Courses</Link><span>/</span>{course?.course_code && <><Link href={`/course/${file.course_id}`} className="font-mono hover:text-foreground">{course.course_code}</Link><span>/</span></>}<span className="truncate text-foreground">{file.title}</span></nav>
     <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start"><div className="min-w-0">
       <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
@@ -114,6 +111,10 @@ export default async function FileDetailPage({ params }: { params: { id: string 
           <div className="absolute inset-x-3 top-3 flex flex-wrap items-center justify-between gap-2"><Badge className="rounded-full bg-background/90 text-foreground shadow-sm backdrop-blur">{RESOURCE_CATEGORY_LABELS[file.category]}</Badge><div className="flex gap-2"><Badge variant="secondary" className="rounded-full bg-background/90 shadow-sm backdrop-blur">{file.file_kind.toUpperCase()}</Badge>{isFree ? <Badge variant="success" className="rounded-full">FREE</Badge> : <Badge className="rounded-full">{formatBDT(file.price_cents)}</Badge>}</div></div>
         </div>
         <div className="p-5 sm:p-7"><div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">{course?.course_code && <Badge variant="outline" className="font-mono">{course.course_code}</Badge>}{course?.course_name && <span>{course.course_name}</span>}{department?.short_name && <><span>•</span><span>{department.short_name}</span></>}</div><h1 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">{file.title}</h1><div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2"><StarSummary rating={Number(file.average_rating ?? 0)} count={file.reviews_count ?? 0} /><span className="flex items-center gap-1.5 text-sm text-muted-foreground"><Download className="h-4 w-4" />{file.downloads_count} downloads</span><span className="flex items-center gap-1.5 text-sm text-muted-foreground"><Eye className="h-4 w-4" />{file.views_count} views</span></div><div className="mt-5 flex flex-wrap gap-2">{file.semester && <Badge variant="secondary">{file.semester}{file.year ? ` ${file.year}` : ""}</Badge>}{file.language && <Badge variant="secondary">{file.language.toUpperCase()}</Badge>}{file.ai_difficulty && <Badge variant="secondary">{file.ai_difficulty} difficulty</Badge>}{file.ai_reading_time_minutes && <Badge variant="secondary">~{file.ai_reading_time_minutes} min read</Badge>}</div></div>
+      </div>
+
+      <div className="mt-5 lg:hidden">
+        <ResourceAccessCard fileId={file.id} isFree={isFree} alreadyPurchased={alreadyPurchased} paymentPending={paymentPending} paymentRejected={paymentRejected} rejectionReason={rejectionReason} price={file.price_cents} rating={Number(file.average_rating ?? 0)} reviews={file.reviews_count ?? 0} previewUrl={previewUrl} previewPageCount={previewPageCount} pageCount={file.page_count} />
       </div>
 
       <section className="mt-7 rounded-2xl border bg-card p-5 sm:p-7"><h2 className="text-xl font-bold">About this resource</h2><p className="mt-3 whitespace-pre-line text-sm leading-7 text-muted-foreground">{file.description || "The seller has not added a description yet."}</p>{file.ai_summary && <div className="mt-5 rounded-xl border border-primary/20 bg-primary/5 p-4"><p className="text-sm font-semibold text-primary">Quick summary</p><p className="mt-1 text-sm leading-6 text-muted-foreground">{file.ai_summary}</p></div>}{!!file.ai_keywords?.length && <div className="mt-5 flex flex-wrap gap-2">{file.ai_keywords.slice(0, 10).map((keyword) => <Badge key={keyword} variant="outline">#{keyword}</Badge>)}</div>}</section>
@@ -129,10 +130,11 @@ export default async function FileDetailPage({ params }: { params: { id: string 
       {scoredRelated.length > 0 && <section className="mt-10 border-t pt-8"><div><p className="text-sm font-semibold text-primary">You may also like</p><h2 className="mt-1 text-2xl font-bold">Related resources</h2><p className="mt-1 text-sm text-muted-foreground">Similar course, category, semester and popular resources.</p></div><div className="mt-5"><ResourceCardGrid files={scoredRelated} /></div></section>}
     </div>
 
-    <aside className="lg:sticky lg:top-24"><div className="rounded-2xl border bg-card p-5 shadow-sm sm:p-6"><div className="flex items-start justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-wide text-primary">Resource access</p><p className="mt-1 text-3xl font-bold">{isFree ? "Free" : formatBDT(file.price_cents)}</p></div><StarSummary rating={Number(file.average_rating ?? 0)} count={file.reviews_count ?? 0} /></div>{alreadyPurchased && <div className="mt-4 rounded-xl border border-primary/30 bg-primary/5 p-4"><div className="flex items-start gap-3"><CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" /><div><p className="font-semibold">You own this resource</p><p className="mt-1 text-sm text-muted-foreground">Payment approved. View or download anytime.</p></div></div></div>}{paymentPending && <div className="mt-4 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4"><div className="flex items-start gap-3"><Clock3 className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" /><div><p className="font-semibold">Payment pending</p><p className="mt-1 text-sm text-muted-foreground">Waiting for admin verification. Please do not pay again.</p></div></div></div>}{paymentRejected && <div className="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 p-4"><div className="flex items-start gap-3"><XCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" /><div><p className="font-semibold">Payment needs attention</p><p className="mt-1 text-sm text-muted-foreground">{rejectionReason || "The previous payment could not be verified."}</p></div></div></div>}{!canDownloadDirectly && previewUrl && <div className="mt-4 rounded-xl border bg-muted/20 p-4"><div className="flex items-start gap-3"><Lock className="mt-0.5 h-5 w-5 text-muted-foreground" /><div><p className="text-sm font-semibold">Free preview available</p><p className="mt-1 text-xs text-muted-foreground">{previewPageCount && file.page_count ? `${previewPageCount} of ${file.page_count} pages` : "Sample preview"} before purchase.</p><Link href={`/files/${file.id}/viewer?preview=1`} className="mt-2 inline-flex text-xs font-semibold text-primary underline">Open preview viewer</Link></div></div></div>}<ResourceDetailActions fileId={file.id} isFree={isFree} alreadyPurchased={alreadyPurchased} paymentPending={paymentPending} paymentRejected={paymentRejected} /><div className="mt-5 border-t pt-4"><ReportResourceButton fileId={file.id} /></div></div>
+    <aside className="hidden lg:sticky lg:top-24 lg:block">
+      <ResourceAccessCard fileId={file.id} isFree={isFree} alreadyPurchased={alreadyPurchased} paymentPending={paymentPending} paymentRejected={paymentRejected} rejectionReason={rejectionReason} price={file.price_cents} rating={Number(file.average_rating ?? 0)} reviews={file.reviews_count ?? 0} previewUrl={previewUrl} previewPageCount={previewPageCount} pageCount={file.page_count} />
 
       <div className="mt-4 rounded-2xl border bg-card p-5"><p className="text-sm font-semibold">Why students choose this resource</p><ul className="mt-3 space-y-2.5 text-sm text-muted-foreground">{benefits.map((benefit) => <li key={benefit} className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{benefit}</li>)}</ul><p className="mt-4 text-xs text-muted-foreground">{qualitySignals}/5 quality signals currently available.</p></div>
     </aside>
     </div>
-  </main><StickyResourceActionBar fileId={file.id} isFree={isFree} alreadyPurchased={alreadyPurchased} paymentPending={paymentPending} paymentRejected={paymentRejected} price={file.price_cents} /><Footer /></div>;
+  </main><Footer /></div>;
 }
