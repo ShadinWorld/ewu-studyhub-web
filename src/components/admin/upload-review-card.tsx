@@ -69,17 +69,18 @@ export function UploadReviewCard({ file }: { file: any }) {
               )}
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
-              by {file.seller?.full_name} ·{" "}
+              by {file.seller?.full_name} () ·{" "}
               {file.file_size_bytes ? `${(file.file_size_bytes / 1024 / 1024).toFixed(1)}MB` : ""}
             </p>
           </div>
         </div>
 
         <div className="flex shrink-0 flex-col gap-2 sm:w-48">
-          <div className="grid grid-cols-2 gap-2">
-            <Button size="sm" variant="secondary" asChild><a href={`/api/files/${file.id}/admin-view`} target="_blank" rel="noreferrer"><Eye className="mr-1 h-4 w-4" /> View</a></Button>
-            <Button size="sm" variant="outline" asChild><a href={`/api/files/${file.id}/admin-download`} target="_blank" rel="noreferrer">Download</a></Button>
-          </div>
+          <Button size="sm" variant="secondary" asChild>
+            <a href={`/api/files/${file.id}/admin-view`} target="_blank" rel="noreferrer">
+              <Eye className="mr-1 h-4 w-4" /> View file
+            </a>
+          </Button>
           {!showRejectBox ? (
             <>
               <Button size="sm" onClick={handleApprove} disabled={isPending}>

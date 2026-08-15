@@ -1,53 +1,5 @@
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
-import { NextResponse, type NextRequest } from "next/server";
-
-const PROTECTED_PREFIXES = ["/dashboard"];
-
-export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({ request: { headers: request.headers } });
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          response = NextResponse.next({ request: { headers: request.headers } });
-          response.cookies.set({ name, value, ...options });
-        },
-        remove(name: string, options: CookieOptions) {
-          response = NextResponse.next({ request: { headers: request.headers } });
-          response.cookies.set({ name, value: "", ...options });
-        },
-      },
-    }
-  );
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const isProtected = PROTECTED_PREFIXES.some((p) =>
-    request.nextUrl.pathname.startsWith(p)
-  );
-
-  if (isProtected && !user) {
-    const redirectUrl = new URL("/login", request.url);
-    redirectUrl.searchParams.set("next", request.nextUrl.pathname);
-    return NextResponse.redirect(redirectUrl);
-  }
-
-  return response;
-}
-
-export const config = {
-  matcher: [
-    /*
-     * Match all paths except static assets and image optimization files.
-     */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-  ],
-};
+import { createServerClient,type CookieOptions } from "@supabase/ssr";
+import { NextResponse,type NextRequest } from "next/server";
+const AUTH_EXEMPT=["/login","/signup","/account","/api/auth/callback"];
+export async function middleware(request:NextRequest){let response=NextResponse.next({request:{headers:request.headers}});const supabase=createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!,process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,{cookies:{get(name:string){return request.cookies.get(name)?.value},set(name:string,value:string,options:CookieOptions){response=NextResponse.next({request:{headers:request.headers}});response.cookies.set({name,value,...options})},remove(name:string,options:CookieOptions){response=NextResponse.next({request:{headers:request.headers}});response.cookies.set({name,value:"",...options})}}});const{data:{user}}=await supabase.auth.getUser();const path=request.nextUrl.pathname;const exempt=AUTH_EXEMPT.some(p=>path===p||path.startsWith(`${p}/`));if(!user&&!exempt&&(path.startsWith("/dashboard")||path.startsWith("/support")||path.startsWith("/purchases")||path.startsWith("/saved")||path.startsWith("/notifications")||path.startsWith("/checkout")||path.startsWith("/admin"))){const url=new URL("/login",request.url);url.searchParams.set("next",path);return NextResponse.redirect(url)}if(user&&!exempt){const{data:profile}=await supabase.from("profiles").select("phone_number").eq("id",user.id).maybeSingle();if(!profile?.phone_number){const url=new URL("/account",request.url);url.searchParams.set("next",path);return NextResponse.redirect(url)}}return response}
+export const config={matcher:["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"]};

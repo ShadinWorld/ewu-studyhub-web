@@ -1,28 +1,5 @@
 import { z } from "zod";
 
-export const signupSchema = z
-  .object({
-    fullName: z.string().trim().min(2, "Name is too short").max(100),
-    email: z.string().trim().email(),
-    phone: z.string().trim().regex(/^01[0-9]{9}$/, "Enter a valid 11-digit Bangladesh phone number"),
-    password: z.string().min(8, "At least 8 characters"),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  });
-
-export const loginSchema = z.object({
-  identifier: z.string().trim().min(3, "Enter your email or phone number"),
-  password: z.string().min(1, "Password is required"),
-});
-
-export const forgotPasswordSchema = z.object({
-  email: z.string().trim().email(),
-  phone: z.string().trim().regex(/^01[0-9]{9}$/, "Enter the phone number used for this account"),
-});
-
 export const uploadFileSchema = z.object({
   title: z.string().trim().min(5).max(150),
   description: z.string().trim().max(2000).optional(),
@@ -55,6 +32,12 @@ export const universityEmailSchema = z.object({
 
 export const searchQuerySchema = z.object({
   q: z.string().trim().max(200).optional(),
+  courseCode: z.string().trim().max(20).optional(),
+  departmentId: z.string().uuid().optional(),
+  teacherId: z.string().uuid().optional(),
+  year: z.coerce.number().int().optional(),
+  pricing: z.enum(["free", "paid", "all"]).default("all"),
+  sort: z.enum(["newest", "popular", "trending", "top_rated"]).default("newest"),
   page: z.coerce.number().int().min(1).default(1),
 });
 

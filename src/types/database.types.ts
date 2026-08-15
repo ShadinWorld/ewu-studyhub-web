@@ -473,7 +473,7 @@ export interface Database {
         Returns: void;
       };
       request_seller_verification: {
-        Args: { p_university_email: string; p_bkash_number: string } & Record<string, unknown>;
+        Args: { p_university_email: string; p_bkash_number: string; p_student_id_document_path: string } & Record<string, unknown>;
         Returns: void;
       };
     };

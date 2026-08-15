@@ -46,17 +46,11 @@ export function ReportReviewCard({ report }: { report: any }) {
           </div>
           {report.details && <p className="text-sm text-muted-foreground">{report.details}</p>}
           <p className="mt-1 text-xs text-muted-foreground">
-            Reported by {report.reporter?.full_name ?? "User"}
+            Reported by {report.reporter?.full_name} ()
           </p>
         </div>
 
-        <div className="flex shrink-0 flex-wrap gap-2">
-          <Button size="sm" variant="secondary" asChild>
-            <Link href={`/api/files/${report.file?.id}/admin-view`} target="_blank" rel="noreferrer">View resource</Link>
-          </Button>
-          <Button size="sm" variant="outline" asChild>
-            <Link href={`/api/files/${report.file?.id}/admin-download`} target="_blank" rel="noreferrer">Download</Link>
-          </Button>
+        <div className="flex shrink-0 gap-2">
           <Button
             size="sm"
             variant="destructive"

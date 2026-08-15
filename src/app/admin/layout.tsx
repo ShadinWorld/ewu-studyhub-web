@@ -3,6 +3,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { Button } from "@/components/ui/button";
+import { AdminAccountSwitcher } from "@/components/admin/admin-account-switcher";
+import { createAdminClient } from "@/lib/supabase/server";
 import { Menu, ShieldCheck } from "lucide-react";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -18,10 +20,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   if (!profile || !["admin", "super_admin"].includes(profile.role)) redirect("/");
 
+  const admin = createAdminClient();
+  const { data: adminProfiles } = await admin.from("profiles").select("id, full_name, role").in("role", ["admin", "super_admin"]).order("full_name");
+  const { data: authUsers } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  const admins = (adminProfiles ?? []).map((p) => ({ id: p.id, name: p.full_name || "Admin", email: authUsers.users.find((u) => u.id === p.id)?.email || "" })).filter((a) => a.email);
+
   const links = [
     ["/admin", "Overview"],
     ["/admin/uploads", "Pending Uploads"],
-    ["/admin/resources", "All Resources"],
     ["/admin/sellers", "Seller Requests"],
     ["/admin/payments", "Payments"],
     ["/admin/payouts", "Payouts"],
@@ -44,7 +50,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <div className="min-w-0 flex-1">
         <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-background/90 px-3 backdrop-blur-xl sm:h-16 sm:px-6">
           <div className="flex items-center gap-2"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary md:hidden"><Menu className="h-5 w-5" /></span><h1 className="font-semibold">Admin Panel</h1></div>
-          <div className="flex items-center gap-2"><Button variant="outline" size="sm" asChild className="hidden sm:inline-flex"><Link href="/">Visit site</Link></Button><ThemeToggle /></div>
+          <div className="flex items-center gap-2"><AdminAccountSwitcher currentName={profile.full_name || "Admin"} currentEmail={user.email || ""} admins={admins} /><Button variant="outline" size="sm" asChild className="hidden sm:inline-flex"><Link href="/">Visit site</Link></Button><ThemeToggle /></div>
         </header>
         <main className="p-4 pb-24 sm:p-6 md:pb-6">{children}</main>
       </div>

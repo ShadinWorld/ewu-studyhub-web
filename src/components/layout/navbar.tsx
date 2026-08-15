@@ -89,10 +89,9 @@ export async function Navbar() {
               />
             </>
           ) : (
-            <div className="hidden items-center gap-2 sm:flex">
-              <Button variant="ghost" size="sm" asChild><Link href="/login">Log in</Link></Button>
-              <Button size="sm" asChild><Link href="/signup">Sign up</Link></Button>
-            </div>
+            <Button size="sm" asChild className="hidden sm:inline-flex">
+              <Link href="/login">Continue with Google</Link>
+            </Button>
           )}
         </div>
       </div>

@@ -20,10 +20,19 @@ export async function approveSeller(targetUserId: string) {
 
   const { data: targetProfile, error: profileError } = await admin
     .from("profiles")
-    .select("seller_bkash_number")
+    .select("seller_bkash_number, student_id_document_url, university_email")
     .eq("id", targetUserId)
     .single();
-  if (profileError) return { error: profileError.message };
+ if (profileError) return { error: profileError.message };
+
+if (
+  !targetProfile?.student_id_document_url ||
+  !targetProfile?.university_email
+) {
+  return {
+    error: "EWU email and ID card must be present before approval.",
+  };
+}
 
   const { error } = await admin
     .from("profiles")

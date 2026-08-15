@@ -1,23 +1,3 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-
-export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
-  const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/dashboard";
-
-  if (code) {
-    const supabase = createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
-      // Confirming the email establishes a session as a side effect of the
-      // code exchange above. We don't want that to count as "logged in" —
-      // the person should always type their password once, even right
-      // after clicking the confirmation link — so sign it back out.
-      await supabase.auth.signOut();
-      return NextResponse.redirect(`${origin}${next}`);
-    }
-  }
-
-  return NextResponse.redirect(`${origin}/login?error=auth_callback_failed`);
-}
+export async function GET(request:Request){const{searchParams,origin}=new URL(request.url);const code=searchParams.get("code");const next=searchParams.get("next")??"/";const safeNext=next.startsWith("/")&&!next.startsWith("//")?next:"/";if(!code)return NextResponse.redirect(`${origin}/login?error=auth_callback_failed`);const supabase=createClient();const{error}=await supabase.auth.exchangeCodeForSession(code);if(error){console.error("OAuth callback exchange error:",error);return NextResponse.redirect(`${origin}/login?error=auth_callback_failed`)}const{data:{user}}=await supabase.auth.getUser();if(!user)return NextResponse.redirect(`${origin}/login?error=auth_callback_failed`);const metadata=user.user_metadata??{};const fullName=metadata.full_name||metadata.name||"New User";const avatarUrl=metadata.avatar_url||metadata.picture||null;const{data:profile}=await supabase.from("profiles").select("id, phone_number").eq("id",user.id).maybeSingle();if(profile)await supabase.from("profiles").update({full_name:fullName,avatar_url:avatarUrl}).eq("id",user.id);if(!profile?.phone_number)return NextResponse.redirect(`${origin}/account?next=${encodeURIComponent(safeNext)}`);return NextResponse.redirect(`${origin}${safeNext}`)}
