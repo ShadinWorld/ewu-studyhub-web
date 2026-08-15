@@ -29,6 +29,7 @@ export async function updateSupportTicket(formData: FormData) {
 
   const { error } = await supabase.from("support_tickets").update(payload).eq("id", id);
   if (error) throw new Error(error.message);
+  await supabase.from("audit_logs").insert({ actor_id: adminId, action: "support.update", target_table: "support_tickets", target_id: id, metadata: { status, replied: Boolean(reply) } });
   revalidatePath("/admin/support");
   revalidatePath("/support");
 }

@@ -13,6 +13,7 @@ export async function updateMarketplaceSettings(formData: FormData) {
   if (!Number.isFinite(percent) || percent < 0 || percent > 100) throw new Error("Commission must be between 0 and 100.");
   const { error } = await supabase.rpc("update_platform_payment_settings", { p_bkash_number: number, p_default_commission_percent: percent });
   if (error) throw new Error(error.message);
+  await supabase.from("audit_logs").insert({ actor_id: user.id, action: "settings.payment_update", target_table: "platform_payment_settings", metadata: { payment_method: "bkash", commission_percent: percent } });
   revalidatePath("/admin/settings");
   revalidatePath("/checkout");
 }

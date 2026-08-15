@@ -22,6 +22,8 @@ import {
 import { DepartmentCard } from "@/components/departments/department-card";
 import { CourseCard } from "@/components/courses/course-card";
 import { RecentlyViewed } from "@/components/files/recently-viewed";
+import { SavedResources } from "@/components/files/saved-resources";
+import { FAQSection } from "@/components/faq/faq-section";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { SupportFormCard } from "@/components/support/support-form";
 
@@ -328,14 +330,18 @@ async function PersonalizedShortcuts() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-
+  const { data: profile } = await supabase.from("profiles").select("full_name, role, phone_number").eq("id", user.id).maybeSingle();
+  const name = profile?.full_name || user.user_metadata?.full_name || "there";
+  const firstName = name.split(/\s+/)[0] || "there";
+  const accountReady = Boolean(profile?.phone_number);
   return (
-    <section className="container -mt-4 relative z-10 pb-2">
-      <div className="rounded-2xl border bg-background/95 p-4 shadow-lg backdrop-blur sm:p-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm font-semibold text-primary">Quick access</p>
-            <p className="mt-1 text-sm text-muted-foreground">Jump straight to the things you use most.</p>
+    <section className="container relative z-10 -mt-5 pb-2">
+      <div className="overflow-hidden rounded-3xl border bg-card/95 shadow-lg backdrop-blur">
+        <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-wide text-primary">Welcome back</p>
+            <h2 className="mt-1 truncate text-lg font-bold sm:text-xl">Hi, {firstName} 👋</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{accountReady ? "Continue exploring your courses and saved resources." : "Complete your account to get the most out of StudyHub."}</p>
           </div>
           <div className="grid grid-cols-2 gap-2 sm:flex">
             <Button asChild variant="outline" className="h-10"><Link href="/purchases"><ShoppingBag className="h-4 w-4" />Purchases</Link></Button>
@@ -429,9 +435,56 @@ export default function HomePage() {
         {/* ------------------------------------------------------------------ */}
 
         <RecentlyViewed />
+        <SavedResources />
 
         {/* ------------------------------------------------------------------ */}
-        {/* Popular Courses                                                     */}
+        {/* Trending Resources                                                  */}
+        {/* ------------------------------------------------------------------ */}
+
+        <section className="container py-12 sm:py-16">
+          <div className="mb-6 flex items-end justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold text-primary">
+                Popular resources
+              </p>
+
+              <h2 className="mt-1 text-2xl font-bold tracking-tight">
+                Popular resources
+              </h2>
+
+              <p className="mt-1 text-sm text-muted-foreground">
+                Resources students are discovering and downloading most.
+              </p>
+            </div>
+
+            <Link
+              href="/trending"
+              className="hidden items-center gap-1 text-sm font-medium text-primary sm:flex"
+            >
+              View trending
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+
+          <Suspense
+            fallback={
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {Array.from({ length: 8 }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="h-72 animate-pulse rounded-xl border bg-muted/30"
+                  />
+                ))}
+              </div>
+            }
+          >
+            <TrendingFiles />
+          </Suspense>
+        </section>
+
+
+        {/* ------------------------------------------------------------------ */}
+        {/* Popular Resources                                                     */}
         {/* ------------------------------------------------------------------ */}
 
         <section className="container pb-12 sm:pb-16">
@@ -522,51 +575,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ------------------------------------------------------------------ */}
-        {/* Trending Resources                                                  */}
-        {/* ------------------------------------------------------------------ */}
-
-        <section className="container py-12 sm:py-16">
-          <div className="mb-6 flex items-end justify-between gap-4">
-            <div>
-              <p className="text-sm font-semibold text-primary">
-                Popular resources
-              </p>
-
-              <h2 className="mt-1 text-2xl font-bold tracking-tight">
-                Trending now
-              </h2>
-
-              <p className="mt-1 text-sm text-muted-foreground">
-                A quick view of resources students are downloading
-                most.
-              </p>
-            </div>
-
-            <Link
-              href="/trending"
-              className="hidden items-center gap-1 text-sm font-medium text-primary sm:flex"
-            >
-              View trending
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-
-          <Suspense
-            fallback={
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {Array.from({ length: 8 }).map((_, index) => (
-                  <div
-                    key={index}
-                    className="h-72 animate-pulse rounded-xl border bg-muted/30"
-                  />
-                ))}
-              </div>
-            }
-          >
-            <TrendingFiles />
-          </Suspense>
-        </section>
+        <FAQSection />
 
         {/* ------------------------------------------------------------------ */}
         {/* Feedback & Support                                                   */}

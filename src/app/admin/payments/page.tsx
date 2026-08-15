@@ -72,7 +72,7 @@ export default async function AdminPaymentsPage() {
   };
 
   return <div className="space-y-8">
-    <div><h2 className="text-2xl font-bold">Payment Operations</h2><p className="text-muted-foreground">Review bKash payments, approve access, reject invalid submissions, and keep a recent audit-friendly history.</p></div>
+    <div><h2 className="text-2xl font-bold">Payment Operations</h2><p className="text-muted-foreground">Review bKash-only payments, approve access, reject invalid submissions, and keep a recent audit-friendly history. Other payment methods are not accepted.</p></div>
     <section><div className="mb-3 flex items-center justify-between"><div><h3 className="text-lg font-semibold">Needs review</h3><p className="text-sm text-muted-foreground">Approve only after checking the transaction ID and amount.</p></div><Badge>{pendingRows?.length ?? 0} pending</Badge></div>{pendingRows?.length ? <div className="space-y-4">{pendingRows.map(r => renderRow(r, true))}</div> : <Card><CardContent className="p-8 text-center text-muted-foreground">No pending bKash payments.</CardContent></Card>}</section>
     <section><div className="mb-3"><h3 className="text-lg font-semibold">Recent payment history</h3><p className="text-sm text-muted-foreground">The latest approved and rejected manual payments.</p></div>{historyRows?.length ? <div className="space-y-4">{historyRows.map(r => renderRow(r, false))}</div> : <Card><CardContent className="p-8 text-center text-muted-foreground">No payment history yet.</CardContent></Card>}</section>
   </div>;

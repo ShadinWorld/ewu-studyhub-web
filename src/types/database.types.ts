@@ -318,6 +318,18 @@ export interface RecentlyViewed {
 
 export type SupportTicketCategory = "suggestion" | "complaint" | "general" | "payment" | "resource" | "seller" | "account" | "purchase";
 export type SupportTicketStatus = "new" | "in_review" | "resolved";
+export type FaqCategory = "General" | "Account" | "Resources" | "Buying" | "Selling" | "Payment" | "EWU Verification" | "Support";
+
+export interface Faq {
+  id: string;
+  category: string;
+  question: string;
+  answer: string;
+  sort_order: number;
+  is_published: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
 export interface SupportTicket {
   id: string;
@@ -422,6 +434,7 @@ export interface Database {
       recently_viewed: Table<RecentlyViewed>;
       notifications: Table<Notification>;
       support_tickets: Table<SupportTicket>;
+      faqs: Table<Faq>;
       file_daily_stats: Table<FileDailyStat>;
       platform_daily_stats: Table<PlatformDailyStat>;
     };

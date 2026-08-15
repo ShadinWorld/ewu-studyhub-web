@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Star, Download, FileText, BadgeCheck, Eye, Clock3, CheckCircle2, XCircle, ShoppingBag } from "lucide-react";
+import { Star, Download, FileText, BadgeCheck, Eye, Clock3, CheckCircle2, XCircle, ShoppingBag, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatBDT } from "@/lib/utils";
 import { RESOURCE_CATEGORY_LABELS } from "@/lib/constants";
@@ -91,7 +91,10 @@ export function ResourceCard({ file }: { file: ResourceCardData }) {
           )}
         </Link>
         <div className="absolute inset-x-2 top-2 z-10 flex items-start justify-between gap-2">
-          <div className="min-w-0 max-w-[78%]"><StatusBadge file={file} /></div>
+          <div className="min-w-0 max-w-[78%] flex flex-wrap gap-1.5">
+            <StatusBadge file={file} />
+            {file.downloads_count >= 100 && <Badge className="rounded-full bg-foreground/85 px-2.5 text-[10px] text-background shadow-sm hover:bg-foreground/85"><Sparkles className="mr-1 h-3 w-3" />POPULAR</Badge>}
+          </div>
           <SaveResourceButton fileId={file.id} saved={Boolean(file.saved)} />
         </div>
         {file.course_code && (
@@ -106,7 +109,7 @@ export function ResourceCard({ file }: { file: ResourceCardData }) {
           <Badge variant="outline" className="mb-2 w-fit rounded-full text-[11px] font-normal">
             {RESOURCE_CATEGORY_LABELS[file.category]}
           </Badge>
-          <h3 className="line-clamp-3 text-[13px] font-bold leading-snug sm:text-sm transition-colors group-hover:text-primary">{file.title}</h3>
+          <h3 className="line-clamp-2 text-[13px] font-bold leading-snug sm:text-sm transition-colors group-hover:text-primary">{file.title}</h3>
         </Link>
 
         {file.seller_name && (

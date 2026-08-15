@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BookOpen, FileText, Sparkles } from "lucide-react";
+import { ArrowRight, BookOpen, FileText, Sparkles, GraduationCap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -41,7 +41,7 @@ export function CourseCard({
           {course.credit != null && <Badge variant="secondary" className="rounded-full">{course.credit} credits</Badge>}
         </div>
         <h3 className="mt-3 line-clamp-3 text-sm font-bold leading-snug sm:mt-4 sm:text-base">{course.course_name}</h3>
-        {course.departmentName && <p className="mt-2 truncate text-xs font-medium text-muted-foreground">{course.departmentName}</p>}
+        {course.departmentName && <p className="mt-2 flex items-center gap-1.5 truncate text-xs font-medium text-muted-foreground"><GraduationCap className="h-3.5 w-3.5 shrink-0" />{course.departmentName}</p>}
       </div>
       <div className="relative mt-4 flex items-center justify-between gap-2 sm:mt-5 sm:gap-3">
         <span className="flex items-center gap-1.5 rounded-full bg-background/80 px-2.5 py-1.5 text-xs font-semibold text-muted-foreground">

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BookOpen, FileText, GraduationCap } from "lucide-react";
+import { ArrowRight, BookOpen, FileText, GraduationCap, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const tones = [
@@ -46,7 +46,8 @@ export function DepartmentCard({
             {department.short_name}
           </span>
         </div>
-        <h3 className="mt-4 line-clamp-3 text-sm font-bold leading-snug sm:mt-5 sm:text-lg">{department.name}</h3>
+        <h3 className="mt-4 line-clamp-2 text-sm font-bold leading-snug sm:mt-5 sm:text-lg">{department.name}</h3>
+        {department.resourceCount > 0 && <p className="mt-2 flex items-center gap-1 text-xs font-semibold text-primary"><Sparkles className="h-3.5 w-3.5" />Active resource community</p>}
       </div>
       <div className="relative mt-4 flex items-end justify-between gap-2 sm:mt-5 sm:gap-3">
         <div className="flex flex-wrap gap-2 text-xs font-medium text-muted-foreground">

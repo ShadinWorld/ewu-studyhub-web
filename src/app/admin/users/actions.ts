@@ -27,6 +27,9 @@ export async function updateUserRole(targetUserId: string, newRole: string) {
   if (!callerProfile || !["admin", "super_admin"].includes(callerProfile.role)) {
     return { error: "Not authorized" };
   }
+  if (targetUserId === user.id && callerProfile.role === "super_admin" && newRole !== "super_admin") {
+    return { error: "A super admin cannot remove their own super admin access from this screen." };
+  }
 
   // Use the admin (service-role) client for the actual write: RLS intentionally
   // only lets a profile update itself, so cross-user role changes must go

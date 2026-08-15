@@ -82,7 +82,6 @@ export async function Navbar() {
               <UserMenu
                 fullName={profile?.full_name ?? null}
                 email={user.email ?? null}
-                phoneNumber={profile?.phone_number ?? null}
                 avatarUrl={profile?.avatar_url ?? null}
                 role={profile?.role ?? "student"}
                 isSeller={Boolean(profile?.is_seller || profile?.role === "seller")}
