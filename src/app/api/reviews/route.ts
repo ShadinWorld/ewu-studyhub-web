@@ -9,7 +9,7 @@ export async function POST(request: Request) {
     const rating = Number(formData.get("rating"));
     const comment = String(formData.get("comment") ?? "").trim();
 
-    if (!fileId || !Number.isInteger(rating) || rating < 1 || rating > 5 || comment.length > 2000) {
+    if (!fileId || !Number.isInteger(rating) || rating < 1 || rating > 5 || comment.length > 500) {
       return NextResponse.redirect(new URL(fileId ? `/files/${fileId}` : "/", request.url));
     }
 

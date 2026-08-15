@@ -1,12 +1,12 @@
+import type { FileVisibility } from "@/types/database.types";
 import { createAdminClient } from "@/lib/supabase/server";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatBDT } from "@/lib/utils";
-import type { FileVisibility } from "@/types/database.types";
 
-const RESOURCE_STATUSES: NonNullable<FileVisibility>[] = [
+const VISIBILITY_STATUSES: FileVisibility[] = [
   "draft",
   "published",
   "archived",
@@ -35,9 +35,8 @@ export default async function AdminResourcesPage({
     query = query.or(`title.ilike.%${q}%,description.ilike.%${q}%`);
   }
 
-  if (RESOURCE_STATUSES.includes(status as NonNullable<FileVisibility>)) {
-    const visibility = status as NonNullable<FileVisibility>;
-    query = query.eq("visibility", visibility);
+  if (VISIBILITY_STATUSES.includes(status as FileVisibility)) {
+    query = query.eq("visibility", status as FileVisibility);
   }
 
   const { data: files } = await query;
@@ -54,16 +53,31 @@ export default async function AdminResourcesPage({
     <div className="space-y-6">
       <div>
         <p className="text-sm font-semibold text-primary">Catalog</p>
-        <h2 className="text-2xl font-bold">Resource management</h2>
+
+        <h2 className="text-2xl font-bold">
+          Resource management
+        </h2>
+
         <p className="mt-1 text-sm text-muted-foreground">
           Search the catalog and inspect any resource, regardless of visibility.
         </p>
       </div>
 
       <div className="grid grid-cols-3 gap-3">
-        <Mini label="Draft" value={String(counts.draft)} />
-        <Mini label="Published" value={String(counts.published)} />
-        <Mini label="Rejected" value={String(counts.rejected)} />
+        <Mini
+          label="Draft"
+          value={String(counts.draft)}
+        />
+
+        <Mini
+          label="Published"
+          value={String(counts.published)}
+        />
+
+        <Mini
+          label="Rejected"
+          value={String(counts.rejected)}
+        />
       </div>
 
       <form className="grid gap-2 sm:grid-cols-[1fr_180px_auto]">
@@ -85,7 +99,9 @@ export default async function AdminResourcesPage({
           <option value="rejected">Rejected</option>
         </select>
 
-        <Button type="submit">Filter</Button>
+        <Button type="submit">
+          Filter
+        </Button>
       </form>
 
       <div className="space-y-3">
@@ -93,7 +109,9 @@ export default async function AdminResourcesPage({
           <Card key={file.id}>
             <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
-                <p className="font-semibold">{file.title}</p>
+                <p className="font-semibold">
+                  {file.title}
+                </p>
 
                 <p className="mt-1 text-xs text-muted-foreground">
                   {file.seller?.full_name || "Seller"} ·{" "}
@@ -101,7 +119,10 @@ export default async function AdminResourcesPage({
                 </p>
 
                 <div className="mt-2 flex flex-wrap gap-2">
-                  <Badge variant="outline" className="capitalize">
+                  <Badge
+                    variant="outline"
+                    className="capitalize"
+                  >
                     {file.visibility}
                   </Badge>
 
@@ -114,7 +135,11 @@ export default async function AdminResourcesPage({
               </div>
 
               <div className="grid w-full shrink-0 grid-cols-2 gap-2 sm:w-auto">
-                <Button size="sm" variant="secondary" asChild>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  asChild
+                >
                   <a
                     href={`/api/files/${file.id}/admin-view`}
                     target="_blank"
@@ -124,7 +149,11 @@ export default async function AdminResourcesPage({
                   </a>
                 </Button>
 
-                <Button size="sm" variant="outline" asChild>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  asChild
+                >
                   <a
                     href={`/api/files/${file.id}/admin-download`}
                     target="_blank"
@@ -160,8 +189,13 @@ function Mini({
   return (
     <Card>
       <CardContent className="p-4">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="mt-1 text-2xl font-bold">{value}</p>
+        <p className="text-xs text-muted-foreground">
+          {label}
+        </p>
+
+        <p className="mt-1 text-2xl font-bold">
+          {value}
+        </p>
       </CardContent>
     </Card>
   );

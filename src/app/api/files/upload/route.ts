@@ -123,22 +123,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Failed to store file. Please try again." }, { status: 500 });
   }
 
-  // ---- PDF page count + partial preview (paid files only) ----
-  // We extract the first ceil(20%) of pages (min 1) into a separate PDF and
-  // store it in the PUBLIC preview bucket, so buyers can see a real sample
-  // before paying without ever getting the full document. Rendering those
-  // remaining pages as blurred images is a further step that needs a PDF
-  // rasterizer (e.g. pdfjs-dist + canvas) — not done here; see docs/PHASES.md.
+  // ---- PDF/image preview + thumbnail ----
+  // PDFs get a real public preview PDF (all pages for free resources, a safe
+  // sample for paid resources). Free images are copied to the public preview
+  // bucket so their real image can be used as the thumbnail and preview.
   let pageCount: number | null = null;
   let previewStoragePath: string | null = null;
+  let thumbnailUrl: string | null = null;
 
   if (mimeToKind(file.type) === "pdf") {
     try {
       const pdfDoc = await PDFDocument.load(bytes, { ignoreEncryption: true });
       pageCount = pdfDoc.getPageCount();
 
-      if (data.pricingType === "paid" && pageCount > 1) {
-        const previewPageCount = Math.max(1, Math.min(pageCount - 1, Math.ceil(pageCount * 0.2)));
+      if (pageCount > 0) {
+        const previewPageCount = data.pricingType === "free"
+          ? pageCount
+          : Math.max(1, Math.min(pageCount - 1, Math.ceil(pageCount * 0.2)));
+
         const previewDoc = await PDFDocument.create();
         const copiedPages = await previewDoc.copyPages(
           pdfDoc,
@@ -148,13 +150,25 @@ export async function POST(request: Request) {
         const previewBytes = await previewDoc.save();
 
         previewStoragePath = `${user.id}/${fileHash}-preview.pdf`;
-        await supabase.storage
+        const { error: previewUploadError } = await supabase.storage
           .from("files-preview")
           .upload(previewStoragePath, previewBytes, { contentType: "application/pdf", upsert: false });
+
+        if (!previewUploadError) {
+          thumbnailUrl = supabase.storage.from("files-preview").getPublicUrl(previewStoragePath).data.publicUrl;
+        }
       }
     } catch {
-      // Corrupt/unreadable PDF — not fatal, just skip page count/preview.
-      // The duplicate/mime checks above already guard against most junk.
+      // Corrupt/unreadable PDF: keep the original upload, but skip preview data.
+    }
+  } else if (mimeToKind(file.type) === "image" && data.pricingType === "free") {
+    previewStoragePath = `${user.id}/${fileHash}-preview.${ext}`;
+    const { error: imagePreviewError } = await supabase.storage
+      .from("files-preview")
+      .upload(previewStoragePath, bytes, { contentType: file.type, upsert: false });
+
+    if (!imagePreviewError) {
+      thumbnailUrl = supabase.storage.from("files-preview").getPublicUrl(previewStoragePath).data.publicUrl;
     }
   }
 
@@ -219,6 +233,7 @@ export async function POST(request: Request) {
       price_cents: data.pricingType === "paid" ? data.priceCents : 0,
       storage_path: storagePath,
       preview_storage_path: previewStoragePath,
+      thumbnail_url: thumbnailUrl,
       page_count: pageCount,
       file_size_bytes: file.size,
       file_hash: fileHash,
