@@ -21,7 +21,7 @@ export default async function AdminPayoutsPage() {
   return <div className="space-y-6">
     <div>
       <h2 className="text-2xl font-bold">Seller Payouts</h2>
-      <p className="text-muted-foreground">Verify the seller, bKash number and amount, then mark the manual payment completed.</p>
+      <p className="text-muted-foreground">Payouts are created automatically after an approved sale. Verify the seller, bKash number and amount, then approve the manual payment.</p>
     </div>
     <div className="grid grid-cols-3 gap-3">
       <Mini label="Pending" value={String(pending.length)} />
@@ -47,7 +47,7 @@ export default async function AdminPayoutsPage() {
               </div>
             </div>
             {isPending && <div className="flex flex-col gap-2 sm:flex-row lg:w-[420px]">
-              <form action={completePayout} className="shrink-0"><input type="hidden" name="payout_id" value={p.id} /><Button type="submit">Mark paid</Button></form>
+              <form action={completePayout} className="shrink-0"><input type="hidden" name="payout_id" value={p.id} /><Button type="submit">Approve & Pay</Button></form>
               <form action={rejectPayout} className="flex flex-1 gap-2"><input type="hidden" name="payout_id" value={p.id} /><Input name="reason" placeholder="Reason (optional)" /><Button type="submit" variant="outline">Reject</Button></form>
             </div>}
           </div>

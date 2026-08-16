@@ -91,6 +91,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.errors[0]?.message ?? "Invalid input" }, { status: 400 });
   }
   const data = parsed.data;
+  const tableOfContents = String(formData.get("tableOfContents") ?? "").trim().slice(0, 3000);
   if (data.pricingType === "paid" && data.priceCents < 1000) {
     return NextResponse.json({ error: "Paid resources must be priced at least ৳10." }, { status: 400 });
   }
@@ -224,6 +225,7 @@ export async function POST(request: Request) {
       course_id: data.courseId ?? null,
       title: data.title,
       description: data.description ?? null,
+      table_of_contents: tableOfContents || null,
       category: data.category,
       file_kind: mimeToKind(file.type),
       language: data.language,

@@ -13,6 +13,7 @@ import {
   Store,
   Users,
   Wallet,
+  HardDrive,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,6 +43,7 @@ export default async function AdminOverviewPage() {
     { data: purchases },
     { data: recentLogs },
     { data: dailyStats },
+    { data: storageUsage },
   ] = await Promise.all([
     supabase.from("files").select("id", { count: "exact", head: true }).eq("visibility", "draft"),
     supabase.from("profiles").select("id", { count: "exact", head: true }),
@@ -55,10 +57,13 @@ export default async function AdminOverviewPage() {
     supabase.from("purchases").select("amount_cents, commission_cents, created_at").eq("status", "completed"),
     supabase.from("audit_logs").select("id, action, target_table, target_id, metadata, created_at, actor:profiles!audit_logs_actor_id_fkey(full_name)").order("created_at", { ascending: false }).limit(8),
     supabase.from("platform_daily_stats").select("date,new_users,active_users,total_sales,total_revenue_cents,total_commission_cents").order("date", { ascending: false }).limit(14),
+    supabase.rpc("admin_storage_usage"),
   ]);
 
   const totalRevenue = (purchases ?? []).reduce((sum, row) => sum + Number(row.amount_cents ?? 0), 0);
   const totalCommission = (purchases ?? []).reduce((sum, row) => sum + Number(row.commission_cents ?? 0), 0);
+  const totalStorage = (storageUsage ?? []).reduce((sum, row) => sum + Number(row.total_bytes ?? 0), 0);
+  const formatStorage = (bytes: number) => { if (!bytes) return "0 B"; const u=["B","KB","MB","GB","TB"]; const i=Math.min(Math.floor(Math.log(bytes)/Math.log(1024)),u.length-1); return `${(bytes/1024**i).toFixed(i===0?0:1)} ${u[i]}`; };
   const totalPending = (pendingUploads ?? 0) + (sellerRequests ?? 0) + (paymentRequests ?? 0) + (payoutRequests ?? 0) + (reportCount ?? 0) + (supportCount ?? 0);
 
   const computedDays = Array.from({ length: 7 }, (_, index) => {
@@ -99,7 +104,7 @@ export default async function AdminOverviewPage() {
         </div>
       </section>
 
-      <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+      <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-7">
         <StatCard label="Users" value={String(userCount ?? 0)} icon={<Users className="h-4 w-4" />} />
         <StatCard label="Sellers" value={String(sellerCount ?? 0)} icon={<Store className="h-4 w-4" />} />
         <StatCard label="Resources" value={String(publishedResources ?? 0)} icon={<Files className="h-4 w-4" />} />
@@ -149,6 +154,7 @@ export default async function AdminOverviewPage() {
         <QuickLink href="/admin/resources" icon={<BookOpen className="h-4 w-4" />} title="Resource control" text="Review and manage the catalog" />
         <QuickLink href="/admin/settings" icon={<ShieldCheck className="h-4 w-4" />} title="Security & payments" text="bKash, commission and admin controls" />
         <QuickLink href="/admin/search" icon={<Search className="h-4 w-4" />} title="Global search" text="Find users, courses and resources" />
+        <QuickLink href="/admin/storage" icon={<HardDrive className="h-4 w-4" />} title="Storage" text="Monitor usage and clean orphaned files" />
       </section>
     </div>
   );

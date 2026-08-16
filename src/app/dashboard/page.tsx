@@ -59,6 +59,7 @@ export default async function DashboardPage() {
           <Button asChild variant="outline" className="h-12"><Link href="/purchases">My Purchases</Link></Button>
           <Button asChild variant="outline" className="h-12"><Link href="/saved">Saved</Link></Button>
           <Button asChild variant="outline" className="h-12"><Link href="/notifications">Notifications</Link></Button>
+          <Button asChild variant="outline" className="h-12"><Link href="/tools">Student Tools</Link></Button>
         </div>
 
         <div className="mt-4 rounded-xl border bg-muted/20 p-4">
@@ -136,8 +137,9 @@ export default async function DashboardPage() {
         <Button asChild variant="outline" className="h-12"><Link href="/dashboard/payment-settings">Payment settings</Link></Button>
         <Button asChild variant="outline" className="h-12"><Link href="/purchases">Purchases</Link></Button>
         <Button asChild variant="outline" className="h-12"><Link href="/notifications">Notifications</Link></Button>
+          <Button asChild variant="outline" className="h-12"><Link href="/tools">Student Tools</Link></Button>
       </div>
-      {pendingPayoutCount ? <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm font-medium text-amber-800 dark:text-amber-200">{pendingPayoutCount} payout request{pendingPayoutCount === 1 ? "" : "s"} is waiting for admin review.</div> : null}
+      {pendingPayoutCount ? <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm font-medium text-amber-800 dark:text-amber-200">{pendingPayoutCount} automatic payout{pendingPayoutCount === 1 ? " is" : "s are"} waiting for admin payment.</div> : null}
 
       <div className="mt-10">
         <h2 className="mb-4 text-xl font-semibold">Your uploads</h2>

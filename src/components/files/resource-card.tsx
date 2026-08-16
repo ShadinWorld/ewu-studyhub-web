@@ -138,7 +138,7 @@ export function ResourceCard({ file }: { file: ResourceCardData }) {
   );
 }
 
-export function ResourceCardGrid({ files }: { files: ResourceCardData[] }) {
+export function ResourceCardGrid({ files, horizontalMobile = false }: { files: ResourceCardData[]; horizontalMobile?: boolean }) {
   if (files.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed bg-muted/20 px-6 py-16 text-center">
@@ -149,8 +149,8 @@ export function ResourceCardGrid({ files }: { files: ResourceCardData[] }) {
     );
   }
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
-      {files.map((file) => <ResourceCard key={file.id} file={file} />)}
+    <div className={horizontalMobile ? "flex snap-x gap-3 overflow-x-auto pb-2 sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:pb-0 lg:grid-cols-3 xl:grid-cols-4" : "grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4"}>
+      {files.map((file) => <div key={file.id} className={horizontalMobile ? "w-[78vw] max-w-[290px] shrink-0 snap-start sm:w-auto sm:max-w-none" : "min-w-0"}><ResourceCard file={file} /></div>)}
     </div>
   );
 }

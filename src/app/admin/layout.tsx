@@ -1,15 +1,16 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Bell, Menu, Search, ShieldCheck } from "lucide-react";
+import { Bell, Search, ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { Button } from "@/components/ui/button";
+import { MobileAdminMenu } from "@/components/admin/mobile-admin-menu";
 
 const links = [
   ["/admin", "Overview"], ["/admin/uploads", "Pending Uploads"], ["/admin/sellers", "Seller Requests"],
   ["/admin/payments", "Payments"], ["/admin/payouts", "Payouts"], ["/admin/reports", "Reports"],
   ["/admin/support", "Feedback & Support"], ["/admin/faqs", "FAQs"], ["/admin/users", "Users"],
-  ["/admin/resources", "Resources"], ["/admin/commission", "Commission"], ["/admin/settings", "Settings"],
+  ["/admin/resources", "Resources"], ["/admin/academic-tools", "Academic Tools"], ["/admin/storage", "Storage"], ["/admin/commission", "Commission"], ["/admin/settings", "Settings"],
 ] as const;
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -40,7 +41,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <div className="min-w-0 lg:pl-64">
         <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b bg-background/90 px-3 backdrop-blur-xl sm:h-16 sm:px-6">
           <div className="flex min-w-0 items-center gap-2">
-            <details className="relative lg:hidden"><summary className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-lg border"><Menu className="h-5 w-5" /></summary><div className="absolute left-0 top-11 z-50 w-64 rounded-2xl border bg-background p-2 shadow-2xl">{links.map(([href, label]) => <Link key={href} href={href} className="block rounded-xl px-3 py-2.5 text-sm font-medium hover:bg-accent">{label}</Link>)}</div></details>
+            <MobileAdminMenu />
             <h1 className="truncate font-semibold">Admin Panel</h1>
           </div>
           <div className="flex items-center gap-2">

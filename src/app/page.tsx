@@ -9,6 +9,13 @@ import {
   ShoppingBag,
   Bookmark,
   LayoutDashboard,
+  Store,
+  Upload,
+  CalendarDays,
+  ClipboardCheck,
+  FileClock,
+  FileQuestion,
+  Megaphone,
 } from "lucide-react";
 
 import { Navbar } from "@/components/layout/navbar";
@@ -129,7 +136,7 @@ async function TrendingFiles() {
     purchaseStatus: purchaseStatusByFileId.get(file.id) ?? null,
   }));
 
-  return <ResourceCardGrid files={resources} />;
+  return <ResourceCardGrid files={resources} horizontalMobile />;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -209,13 +216,15 @@ async function DepartmentsPreview() {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+    <div className="flex snap-x gap-3 overflow-x-auto pb-2 sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:pb-0 lg:grid-cols-3">
       {topDepartments.map((department, index) => (
+        <div key={department.id} className="w-[78vw] max-w-[310px] shrink-0 snap-start sm:w-auto sm:max-w-none">
         <DepartmentCard
           key={department.id}
           department={department}
           index={index}
         />
+        </div>
       ))}
     </div>
   );
@@ -300,8 +309,9 @@ async function PopularCourses() {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="flex snap-x gap-3 overflow-x-auto pb-2 sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:pb-0 lg:grid-cols-4">
       {orderedCourses.map((course, index) => (
+        <div key={course.id} className="w-[78vw] max-w-[310px] shrink-0 snap-start sm:w-auto sm:max-w-none">
         <CourseCard
           key={course.id}
           index={index}
@@ -313,6 +323,7 @@ async function PopularCourses() {
             resourceCount: counts.get(course.id) ?? 0,
           }}
         />
+        </div>
       ))}
     </div>
   );
@@ -321,6 +332,35 @@ async function PopularCourses() {
 /* -------------------------------------------------------------------------- */
 /* Resource Categories                                                        */
 /* -------------------------------------------------------------------------- */
+
+/* -------------------------------------------------------------------------- */
+/* Homepage announcements + tools                                             */
+/* -------------------------------------------------------------------------- */
+
+async function HomepageAnnouncements() {
+  const supabase = createClient();
+  const now = Date.now();
+  const { data: rows } = await supabase
+    .from("announcements")
+    .select("id,title,body,badge,cta_label,cta_link,image_url,starts_at,ends_at,priority,created_at")
+    .eq("is_active", true)
+    .order("priority", { ascending: false })
+    .order("created_at", { ascending: false })
+    .limit(10);
+  const data = (rows ?? []).filter(a => (!a.starts_at || new Date(a.starts_at).getTime() <= now) && (!a.ends_at || new Date(a.ends_at).getTime() >= now)).slice(0,3);
+  if (!data.length) return null;
+  return <section className="container pt-6 sm:pt-8"><div className="mb-4 flex items-end justify-between gap-3"><div><p className="text-sm font-semibold text-primary">Important updates</p><h2 className="mt-1 text-xl font-bold sm:text-2xl">What's happening on StudyHub</h2></div><Megaphone className="h-5 w-5 text-primary"/></div><div className="flex snap-x gap-3 overflow-x-auto pb-2">{data.map(a=><article key={a.id} className="w-[88vw] max-w-xl shrink-0 snap-start rounded-2xl border bg-card p-5 shadow-sm sm:w-[min(560px,70vw)]"><div className="flex items-start justify-between gap-3">{a.badge&&<span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-primary">{a.badge}</span>}<Megaphone className="h-4 w-4 text-muted-foreground"/></div><h3 className="mt-3 text-lg font-bold">{a.title}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{a.body}</p>{a.cta_link&&a.cta_label&&<Link href={a.cta_link} className="mt-4 inline-flex text-sm font-semibold text-primary hover:underline">{a.cta_label}<ArrowRight className="ml-1 h-4 w-4"/></Link>}</article>)}</div></section>;
+}
+
+function StudentToolsPreview() {
+  const tools = [
+    ["/tools/academic-calendar", "Academic Calendar", "Current semester dates", CalendarDays],
+    ["/tools/final-exams", "Final Exam Schedule", "Term-wise exam PDF", ClipboardCheck],
+    ["/tools/deadlines", "Deadline Tracker", "Never miss an important date", FileClock],
+    ["/tools/resource-request", "Request a Resource", "Ask for missing materials", FileQuestion],
+  ] as const;
+  return <section className="container pt-8 sm:pt-10"><div className="mb-4 flex items-end justify-between gap-3"><div><p className="text-sm font-semibold text-primary">Student tools</p><h2 className="mt-1 text-xl font-bold sm:text-2xl">More than a resource marketplace</h2><p className="mt-1 text-sm text-muted-foreground">Useful tools for everyday EWU student life.</p></div><Link href="/tools" className="hidden text-sm font-semibold text-primary sm:inline-flex">View all <ArrowRight className="ml-1 h-4 w-4"/></Link></div><div className="flex snap-x gap-3 overflow-x-auto pb-2">{tools.map(([href,title,text,Icon])=><Link key={href} href={href} className="group w-[72vw] max-w-[250px] shrink-0 snap-start rounded-2xl border bg-card p-4 transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-md"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon className="h-5 w-5"/></div><p className="mt-3 font-semibold group-hover:text-primary">{title}</p><p className="mt-1 text-xs leading-5 text-muted-foreground">{text}</p></Link>)}</div></section>;
+}
 
 /* -------------------------------------------------------------------------- */
 /* Homepage                                                                   */
@@ -334,6 +374,8 @@ async function PersonalizedShortcuts() {
   const name = profile?.full_name || user.user_metadata?.full_name || "there";
   const firstName = name.split(/\s+/)[0] || "there";
   const accountReady = Boolean(profile?.phone_number);
+  const isSeller = profile?.role === "seller";
+  const isAdmin = profile?.role === "admin" || profile?.role === "super_admin";
   return (
     <section className="container relative z-10 -mt-5 pb-2">
       <div className="overflow-hidden rounded-3xl border bg-card/95 shadow-lg backdrop-blur">
@@ -346,12 +388,21 @@ async function PersonalizedShortcuts() {
           <div className="grid grid-cols-2 gap-2 sm:flex">
             <Button asChild variant="outline" className="h-10"><Link href="/purchases"><ShoppingBag className="h-4 w-4" />Purchases</Link></Button>
             <Button asChild variant="outline" className="h-10"><Link href="/saved"><Bookmark className="h-4 w-4" />Saved</Link></Button>
-            <Button asChild className="h-10"><Link href="/dashboard"><LayoutDashboard className="h-4 w-4" />Dashboard</Link></Button>
+            <Button asChild className="h-10"><Link href={isAdmin ? "/admin" : "/dashboard"}><LayoutDashboard className="h-4 w-4" />{isAdmin ? "Admin" : "Dashboard"}</Link></Button>
+            {!isSeller && !isAdmin && <Button asChild variant="outline" className="h-10"><Link href="/dashboard/become-seller"><Store className="h-4 w-4" />Become a seller</Link></Button>}
+            {isSeller && <Button asChild variant="outline" className="h-10"><Link href="/dashboard/upload"><Upload className="h-4 w-4" />Upload</Link></Button>}
           </div>
         </div>
       </div>
     </section>
   );
+}
+
+async function LoggedOutHeroCTA() {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) return null;
+  return <Button asChild size="lg" className="h-11"><Link href="/login">Login / Get started</Link></Button>;
 }
 
 export default function HomePage() {
@@ -423,12 +474,16 @@ export default function HomePage() {
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </Button>
+                <LoggedOutHeroCTA />
               </div>
             </div>
           </div>
         </section>
 
         <PersonalizedShortcuts />
+
+        <HomepageAnnouncements />
+        <StudentToolsPreview />
 
         {/* ------------------------------------------------------------------ */}
         {/* Recently Viewed                                                     */}

@@ -133,6 +133,12 @@ export function UploadForm({
       </div>
 
       <div className="space-y-2">
+        <Label htmlFor="tableOfContents">What’s inside / Table of contents <span className="text-muted-foreground">(optional)</span></Label>
+        <textarea id="tableOfContents" name="tableOfContents" maxLength={3000} rows={6} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" placeholder={"Example:\n1. Introduction\n2. Database Fundamentals\n3. ER Model\n4. Normalization\n5. SQL Queries"} />
+        <p className="text-xs text-muted-foreground">Add the main topics, chapters or questions covered so buyers can quickly understand what they are getting.</p>
+      </div>
+
+      <div className="space-y-2">
         <Label htmlFor="category">Category</Label>
         <select id="category" name="category" required className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
           {CATEGORIES.map(([value, label]) => (

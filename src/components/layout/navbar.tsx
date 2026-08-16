@@ -47,6 +47,7 @@ export async function Navbar() {
           <Link href="/departments" className="text-muted-foreground transition-colors hover:text-foreground">Departments</Link>
           <Link href="/courses" className="text-muted-foreground transition-colors hover:text-foreground">Courses</Link>
           <Link href="/trending" className="text-muted-foreground transition-colors hover:text-foreground">Trending</Link>
+          <Link href="/tools" className="text-muted-foreground transition-colors hover:text-foreground">Tools</Link>
         </nav>
 
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">

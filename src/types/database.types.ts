@@ -34,7 +34,8 @@ export type NotificationType =
   | "seller_rejected"
   | "purchase_pending"
   | "purchase_approved"
-  | "purchase_rejected" | "payout_requested" | "payment_submitted";
+  | "purchase_rejected" | "payout_requested" | "payment_submitted"
+  | "admin_message" | "announcement" | "deadline" | "resource_request_update";
 
 // ----------------------------------------------------------------------------
 // ROW TYPES - one per table, in schema order
@@ -93,6 +94,8 @@ export interface Profile {
   seller_bio: string | null;
   seller_bkash_number: string | null;
   phone_number: string | null; // normalized Bangladesh number: +8801XXXXXXXXX
+  account_status: "active" | "restricted" | "suspended" | "banned";
+  name_changed_at: string | null;
   wallet_balance_cents: number;
   followers_count: number;
   following_count: number;
@@ -147,6 +150,7 @@ export interface FileResource {
   created_at: string;
   updated_at: string;
   published_at: string | null;
+  table_of_contents: string | null;
 }
 
 export interface FileTag {
@@ -241,7 +245,19 @@ export interface PlatformPaymentSettings {
   id: boolean;
   bkash_number: string;
   default_commission_percent: number;
+  commission_type: "percentage" | "fixed_amount";
+  default_commission_amount_cents: number;
   updated_at: string;
+}
+
+export interface AdminMessage {
+  id: string;
+  user_id: string;
+  admin_id: string;
+  subject: string;
+  body: string;
+  read_at: string | null;
+  created_at: string;
 }
 
 export interface DownloadWatermark {
@@ -346,6 +362,64 @@ export interface SupportTicket {
   updated_at: string;
 }
 
+
+export interface AcademicDocument {
+  id: string;
+  document_type: "academic_calendar" | "final_exam_schedule";
+  term: "spring" | "summer" | "fall";
+  year: number;
+  title: string;
+  storage_path: string;
+  file_size_bytes: number | null;
+  uploaded_by: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface Deadline {
+  id: string;
+  title: string;
+  description: string | null;
+  category: string;
+  term: "spring" | "summer" | "fall" | null;
+  year: number | null;
+  due_at: string;
+  link: string | null;
+  is_active: boolean;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ResourceRequest {
+  id: string;
+  user_id: string;
+  course_id: string | null;
+  title: string;
+  details: string | null;
+  status: "open" | "in_progress" | "fulfilled" | "closed";
+  admin_note: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Announcement {
+  id: string;
+  title: string;
+  body: string;
+  badge: string | null;
+  cta_label: string | null;
+  cta_link: string | null;
+  image_url: string | null;
+  starts_at: string | null;
+  ends_at: string | null;
+  is_active: boolean;
+  priority: number;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Notification {
   id: string;
   profile_id: string;
@@ -437,6 +511,11 @@ export interface Database {
       faqs: Table<Faq>;
       file_daily_stats: Table<FileDailyStat>;
       platform_daily_stats: Table<PlatformDailyStat>;
+      admin_messages: Table<AdminMessage>;
+      academic_documents: Table<AcademicDocument>;
+      deadlines: Table<Deadline>;
+      resource_requests: Table<ResourceRequest>;
+      announcements: Table<Announcement>;
     };
     Views: Record<string, never>;
     Functions: {
@@ -478,9 +557,13 @@ export interface Database {
         Returns: void;
       };
       update_platform_payment_settings: {
-        Args: { p_bkash_number: string; p_default_commission_percent: number } & Record<string, unknown>;
+        Args: { p_bkash_number: string; p_commission_type: "percentage" | "fixed_amount"; p_default_commission_percent: number; p_default_commission_amount_cents: number } & Record<string, unknown>;
         Returns: void;
       };
+      change_profile_name: { Args: { p_full_name: string } & Record<string, unknown>; Returns: void };
+      update_profile_avatar: { Args: { p_avatar_url: string } & Record<string, unknown>; Returns: void };
+      admin_storage_usage: { Args: Record<string, unknown>; Returns: { bucket_id: string; object_count: number; total_bytes: number }[] };
+      admin_storage_orphans: { Args: { p_limit?: number } & Record<string, unknown>; Returns: { bucket_id: string; object_name: string; object_size: number }[] };
       save_seller_bkash_number: {
         Args: { p_bkash_number: string } & Record<string, unknown>;
         Returns: void;

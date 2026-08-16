@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatBDT } from "@/lib/utils";
+import type { FileVisibility } from "@/types/database.types";
 
 export default async function AdminResourcesPage({ searchParams }: { searchParams: { q?: string; status?: string } }) {
   const q = String(searchParams.q ?? "").trim();
@@ -11,10 +12,10 @@ export default async function AdminResourcesPage({ searchParams }: { searchParam
   const admin = createAdminClient();
   let query = admin.from("files").select("id,title,category,pricing_type,price_cents,visibility,created_at,seller:profiles!files_seller_id_fkey(full_name)").order("created_at", { ascending: false }).limit(100);
   if (q) query = query.or(`title.ilike.%${q}%,description.ilike.%${q}%`);
-if (["draft", "published", "archived", "rejected"].includes(status)) {
-  const visibility = status as "draft" | "published" | "archived" | "rejected";
-  query = query.eq("visibility", visibility);
-}
+  if (["draft", "published", "archived", "rejected"].includes(status)) {
+    const visibility = status as FileVisibility;
+    query = query.eq("visibility", visibility);
+  }
   const { data: files } = await query;
   const rows = files ?? [];
   const counts = { draft: rows.filter((f) => f.visibility === "draft").length, published: rows.filter((f) => f.visibility === "published").length, rejected: rows.filter((f) => f.visibility === "rejected").length };
