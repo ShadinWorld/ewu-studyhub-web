@@ -2,14 +2,19 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { headers } from "next/headers";
 
 export type FormState = { error?: string; success?: string } | undefined;
 
 export async function signInWithGoogleAction(_prevState: FormState, formData: FormData): Promise<FormState> {
   const supabase = createClient();
-  const next = String(formData.get("next") || "/");
-  const safeNext = "/";
-  const origin = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const requestedNext = String(formData.get("next") || "/");
+  const safeNext = requestedNext.startsWith("/") && !requestedNext.startsWith("//") ? requestedNext : "/";
+  const h = headers();
+  const forwardedHost = h.get("x-forwarded-host") || h.get("host");
+  const forwardedProto = h.get("x-forwarded-proto") || "https";
+  const derivedOrigin = forwardedHost ? `${forwardedProto}://${forwardedHost}` : null;
+  const origin = process.env.NEXT_PUBLIC_SITE_URL || derivedOrigin || "http://localhost:3000";
   const switchEmail = String(formData.get("switchEmail") || "").trim().toLowerCase();
 
   const { data, error } = await supabase.auth.signInWithOAuth({

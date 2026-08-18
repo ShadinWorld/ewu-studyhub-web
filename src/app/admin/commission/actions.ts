@@ -1,4 +1,5 @@
 "use server";
+import { redirect } from "next/navigation";
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
@@ -15,4 +16,5 @@ export async function updateResourceCommission(formData: FormData) {
   if (error) throw new Error(error.message);
   revalidatePath("/admin/commission");
   revalidatePath(`/files/${fileId}`);
+  redirect("/admin/commission?saved=Commission%20updated");
 }

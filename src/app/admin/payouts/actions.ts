@@ -1,4 +1,5 @@
 "use server";
+import { redirect } from "next/navigation";
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
@@ -22,6 +23,7 @@ export async function completePayout(formData: FormData) {
   revalidatePath("/admin");
   revalidatePath("/dashboard/payment-settings");
   revalidatePath("/dashboard");
+  redirect("/admin/payouts?saved=Payout%20paid");
 }
 
 export async function rejectPayout(formData: FormData) {
@@ -35,4 +37,5 @@ export async function rejectPayout(formData: FormData) {
   revalidatePath("/admin/payouts");
   revalidatePath("/admin");
   revalidatePath("/dashboard/payment-settings");
+  redirect("/admin/payouts?saved=Payout%20rejected");
 }

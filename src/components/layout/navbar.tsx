@@ -17,18 +17,20 @@ export async function Navbar() {
   let profile: { full_name: string | null; avatar_url: string | null; role: UserRole; is_seller: boolean; phone_number: string | null } | null = null;
 
   if (user) {
-    const { data } = await supabase
-      .from("profiles")
-      .select("full_name, avatar_url, role, is_seller, phone_number")
-      .eq("id", user.id)
-      .single();
+    const [{ data }, { count }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("full_name, avatar_url, role, is_seller, phone_number")
+        .eq("id", user.id)
+        .single(),
+      supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("profile_id", user.id)
+        .eq("is_read", false),
+    ]);
     profile = data;
     isAdmin = Boolean(profile && ["admin", "super_admin"].includes(profile.role));
-    const { count } = await supabase
-      .from("notifications")
-      .select("id", { count: "exact", head: true })
-      .eq("profile_id", user.id)
-      .eq("is_read", false);
     unreadNotificationCount = count ?? 0;
   }
 

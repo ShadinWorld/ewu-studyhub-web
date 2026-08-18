@@ -370,6 +370,7 @@ export interface AcademicDocument {
   year: number;
   title: string;
   storage_path: string;
+  mime_type: "application/pdf" | "image/jpeg" | "image/png" | "image/webp" | "image/gif";
   file_size_bytes: number | null;
   uploaded_by: string;
   is_active: boolean;

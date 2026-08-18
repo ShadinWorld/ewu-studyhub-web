@@ -1,4 +1,5 @@
 "use server";
+import { redirect } from "next/navigation";
 
 import { revalidatePath } from "next/cache";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
@@ -18,4 +19,5 @@ export async function deleteStorageObject(formData: FormData) {
   if (error) throw new Error(error.message);
   await admin.from("audit_logs").insert({ actor_id: user.id, action: "storage.object_delete", target_table: "storage.objects", metadata: { bucket_id: bucket, object_name: name } });
   revalidatePath("/admin/storage");
+  redirect("/admin/storage?saved=Storage%20object%20removed");
 }

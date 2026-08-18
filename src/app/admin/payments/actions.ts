@@ -1,4 +1,5 @@
 "use server";
+import { redirect } from "next/navigation";
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
@@ -14,6 +15,7 @@ export async function approvePayment(formData: FormData) {
   revalidatePath("/admin/payments");
   revalidatePath("/admin");
   revalidatePath("/purchases");
+  redirect("/admin/payments?saved=Payment%20updated");
 }
 
 export async function rejectPayment(formData: FormData) {
@@ -27,4 +29,5 @@ export async function rejectPayment(formData: FormData) {
   await supabase.from("audit_logs").insert({ actor_id: user.id, action: "payment.reject", target_table: "purchases", target_id: purchaseId, metadata: { reason } });
   revalidatePath("/admin/payments");
   revalidatePath("/purchases");
+  redirect("/admin/payments?saved=Payment%20rejected");
 }

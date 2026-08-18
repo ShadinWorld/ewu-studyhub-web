@@ -1,4 +1,5 @@
 "use server";
+import { redirect } from "next/navigation";
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
@@ -28,6 +29,7 @@ export async function createFaq(formData: FormData) {
   if (error) throw new Error(error.message);
   revalidatePath("/");
   revalidatePath("/admin/faqs");
+  redirect("/admin/faqs?saved=FAQ%20saved");
 }
 
 export async function updateFaq(formData: FormData) {
@@ -43,6 +45,7 @@ export async function updateFaq(formData: FormData) {
   if (error) throw new Error(error.message);
   revalidatePath("/");
   revalidatePath("/admin/faqs");
+  redirect("/admin/faqs?saved=FAQ%20saved");
 }
 
 export async function deleteFaq(formData: FormData) {
@@ -53,4 +56,5 @@ export async function deleteFaq(formData: FormData) {
   if (error) throw new Error(error.message);
   revalidatePath("/");
   revalidatePath("/admin/faqs");
+  redirect("/admin/faqs?saved=FAQ%20deleted");
 }

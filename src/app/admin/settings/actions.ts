@@ -1,4 +1,5 @@
 "use server";
+import { redirect } from "next/navigation";
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
@@ -41,4 +42,5 @@ export async function updateMarketplaceSettings(formData: FormData) {
   revalidatePath("/admin/settings");
   revalidatePath("/checkout");
   revalidatePath("/admin/payouts");
+  redirect("/admin/settings?saved=Marketplace%20settings%20saved");
 }

@@ -50,7 +50,7 @@ export async function approveSeller(targetUserId: string) {
 
   await admin.from("notifications").insert({
     profile_id: targetUserId,
-    type: "report_update",
+    type: "seller_approved",
     title: "You're now a verified seller!",
     body: targetProfile?.seller_bkash_number
       ? "Your EWU student ID was approved and your bKash payout number was saved. You can start uploading resources."

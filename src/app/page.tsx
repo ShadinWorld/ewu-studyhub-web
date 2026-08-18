@@ -136,7 +136,7 @@ async function TrendingFiles() {
     purchaseStatus: purchaseStatusByFileId.get(file.id) ?? null,
   }));
 
-  return <ResourceCardGrid files={resources} horizontalMobile />;
+  return <ResourceCardGrid files={resources} />;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -216,9 +216,9 @@ async function DepartmentsPreview() {
   }
 
   return (
-    <div className="flex snap-x gap-3 overflow-x-auto pb-2 sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:pb-0 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
       {topDepartments.map((department, index) => (
-        <div key={department.id} className="w-[78vw] max-w-[310px] shrink-0 snap-start sm:w-auto sm:max-w-none">
+        <div key={department.id} className="min-w-0">
         <DepartmentCard
           key={department.id}
           department={department}
@@ -233,6 +233,22 @@ async function DepartmentsPreview() {
 /* -------------------------------------------------------------------------- */
 /* Popular Courses                                                            */
 /* -------------------------------------------------------------------------- */
+
+async function RecentResources() {
+  const supabase = createClient();
+  const { data: files } = await supabase.from("files").select("id,title,thumbnail_url,pricing_type,price_cents,average_rating,reviews_count,downloads_count,views_count,category,course_id,seller_id").eq("visibility", "published").order("created_at", { ascending: false }).limit(8);
+  if (!files?.length) return null;
+  const courseIds = Array.from(new Set(files.map(f=>f.course_id).filter((x): x is string=>Boolean(x))));
+  const sellerIds = Array.from(new Set(files.map(f=>f.seller_id).filter((x): x is string=>Boolean(x))));
+  const [{data:courses},{data:sellers}] = await Promise.all([
+    courseIds.length ? supabase.from("courses").select("id,course_code").in("id",courseIds) : Promise.resolve({data:[] as {id:string;course_code:string}[]}),
+    sellerIds.length ? createAdminClient().from("profiles").select("id,full_name").in("id",sellerIds) : Promise.resolve({data:[] as {id:string;full_name:string|null}[]}),
+  ]);
+  const courseMap=new Map((courses??[]).map(c=>[c.id,c.course_code]));
+  const sellerMap=new Map((sellers??[]).map(x=>[x.id,x.full_name]));
+  const resources: ResourceCardData[]=files.map(f=>({...f,course_code:f.course_id?courseMap.get(f.course_id)??null:null,seller_name:sellerMap.get(f.seller_id)??null,purchaseStatus:null}));
+  return <section className="container pt-10 sm:pt-12"><div className="mb-4 flex items-end justify-between gap-3"><div><p className="text-sm font-semibold text-primary">Fresh uploads</p><h2 className="mt-1 text-xl font-bold sm:text-2xl">Recently added resources</h2><p className="mt-1 text-sm text-muted-foreground">The latest resources added by EWU StudyHub sellers.</p></div><Link href="/search?sort=recent" className="text-sm font-semibold text-primary">View all <ArrowRight className="ml-1 inline h-4 w-4"/></Link></div><ResourceCardGrid files={resources}/></section>;
+}
 
 async function PopularCourses() {
   const supabase = createClient();
@@ -309,9 +325,9 @@ async function PopularCourses() {
   }
 
   return (
-    <div className="flex snap-x gap-3 overflow-x-auto pb-2 sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:pb-0 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
       {orderedCourses.map((course, index) => (
-        <div key={course.id} className="w-[78vw] max-w-[310px] shrink-0 snap-start sm:w-auto sm:max-w-none">
+        <div key={course.id} className="min-w-0">
         <CourseCard
           key={course.id}
           index={index}
@@ -349,7 +365,7 @@ async function HomepageAnnouncements() {
     .limit(10);
   const data = (rows ?? []).filter(a => (!a.starts_at || new Date(a.starts_at).getTime() <= now) && (!a.ends_at || new Date(a.ends_at).getTime() >= now)).slice(0,3);
   if (!data.length) return null;
-  return <section className="container pt-6 sm:pt-8"><div className="mb-4 flex items-end justify-between gap-3"><div><p className="text-sm font-semibold text-primary">Important updates</p><h2 className="mt-1 text-xl font-bold sm:text-2xl">What's happening on StudyHub</h2></div><Megaphone className="h-5 w-5 text-primary"/></div><div className="flex snap-x gap-3 overflow-x-auto pb-2">{data.map(a=><article key={a.id} className="w-[88vw] max-w-xl shrink-0 snap-start rounded-2xl border bg-card p-5 shadow-sm sm:w-[min(560px,70vw)]"><div className="flex items-start justify-between gap-3">{a.badge&&<span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-primary">{a.badge}</span>}<Megaphone className="h-4 w-4 text-muted-foreground"/></div><h3 className="mt-3 text-lg font-bold">{a.title}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{a.body}</p>{a.cta_link&&a.cta_label&&<Link href={a.cta_link} className="mt-4 inline-flex text-sm font-semibold text-primary hover:underline">{a.cta_label}<ArrowRight className="ml-1 h-4 w-4"/></Link>}</article>)}</div></section>;
+  return <section className="container pt-6 sm:pt-8"><div className="mb-4 flex items-end justify-between gap-3"><div><p className="text-sm font-semibold text-primary">Important updates</p><h2 className="mt-1 text-xl font-bold sm:text-2xl">What's happening on StudyHub</h2></div><Megaphone className="h-5 w-5 text-primary"/></div><div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">{data.map(a=><article key={a.id} className="rounded-2xl border bg-card p-5 shadow-sm"><div className="flex items-start justify-between gap-3">{a.badge&&<span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-primary">{a.badge}</span>}<Megaphone className="h-4 w-4 text-muted-foreground"/></div><h3 className="mt-3 text-lg font-bold">{a.title}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{a.body}</p>{a.cta_link&&a.cta_label&&<Link href={a.cta_link} className="mt-4 inline-flex text-sm font-semibold text-primary hover:underline">{a.cta_label}<ArrowRight className="ml-1 h-4 w-4"/></Link>}</article>)}</div></section>;
 }
 
 function StudentToolsPreview() {
@@ -359,12 +375,38 @@ function StudentToolsPreview() {
     ["/tools/deadlines", "Deadline Tracker", "Never miss an important date", FileClock],
     ["/tools/resource-request", "Request a Resource", "Ask for missing materials", FileQuestion],
   ] as const;
-  return <section className="container pt-8 sm:pt-10"><div className="mb-4 flex items-end justify-between gap-3"><div><p className="text-sm font-semibold text-primary">Student tools</p><h2 className="mt-1 text-xl font-bold sm:text-2xl">More than a resource marketplace</h2><p className="mt-1 text-sm text-muted-foreground">Useful tools for everyday EWU student life.</p></div><Link href="/tools" className="hidden text-sm font-semibold text-primary sm:inline-flex">View all <ArrowRight className="ml-1 h-4 w-4"/></Link></div><div className="flex snap-x gap-3 overflow-x-auto pb-2">{tools.map(([href,title,text,Icon])=><Link key={href} href={href} className="group w-[72vw] max-w-[250px] shrink-0 snap-start rounded-2xl border bg-card p-4 transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-md"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon className="h-5 w-5"/></div><p className="mt-3 font-semibold group-hover:text-primary">{title}</p><p className="mt-1 text-xs leading-5 text-muted-foreground">{text}</p></Link>)}</div></section>;
+  return <section className="container pt-8 sm:pt-10"><div className="mb-4 flex items-end justify-between gap-3"><div><p className="text-sm font-semibold text-primary">Student tools</p><h2 className="mt-1 text-xl font-bold sm:text-2xl">More than a resource marketplace</h2><p className="mt-1 text-sm text-muted-foreground">Useful tools for everyday EWU student life.</p></div><Link href="/tools" className="hidden text-sm font-semibold text-primary sm:inline-flex">View all <ArrowRight className="ml-1 h-4 w-4"/></Link></div><div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">{tools.map(([href,title,text,Icon])=><Link key={href} href={href} className="group rounded-2xl border bg-card p-4 transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-md"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon className="h-5 w-5"/></div><p className="mt-3 font-semibold group-hover:text-primary">{title}</p><p className="mt-1 text-xs leading-5 text-muted-foreground">{text}</p></Link>)}</div></section>;
 }
 
 /* -------------------------------------------------------------------------- */
 /* Homepage                                                                   */
 /* -------------------------------------------------------------------------- */
+
+
+async function SellerResourcesHome() {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data: profile } = await supabase.from("profiles").select("is_seller, role").eq("id", user.id).maybeSingle();
+  const isSeller = Boolean(profile?.is_seller || profile?.role === "seller");
+  if (!isSeller) return null;
+  const { data: files } = await supabase.from("files").select("id,title,thumbnail_url,pricing_type,price_cents,average_rating,reviews_count,downloads_count,views_count,category,course_id,seller_id").eq("seller_id", user.id).neq("visibility", "rejected").order("created_at", { ascending: false }).limit(6);
+  if (!files?.length) return null;
+  const courseIds = Array.from(new Set(files.map(f => f.course_id).filter((x): x is string => Boolean(x))));
+  const { data: courses } = courseIds.length ? await supabase.from("courses").select("id,course_code").in("id", courseIds) : { data: [] as {id:string;course_code:string}[] };
+  const courseMap = new Map((courses ?? []).map(c => [c.id, c.course_code]));
+  const resources: ResourceCardData[] = files.map(f => ({ ...f, course_code: f.course_id ? courseMap.get(f.course_id) ?? null : null, seller_name: "You", purchaseStatus: null, isOwner: true }));
+  return <section className="container pt-8 sm:pt-10"><div className="mb-4 flex items-end justify-between gap-3"><div><p className="text-sm font-semibold text-primary">Your resources</p><h2 className="mt-1 text-xl font-bold sm:text-2xl">Your latest uploads</h2><p className="mt-1 text-sm text-muted-foreground">Your resources appear here first. You are the owner, so no purchase is needed.</p></div><Button asChild variant="outline"><Link href="/dashboard/upload"><Upload className="h-4 w-4"/>Upload</Link></Button></div><ResourceCardGrid files={resources} /></section>;
+}
+
+async function SellerCongratulations() {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data: note } = await supabase.from("notifications").select("id,title,body").eq("profile_id", user.id).eq("type", "seller_approved").eq("is_read", false).order("created_at", { ascending: false }).limit(1).maybeSingle();
+  if (!note) return null;
+  return <div className="container pt-6"><div className="rounded-3xl border border-primary/20 bg-primary/5 p-5 shadow-sm"><div><p className="text-xs font-bold uppercase tracking-wide text-primary">Congratulations 🎉</p><h2 className="mt-1 text-xl font-bold">You are now an EWU StudyHub Seller!</h2><p className="mt-2 text-sm text-muted-foreground">{note.body || "You can now upload and sell your academic resources."}</p></div><div className="mt-4 flex flex-wrap gap-2"><Button asChild><Link href="/dashboard/upload"><Upload className="h-4 w-4"/>Upload your first resource</Link></Button><Button asChild variant="outline"><Link href="/dashboard">Seller dashboard</Link></Button></div></div></div>;
+}
 
 async function PersonalizedShortcuts() {
   const supabase = createClient();
@@ -481,9 +523,12 @@ export default function HomePage() {
         </section>
 
         <PersonalizedShortcuts />
+        <SellerCongratulations />
+        <SellerResourcesHome />
 
         <HomepageAnnouncements />
         <StudentToolsPreview />
+        <RecentResources />
 
         {/* ------------------------------------------------------------------ */}
         {/* Recently Viewed                                                     */}

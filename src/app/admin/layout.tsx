@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { MobileAdminMenu } from "@/components/admin/mobile-admin-menu";
+import { AdminActionToast } from "@/components/admin/admin-action-toast";
 
 const links = [
   ["/admin", "Overview"], ["/admin/uploads", "Pending Uploads"], ["/admin/sellers", "Seller Requests"],
@@ -50,7 +51,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <Button variant="outline" size="sm" asChild className="hidden sm:inline-flex"><Link href="/">Visit site</Link></Button><ThemeToggle />
           </div>
         </header>
-        <main className="p-3 pb-20 sm:p-6 lg:p-7">{children}</main>
+        <main className="p-3 pb-20 sm:p-6 lg:p-7"><AdminActionToast />{children}</main>
       </div>
     </div>
   );

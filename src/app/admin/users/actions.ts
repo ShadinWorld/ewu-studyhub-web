@@ -1,4 +1,5 @@
 "use server";
+import { redirect } from "next/navigation";
 
 import { revalidatePath } from "next/cache";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
@@ -63,6 +64,7 @@ export async function updateUserStatus(formData: FormData) {
   await admin.from("audit_logs").insert({ actor_id: adminId, action: `user.status.${accountStatus}`, target_table: "profiles", target_id: userId });
   revalidatePath("/admin/users");
   revalidatePath(`/admin/users/${userId}`);
+  redirect("/admin/users?saved=User%20status%20updated");
 }
 
 export async function sendAdminMessage(formData: FormData) {
@@ -76,4 +78,5 @@ export async function sendAdminMessage(formData: FormData) {
   await admin.from("notifications").insert({ profile_id: userId, type: "report_update", title: subject, body, link: "/notifications" });
   await admin.from("audit_logs").insert({ actor_id: adminId, action: "user.message", target_table: "profiles", target_id: userId, metadata: { subject } });
   revalidatePath(`/admin/users/${userId}`);
+  redirect(`/admin/users/${userId}?saved=Message%20sent`);
 }

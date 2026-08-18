@@ -1,4 +1,5 @@
 "use server";
+import { redirect } from "next/navigation";
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
@@ -32,4 +33,5 @@ export async function updateSupportTicket(formData: FormData) {
   await supabase.from("audit_logs").insert({ actor_id: adminId, action: "support.update", target_table: "support_tickets", target_id: id, metadata: { status, replied: Boolean(reply) } });
   revalidatePath("/admin/support");
   revalidatePath("/support");
+  redirect("/admin/support?saved=Support%20updated");
 }

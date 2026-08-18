@@ -2,14 +2,21 @@
 
 import { useFormState, useFormStatus } from "react-dom";
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { signInWithGoogleAction } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 function GoogleButton() {
   const { pending } = useFormStatus();
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    if (!pending) { setSlow(false); return; }
+    const t = window.setTimeout(() => setSlow(true), 8000);
+    return () => window.clearTimeout(t);
+  }, [pending]);
   return (
+    <>
     <Button type="submit" className="w-full" disabled={pending} size="lg">
       <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
         <path fill="#4285F4" d="M21.35 12.23c0-.79-.07-1.55-.23-2.27H12v4.3h5.23a4.47 4.47 0 0 1-1.94 2.93v2.44h3.14c1.84-1.69 2.92-4.18 2.92-7.4Z" />
@@ -19,6 +26,8 @@ function GoogleButton() {
       </svg>
       {pending ? "Connecting…" : "Continue with Google"}
     </Button>
+      {slow && <p className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-200">Your internet connection seems slow. Please wait a little longer or try again.</p>}
+    </>
   );
 }
 
