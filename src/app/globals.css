@@ -26,6 +26,50 @@
     --radius: 0.65rem;
   }
 
+  .ewu-blue {
+    --background: 0 0% 100%;
+    --foreground: 221 39% 13%;
+    --card: 0 0% 100%;
+    --card-foreground: 221 39% 13%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 221 39% 13%;
+    --primary: 219 53% 23%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 178 42% 96%;
+    --secondary-foreground: 219 53% 23%;
+    --muted: 210 30% 96%;
+    --muted-foreground: 215 16% 42%;
+    --accent: 171 48% 92%;
+    --accent-foreground: 173 100% 21%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 32% 89%;
+    --input: 214 32% 89%;
+    --ring: 173 100% 21%;
+  }
+
+  .pink {
+    --background: 336 100% 99%;
+    --foreground: 276 34% 18%;
+    --card: 0 0% 100%;
+    --card-foreground: 276 34% 18%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 276 34% 18%;
+    --primary: 337 71% 56%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 330 78% 96%;
+    --secondary-foreground: 276 47% 25%;
+    --muted: 330 45% 96%;
+    --muted-foreground: 276 16% 45%;
+    --accent: 278 46% 94%;
+    --accent-foreground: 276 47% 25%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 330 28% 89%;
+    --input: 330 28% 89%;
+    --ring: 276 47% 25%;
+  }
+
   .dark {
     --background: 222 47% 7%;
     --foreground: 210 40% 98%;
