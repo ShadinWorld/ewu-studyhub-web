@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient, createClient } from "@/lib/supabase/server";
 
 async function requireAdmin() {
   const supabase = createClient();
@@ -37,7 +37,8 @@ export async function approveFile(fileId: string) {
   // Notify the seller
   const { data: file } = await supabase.from("files").select("seller_id, title").eq("id", fileId).single();
   if (file) {
-    await supabase.from("notifications").insert({
+    await createAdminClient().from("notifications").update({ is_read: true }).eq("profile_id", file.seller_id).eq("type", "upload_pending");
+    await createAdminClient().from("notifications").insert({
       profile_id: file.seller_id,
       type: "upload_approved",
       title: "Your upload was approved",
@@ -69,8 +70,9 @@ export async function rejectFile(fileId: string, reason: string) {
   });
 
   const { data: file } = await supabase.from("files").select("seller_id, title").eq("id", fileId).single();
+  if (file) await createAdminClient().from("notifications").update({ is_read: true }).eq("profile_id", file.seller_id).eq("type", "upload_pending");
   if (file) {
-    await supabase.from("notifications").insert({
+    await createAdminClient().from("notifications").insert({
       profile_id: file.seller_id,
       type: "upload_rejected",
       title: "Your upload was rejected",

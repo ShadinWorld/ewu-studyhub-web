@@ -19,8 +19,20 @@ export async function requestSellerVerification(_prev: SellerFormState, formData
   const bytes = new Uint8Array(await file.arrayBuffer());
   const { error: uploadError } = await admin.storage.from("student-id-docs").upload(path, bytes, { contentType: file.type, upsert: false });
   if (uploadError) return { error: `Unable to upload ID card: ${uploadError.message}` };
-  const { error } = await supabase.rpc("request_seller_verification", { p_university_email: parsed.data.universityEmail, p_bkash_number: bkashNumber, p_student_id_document_path: path });
+  const { error } = await supabase.rpc("request_seller_verification", { p_university_email: parsed.data.universityEmail, p_bkash_number: bkashNumber });
   if (error) { await admin.storage.from("student-id-docs").remove([path]); return { error: error.message }; }
-  revalidatePath("/dashboard/become-seller"); revalidatePath("/admin/sellers");
+
+  const { error: profileUpdateError } = await supabase.from("profiles").update({ student_id_document_url: path }).eq("id", user.id);
+  if (profileUpdateError) { await admin.storage.from("student-id-docs").remove([path]); return { error: profileUpdateError.message }; }
+
+  await admin.from("notifications").insert({
+    profile_id: user.id,
+    type: "seller_verification_pending",
+    title: "Seller verification submitted",
+    body: "Waiting for admin approval. We will notify you when your seller request is approved or rejected.",
+    link: "/notifications",
+  });
+
+  revalidatePath("/dashboard/become-seller"); revalidatePath("/admin/sellers"); revalidatePath("/notifications"); revalidatePath("/dashboard");
   return { success: "Verification request submitted. An admin will review your EWU email and ID card." };
 }

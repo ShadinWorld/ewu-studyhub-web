@@ -1,5 +1,7 @@
 "use server";
 
+import { redirect } from "next/navigation";
+
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
@@ -64,6 +66,17 @@ export async function requestPayout(formData: FormData) {
     throw new Error(error.message);
   }
 
+  const admin = (await import("@/lib/supabase/server")).createAdminClient();
+  await admin.from("notifications").insert({
+    profile_id: user.id,
+    type: "payout_pending",
+    title: "Payout request submitted",
+    body: `Your payout request for BDT ${amount.toFixed(2)} is waiting for admin payment.`,
+    link: "/notifications",
+  });
+
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/payment-settings");
+  revalidatePath("/notifications");
+  redirect("/notifications");
 }

@@ -15,7 +15,7 @@ export function FileCard({ file }: { file: Pick<FileResource,
       className="group rounded-lg border bg-card overflow-hidden transition-shadow hover:shadow-md"
     >
       <div className="aspect-[4/3] relative bg-muted">
-        {file.thumbnail_url ? (
+        {file.thumbnail_url && /\.(jpe?g|png|webp|gif)(\?|$)/i.test(file.thumbnail_url) ? (
           <Image
             src={file.thumbnail_url}
             alt={file.title}

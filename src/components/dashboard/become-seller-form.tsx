@@ -1,5 +1,7 @@
 "use client";
 import { useFormState, useFormStatus } from "react-dom";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { requestSellerVerification } from "@/app/dashboard/become-seller/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +12,8 @@ type Profile = { is_seller?: boolean; role?: string; university_email?: string |
 function SubmitButton(){const {pending}=useFormStatus();return <Button type="submit" className="w-full" disabled={pending}>{pending?"Submitting…":"Submit for verification"}</Button>}
 export function BecomeSellerForm({ profile }: { profile: Profile }) {
  const [state, formAction]=useFormState(requestSellerVerification, undefined);
+ const router = useRouter();
+ useEffect(() => { if (state?.success) router.push("/notifications"); }, [state?.success, router]);
  if(profile?.is_seller||profile?.role==="seller") return <div className="rounded-lg border bg-accent/40 p-4"><Badge variant="success">Verified seller</Badge><p className="mt-2 text-sm text-muted-foreground">You're already a verified seller with {profile.university_email}.</p></div>;
  if(profile?.student_id_verification_status==="pending") return <div className="rounded-lg border bg-accent/40 p-4"><Badge variant="secondary">Pending review</Badge><p className="mt-2 text-sm text-muted-foreground">Your request with {profile.university_email} is waiting for admin approval.</p></div>;
  return <form action={formAction} className="space-y-5">

@@ -105,7 +105,7 @@ export function UploadForm({
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Upload failed");
       toast.success("Uploaded! Your file is pending review before it goes live.");
-      router.push(`/dashboard`);
+      router.push(`/notifications`);
     } catch (err: any) {
       toast.error(err.message ?? "Something went wrong");
     } finally {

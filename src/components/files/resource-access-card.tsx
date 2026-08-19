@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CheckCircle2, Clock3, Lock, XCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { StarSummary } from "@/components/files/star-summary";
 import { ResourceDetailActions } from "@/components/files/resource-detail-actions";
 import { ReportResourceButton } from "@/components/files/report-resource-button";

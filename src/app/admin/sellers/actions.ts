@@ -48,6 +48,8 @@ export async function approveSeller(targetUserId: string) {
     if (paymentError) return { error: paymentError.message };
   }
 
+  await admin.from("notifications").update({ is_read: true }).eq("profile_id", targetUserId).eq("type", "seller_verification_pending");
+
   await admin.from("notifications").insert({
     profile_id: targetUserId,
     type: "seller_approved",
@@ -79,9 +81,11 @@ export async function rejectSeller(targetUserId: string) {
     .eq("id", targetUserId);
   if (error) return { error: error.message };
 
+  await admin.from("notifications").update({ is_read: true }).eq("profile_id", targetUserId).eq("type", "seller_verification_pending");
+
   await admin.from("notifications").insert({
     profile_id: targetUserId,
-    type: "report_update",
+    type: "seller_rejected",
     title: "Seller verification rejected",
     body: "Your seller verification request was not approved. Please review your details and submit again.",
     link: "/dashboard/become-seller",

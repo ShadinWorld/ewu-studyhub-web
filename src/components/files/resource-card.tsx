@@ -48,7 +48,7 @@ export function ResourceCard({ file }: { file: ResourceCardData }) {
   return <article className="group flex min-w-0 flex-col overflow-hidden rounded-2xl border bg-card shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-xl">
     <div className="relative aspect-[4/3] overflow-hidden bg-muted">
       <Link href={`/files/${file.id}`} aria-label={`Open ${file.title}`} className="absolute inset-0">
-        {file.thumbnail_url ? <Image src={file.thumbnail_url} alt={file.title} fill className="object-cover transition-transform duration-300 group-hover:scale-105" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" /> : <div className="flex h-full items-center justify-center bg-gradient-to-br from-primary/10 via-accent/50 to-muted text-muted-foreground"><FileText className="h-10 w-10" /></div>}
+        {file.thumbnail_url && /\.(jpe?g|png|webp|gif)(\?|$)/i.test(file.thumbnail_url) ? <Image src={file.thumbnail_url} alt={file.title} fill className="object-cover transition-transform duration-300 group-hover:scale-105" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" /> : <div className="flex h-full items-center justify-center bg-gradient-to-br from-primary/10 via-accent/50 to-muted text-muted-foreground"><FileText className="h-10 w-10" /></div>}
       </Link>
       <div className="absolute inset-x-2 top-2 z-10 flex items-start justify-between gap-2">
         <div className="flex min-w-0 max-w-[78%] flex-wrap gap-1.5"><StatusBadge file={file} />{file.downloads_count >= 100 && <Badge className="rounded-full bg-foreground/85 px-2.5 text-[10px] text-background shadow-sm hover:bg-foreground/85"><Sparkles className="mr-1 h-3 w-3" />POPULAR</Badge>}</div>

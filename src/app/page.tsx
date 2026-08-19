@@ -16,6 +16,7 @@ import {
   FileClock,
   FileQuestion,
   Megaphone,
+  Bell,
 } from "lucide-react";
 
 import { Navbar } from "@/components/layout/navbar";
@@ -368,6 +369,16 @@ async function HomepageAnnouncements() {
   return <section className="container pt-6 sm:pt-8"><div className="mb-4 flex items-end justify-between gap-3"><div><p className="text-sm font-semibold text-primary">Important updates</p><h2 className="mt-1 text-xl font-bold sm:text-2xl">What's happening on StudyHub</h2></div><Megaphone className="h-5 w-5 text-primary"/></div><div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">{data.map(a=><article key={a.id} className="rounded-2xl border bg-card p-5 shadow-sm"><div className="flex items-start justify-between gap-3">{a.badge&&<span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-primary">{a.badge}</span>}<Megaphone className="h-4 w-4 text-muted-foreground"/></div><h3 className="mt-3 text-lg font-bold">{a.title}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{a.body}</p>{a.cta_link&&a.cta_label&&<Link href={a.cta_link} className="mt-4 inline-flex text-sm font-semibold text-primary hover:underline">{a.cta_label}<ArrowRight className="ml-1 h-4 w-4"/></Link>}</article>)}</div></section>;
 }
 
+
+async function PendingActionsHome() {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data: notifications } = await supabase.from("notifications").select("id,type,title,body,created_at,link,is_read").eq("profile_id", user.id).in("type", ["upload_pending","payout_pending","seller_verification_pending"]).order("created_at", { ascending: false }).limit(6);
+  if (!notifications?.length) return null;
+  return <section className="container pt-6 sm:pt-8"><div className="rounded-2xl border bg-card p-5 shadow-sm"><div className="flex items-start justify-between gap-3"><div><p className="text-sm font-semibold text-primary">Action status</p><h2 className="mt-1 text-xl font-bold">Your pending requests</h2><p className="mt-1 text-sm text-muted-foreground">Track uploads, seller verification and payout requests until admin resolves them.</p></div><Button asChild variant="outline" size="sm"><Link href="/notifications">View notifications</Link></Button></div><div className="mt-4 space-y-2">{notifications.map(n => <div key={n.id} className="flex flex-col gap-2 rounded-xl border p-3 sm:flex-row sm:items-center sm:justify-between"><div><div className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-amber-500"/><p className="font-medium">{n.title}</p></div><p className="mt-1 text-xs text-muted-foreground">{n.body || "Waiting for admin approval."} · {new Date(n.created_at).toLocaleString()}</p></div>{n.link ? <Button asChild size="sm" variant="outline"><Link href={n.link}>Open</Link></Button> : null}</div>)}</div></div></section>;
+}
+
 function StudentToolsPreview() {
   const tools = [
     ["/tools/academic-calendar", "Academic Calendar", "Current semester dates", CalendarDays],
@@ -430,6 +441,7 @@ async function PersonalizedShortcuts() {
           <div className="grid grid-cols-2 gap-2 sm:flex">
             <Button asChild variant="outline" className="h-10"><Link href="/purchases"><ShoppingBag className="h-4 w-4" />Purchases</Link></Button>
             <Button asChild variant="outline" className="h-10"><Link href="/saved"><Bookmark className="h-4 w-4" />Saved</Link></Button>
+            <Button asChild variant="outline" className="h-10"><Link href="/notifications"><Bell className="h-4 w-4" />Notifications</Link></Button>
             <Button asChild className="h-10"><Link href={isAdmin ? "/admin" : "/dashboard"}><LayoutDashboard className="h-4 w-4" />{isAdmin ? "Admin" : "Dashboard"}</Link></Button>
             {!isSeller && !isAdmin && <Button asChild variant="outline" className="h-10"><Link href="/dashboard/become-seller"><Store className="h-4 w-4" />Become a seller</Link></Button>}
             {isSeller && <Button asChild variant="outline" className="h-10"><Link href="/dashboard/upload"><Upload className="h-4 w-4" />Upload</Link></Button>}

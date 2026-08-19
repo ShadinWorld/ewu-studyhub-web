@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createHash } from "crypto";
 import { PDFDocument } from "pdf-lib";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { uploadFileSchema } from "@/lib/validations";
 
 const MAX_BYTES = 100 * 1024 * 1024; // 100MB
@@ -100,7 +100,8 @@ export async function POST(request: Request) {
   const bytes = Buffer.from(await file.arrayBuffer());
   const fileHash = createHash("sha256").update(bytes).digest("hex");
 
-  const { data: dup } = await supabase
+  const adminForUpload = createAdminClient();
+  const { data: dup } = await adminForUpload
     .from("files")
     .select("id, title")
     .eq("file_hash", fileHash)
@@ -140,36 +141,73 @@ export async function POST(request: Request) {
       if (pageCount > 0) {
         const previewPageCount = data.pricingType === "free"
           ? pageCount
-          : Math.max(1, Math.min(pageCount - 1, Math.ceil(pageCount * 0.2)));
+          : pageCount > 1
+            ? Math.min(pageCount, Math.max(1, Math.ceil(pageCount * 0.3)))
+            : 0;
 
-        const previewDoc = await PDFDocument.create();
-        const copiedPages = await previewDoc.copyPages(
-          pdfDoc,
-          Array.from({ length: previewPageCount }, (_, i) => i)
-        );
-        copiedPages.forEach((p) => previewDoc.addPage(p));
-        const previewBytes = await previewDoc.save();
+        if (previewPageCount > 0) {
+          const previewDoc = await PDFDocument.create();
+          const copiedPages = await previewDoc.copyPages(
+            pdfDoc,
+            Array.from({ length: previewPageCount }, (_, i) => i)
+          );
+          copiedPages.forEach((p) => previewDoc.addPage(p));
+          const previewBytes = await previewDoc.save();
 
-        previewStoragePath = `${user.id}/${fileHash}-preview.pdf`;
-        const { error: previewUploadError } = await supabase.storage
-          .from("files-preview")
-          .upload(previewStoragePath, previewBytes, { contentType: "application/pdf", upsert: false });
+          previewStoragePath = `${user.id}/${fileHash}-preview.pdf`;
+          const { error: previewUploadError } = await supabase.storage
+            .from("files-preview")
+            .upload(previewStoragePath, previewBytes, { contentType: "application/pdf", upsert: false });
 
-        if (!previewUploadError) {
-          thumbnailUrl = supabase.storage.from("files-preview").getPublicUrl(previewStoragePath).data.publicUrl;
+          if (!previewUploadError) {
+            thumbnailUrl = null;
+          }
         }
       }
     } catch {
       // Corrupt/unreadable PDF: keep the original upload, but skip preview data.
     }
-  } else if (mimeToKind(file.type) === "image" && data.pricingType === "free") {
-    previewStoragePath = `${user.id}/${fileHash}-preview.${ext}`;
-    const { error: imagePreviewError } = await supabase.storage
-      .from("files-preview")
-      .upload(previewStoragePath, bytes, { contentType: file.type, upsert: false });
+  } else if (mimeToKind(file.type) === "image") {
+    try {
+      if (data.pricingType === "free") {
+        previewStoragePath = `${user.id}/${fileHash}-preview.${ext}`;
+        const { error: imagePreviewError } = await supabase.storage
+          .from("files-preview")
+          .upload(previewStoragePath, bytes, { contentType: file.type, upsert: false });
 
-    if (!imagePreviewError) {
-      thumbnailUrl = supabase.storage.from("files-preview").getPublicUrl(previewStoragePath).data.publicUrl;
+        if (!imagePreviewError) {
+          thumbnailUrl = null;
+          pageCount = 1;
+        }
+      } else {
+        // Paid images get a public preview PDF containing only the top 40% of
+        // the image. The original image remains private.
+        const previewDoc = await PDFDocument.create();
+        const image = file.type === "image/png"
+          ? await previewDoc.embedPng(bytes)
+          : await previewDoc.embedJpg(bytes);
+        const width = image.width;
+        const fullHeight = image.height;
+        const previewHeight = Math.max(1, Math.round(fullHeight * 0.4));
+        const page = previewDoc.addPage([width, previewHeight]);
+        page.drawImage(image, {
+          x: 0,
+          y: -(fullHeight - previewHeight),
+          width,
+          height: fullHeight,
+        });
+        const previewBytes = await previewDoc.save();
+        previewStoragePath = `${user.id}/${fileHash}-preview.pdf`;
+        const { error: imagePreviewError } = await supabase.storage
+          .from("files-preview")
+          .upload(previewStoragePath, previewBytes, { contentType: "application/pdf", upsert: false });
+        if (!imagePreviewError) {
+          thumbnailUrl = null;
+          pageCount = 1;
+        }
+      }
+    } catch {
+      // If image preview generation fails, keep the original private upload.
     }
   }
 
@@ -249,6 +287,15 @@ export async function POST(request: Request) {
     if (previewStoragePath) await supabase.storage.from("files-preview").remove([previewStoragePath]);
     return NextResponse.json({ error: "Failed to save resource. Please try again." }, { status: 500 });
   }
+
+  const admin = createAdminClient();
+  await admin.from("notifications").insert({
+    profile_id: user.id,
+    type: "upload_pending",
+    title: "Resource submitted for review",
+    body: `"${data.title}" is waiting for admin approval.`,
+    link: "/notifications",
+  });
 
   return NextResponse.json({ id: inserted.id }, { status: 201 });
 }

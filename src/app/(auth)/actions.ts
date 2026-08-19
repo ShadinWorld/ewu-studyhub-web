@@ -14,7 +14,7 @@ export async function signInWithGoogleAction(_prevState: FormState, formData: Fo
   const forwardedHost = h.get("x-forwarded-host") || h.get("host");
   const forwardedProto = h.get("x-forwarded-proto") || "https";
   const derivedOrigin = forwardedHost ? `${forwardedProto}://${forwardedHost}` : null;
-  const origin = process.env.NEXT_PUBLIC_SITE_URL || derivedOrigin || "http://localhost:3000";
+  const origin = (process.env.NEXT_PUBLIC_SITE_URL || derivedOrigin || "http://localhost:3000").replace(/\/+$/, "");
   const switchEmail = String(formData.get("switchEmail") || "").trim().toLowerCase();
 
   const { data, error } = await supabase.auth.signInWithOAuth({

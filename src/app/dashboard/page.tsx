@@ -26,7 +26,7 @@ export default async function DashboardPage() {
   const isSeller = Boolean(profile?.is_seller || profile?.role === "seller");
 
   if (!isSeller) {
-    const [{ data: purchases }, { count: savedCount }, { count: pendingCount }] = await Promise.all([
+    const [{ data: purchases }, { count: savedCount }, { count: pendingCount }, { data: actionNotifications }] = await Promise.all([
       supabase
         .from("purchases")
         .select("id, file_id, amount_cents, status, files(title)")
@@ -35,6 +35,7 @@ export default async function DashboardPage() {
         .limit(5),
       supabase.from("wishlists").select("file_id", { count: "exact", head: true }).eq("profile_id", user.id),
       supabase.from("purchases").select("id", { count: "exact", head: true }).eq("buyer_id", user.id).eq("status", "pending"),
+      supabase.from("notifications").select("id,type,title,body,created_at,is_read,link").eq("profile_id", user.id).in("type", ["seller_verification_pending","resource_request_update","purchase_pending","purchase_rejected"]).order("created_at", { ascending: false }).limit(5),
     ]);
 
     const completedCount = (purchases ?? []).filter((p) => p.status === "completed").length;
@@ -58,7 +59,7 @@ export default async function DashboardPage() {
           <Button asChild className="h-12"><Link href="/search">Browse resources</Link></Button>
           <Button asChild variant="outline" className="h-12"><Link href="/purchases">My Purchases</Link></Button>
           <Button asChild variant="outline" className="h-12"><Link href="/saved">Saved</Link></Button>
-          <Button asChild variant="outline" className="h-12"><Link href="/notifications">Notifications</Link></Button>
+          <Button asChild variant="outline" className="relative h-12"><Link href="/notifications">Notifications{actionNotifications?.some((n) => !n.is_read) ? <span className="ml-1 rounded-full bg-primary px-1.5 py-0.5 text-[10px] text-primary-foreground">{actionNotifications.filter((n) => !n.is_read).length}</span> : null}</Link></Button>
           <Button asChild variant="outline" className="h-12"><Link href="/tools">Student Tools</Link></Button>
         </div>
 
@@ -71,6 +72,8 @@ export default async function DashboardPage() {
             <Button asChild variant="secondary"><Link href="/dashboard/become-seller"><Upload className="mr-2 h-4 w-4" />Become a seller</Link></Button>
           </div>
         </div>
+
+        {actionNotifications?.length ? <section className="mt-8 rounded-2xl border bg-card p-5 shadow-sm"><div className="flex items-start justify-between gap-3"><div><p className="text-sm font-semibold text-primary">Action status</p><h2 className="mt-1 text-lg font-bold">Requests & activity</h2><p className="mt-1 text-sm text-muted-foreground">Keep track of items waiting for review or needing attention.</p></div><Button asChild variant="outline" size="sm"><Link href="/notifications">View all</Link></Button></div><div className="mt-4 space-y-2">{actionNotifications.slice(0,4).map((n) => <div key={n.id} className="flex flex-col gap-2 rounded-xl border p-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-medium">{n.title}</p><p className="mt-1 text-xs text-muted-foreground">{n.body || "Status update"} · {new Date(n.created_at).toLocaleString()}</p></div>{n.link ? <Button asChild size="sm" variant="outline"><Link href={n.link}>Open</Link></Button> : null}</div>)}</div></section> : null}
 
         <div className="mt-10">
           <div className="flex items-center justify-between">
@@ -99,7 +102,7 @@ export default async function DashboardPage() {
     );
   }
 
-  const [{ data: myFiles }, { data: purchaseAgg }, { count: pendingPayoutCount }] = await Promise.all([
+  const [{ data: myFiles }, { data: purchaseAgg }, { count: pendingPayoutCount }, { data: actionNotifications }] = await Promise.all([
     supabase
       .from("files")
       .select("id, title, visibility, pricing_type, price_cents, category, rejection_reason, downloads_count")
@@ -111,6 +114,7 @@ export default async function DashboardPage() {
       .eq("files.seller_id", user.id)
       .eq("status", "completed"),
     supabase.from("payouts").select("id", { count: "exact", head: true }).eq("seller_id", user.id).eq("status", "pending"),
+    supabase.from("notifications").select("id,type,title,body,created_at,is_read,link").eq("profile_id", user.id).in("type", ["upload_pending","upload_approved","upload_rejected","payout_pending","payout_completed","seller_approved"]).order("created_at", { ascending: false }).limit(8),
   ]);
 
   const totalRevenue = (purchaseAgg ?? []).reduce((sum, p: any) => sum + p.seller_earning_cents, 0);
@@ -140,6 +144,7 @@ export default async function DashboardPage() {
           <Button asChild variant="outline" className="h-12"><Link href="/tools">Student Tools</Link></Button>
       </div>
       {pendingPayoutCount ? <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm font-medium text-amber-800 dark:text-amber-200">{pendingPayoutCount} automatic payout{pendingPayoutCount === 1 ? " is" : "s are"} waiting for admin payment.</div> : null}
+      {actionNotifications?.length ? <section className="mt-6 rounded-2xl border bg-card p-5 shadow-sm"><div className="flex items-start justify-between gap-3"><div><p className="text-sm font-semibold text-primary">Action status</p><h2 className="mt-1 text-lg font-bold">Uploads & payouts</h2><p className="mt-1 text-sm text-muted-foreground">See what is waiting for admin review and what has already been resolved.</p></div><Button asChild variant="outline" size="sm"><Link href="/notifications">View all</Link></Button></div><div className="mt-4 space-y-2">{actionNotifications.slice(0,5).map((n) => <div key={n.id} className="flex flex-col gap-2 rounded-xl border p-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-medium">{n.title}</p><p className="mt-1 text-xs text-muted-foreground">{n.body || "Status update"} · {new Date(n.created_at).toLocaleString()}</p></div>{n.link ? <Button asChild size="sm" variant="outline"><Link href={n.link}>Open</Link></Button> : null}</div>)}</div></section> : null}
 
       <div className="mt-10">
         <h2 className="mb-4 text-xl font-semibold">Your uploads</h2>
