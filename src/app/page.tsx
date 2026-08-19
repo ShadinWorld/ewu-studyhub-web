@@ -216,7 +216,7 @@ async function DepartmentsPreview() {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+    <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3">
       {topDepartments.map((department, index) => (
         <div key={department.id} className="min-w-0">
         <DepartmentCard
@@ -325,7 +325,7 @@ async function PopularCourses() {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4">
       {orderedCourses.map((course, index) => (
         <div key={course.id} className="min-w-0">
         <CourseCard
@@ -568,7 +568,7 @@ export default function HomePage() {
 
           <Suspense
             fallback={
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4">
                 {Array.from({ length: 8 }).map((_, index) => (
                   <div
                     key={index}
@@ -614,7 +614,7 @@ export default function HomePage() {
 
           <Suspense
             fallback={
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4">
                 {Array.from({ length: 8 }).map((_, index) => (
                   <div
                     key={index}
@@ -660,7 +660,7 @@ export default function HomePage() {
 
             <Suspense
               fallback={
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3">
                   {Array.from({ length: 6 }).map((_, index) => (
                     <div
                       key={index}

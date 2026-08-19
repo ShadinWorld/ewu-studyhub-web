@@ -5,6 +5,7 @@ import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { createClient } from "@/lib/supabase/server";
 import { UserMenu } from "@/components/layout/user-menu";
 import type { UserRole } from "@/types/database.types";
+import { BackButton } from "@/components/navigation/back-button";
 
 export async function Navbar() {
   const supabase = createClient();
@@ -37,12 +38,15 @@ export async function Navbar() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/80 bg-background/90 backdrop-blur-xl">
       <div className="container flex h-14 items-center justify-between gap-2 sm:h-16">
-        <Link href="/" className="flex min-w-0 items-center gap-2 font-bold text-base sm:text-lg">
+        <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+          <BackButton className="shrink-0" />
+          <Link href="/" className="flex min-w-0 items-center gap-2 font-bold text-base sm:text-lg">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary sm:h-10 sm:w-10">
             <GraduationCap className="h-5 w-5 sm:h-6 sm:w-6" />
           </span>
-          <span className="truncate">EWU StudyHub</span>
-        </Link>
+            <span className="truncate">EWU StudyHub</span>
+          </Link>
+        </div>
 
         <nav className="hidden items-center gap-6 text-sm font-medium md:flex">
           <Link href="/search" className="text-muted-foreground transition-colors hover:text-foreground">Browse</Link>

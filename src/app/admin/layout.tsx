@@ -6,6 +6,7 @@ import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { MobileAdminMenu } from "@/components/admin/mobile-admin-menu";
 import { AdminActionToast } from "@/components/admin/admin-action-toast";
+import { BackButton } from "@/components/navigation/back-button";
 
 const links = [
   ["/admin", "Overview"], ["/admin/uploads", "Pending Uploads"], ["/admin/sellers", "Seller Requests"],
@@ -42,6 +43,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <div className="min-w-0 lg:pl-64">
         <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b bg-background/90 px-3 backdrop-blur-xl sm:h-16 sm:px-6">
           <div className="flex min-w-0 items-center gap-2">
+            <BackButton className="shrink-0" />
             <MobileAdminMenu />
             <h1 className="truncate font-semibold">Admin Panel</h1>
           </div>
