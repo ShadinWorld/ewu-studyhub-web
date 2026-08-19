@@ -205,8 +205,7 @@ async function DepartmentsPreview() {
       (a, b) =>
         b.resourceCount - a.resourceCount ||
         a.name.localeCompare(b.name)
-    )
-    .slice(0, 6);
+    );
 
   if (!topDepartments.length) {
     return (

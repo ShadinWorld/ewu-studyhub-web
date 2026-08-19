@@ -33,7 +33,7 @@ export function CourseCard({
       )}
     >
       <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-primary/10 blur-2xl" />
-      <div className="relative min-w-0">
+      <div className="relative min-w-0 flex-1">
         <div className="flex flex-wrap items-start justify-between gap-1.5">
           <span className="inline-flex min-w-0 max-w-full items-center gap-1 rounded-full bg-primary/10 px-2 py-1 font-mono text-[10px] font-bold text-primary sm:px-2.5 sm:text-xs">
             <BookOpen className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" />
@@ -45,7 +45,7 @@ export function CourseCard({
             </Badge>
           )}
         </div>
-        <h3 className="mt-3 line-clamp-3 text-[13px] font-bold leading-5 sm:mt-4 sm:text-base sm:leading-snug">
+        <h3 className="mt-3 line-clamp-3 break-words text-[13px] font-bold leading-5 sm:mt-4 sm:text-base sm:leading-snug">
           {course.course_name}
         </h3>
         {course.departmentName && (
@@ -55,12 +55,12 @@ export function CourseCard({
           </p>
         )}
       </div>
-      <div className="relative mt-3 flex min-w-0 items-center justify-between gap-1.5 sm:mt-5 sm:gap-3">
+      <div className="relative mt-3 flex min-w-0 flex-wrap items-center justify-between gap-1.5 sm:mt-5 sm:gap-3">
         <span className="inline-flex min-w-0 max-w-[56%] items-center gap-1 rounded-full bg-background/80 px-2 py-1.5 text-[10px] font-semibold text-muted-foreground sm:max-w-none sm:px-2.5 sm:text-xs">
           <FileText className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" />
           <span className="truncate">{course.resourceCount} resources</span>
         </span>
-        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-foreground/5 px-2.5 py-1.5 text-[10px] font-bold text-primary transition-all group-hover:bg-primary group-hover:text-primary-foreground sm:px-3 sm:text-xs">
+        <span className="inline-flex min-w-0 shrink-0 items-center gap-1 rounded-full bg-foreground/5 px-2.5 py-1.5 text-[10px] font-bold text-primary transition-all group-hover:bg-primary group-hover:text-primary-foreground sm:px-3 sm:text-xs">
           {course.resourceCount > 0 ? <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> : null}
           Explore <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5 sm:h-3.5 sm:w-3.5" />
         </span>

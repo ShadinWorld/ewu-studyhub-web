@@ -37,15 +37,15 @@ export function ReportReviewCard({ report }: { report: any }) {
   return (
     <Card>
       <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <div className="mb-1 flex items-center gap-2">
+        <div className="min-w-0 flex-1">
+          <div className="mb-1 flex flex-wrap items-center gap-2">
             <Badge variant="destructive">{REASON_LABELS[report.reason] ?? report.reason}</Badge>
-            <Link href={`/files/${report.file?.id}`} className="text-sm font-medium hover:underline" target="_blank">
+            <Link href={`/files/${report.file?.id}`} className="min-w-0 break-words text-sm font-medium hover:underline" target="_blank">
               {report.file?.title}
             </Link>
           </div>
           {report.details && <p className="text-sm text-muted-foreground">{report.details}</p>}
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1 break-words text-xs text-muted-foreground">
             Reported by {report.reporter?.full_name} ()
           </p>
         </div>

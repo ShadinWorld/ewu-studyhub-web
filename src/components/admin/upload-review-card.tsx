@@ -48,12 +48,12 @@ export function UploadReviewCard({ file }: { file: any }) {
   return (
     <Card>
       <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex gap-3">
+        <div className="flex min-w-0 flex-1 gap-3">
           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-muted">
             <FileText className="h-6 w-6 text-muted-foreground" />
           </div>
-          <div>
-            <p className="font-medium">{file.title}</p>
+          <div className="min-w-0">
+            <p className="break-words font-medium">{file.title}</p>
             <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{file.description}</p>
             <div className="mt-2 flex flex-wrap gap-2 text-xs">
               <Badge variant="secondary">{file.category}</Badge>
@@ -68,7 +68,7 @@ export function UploadReviewCard({ file }: { file: any }) {
                 </Badge>
               )}
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">
+            <p className="mt-2 break-words text-xs text-muted-foreground">
               by {file.seller?.full_name} () ·{" "}
               {file.file_size_bytes ? `${(file.file_size_bytes / 1024 / 1024).toFixed(1)}MB` : ""}
             </p>
