@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient, createClient } from "@/lib/supabase/server";
 
 export async function submitBkashPayment(formData: FormData): Promise<void> {
   const supabase = createClient();
@@ -88,6 +88,24 @@ export async function submitBkashPayment(formData: FormData): Promise<void> {
     console.error("bKash payment submission error:", error);
     throw new Error("Unable to submit payment. Please try again.");
   }
+
+  const admin = createAdminClient();
+  await admin.from("notifications").insert([
+    {
+      profile_id: user.id,
+      type: "purchase_pending",
+      title: "Purchase request submitted",
+      body: `\"${file.title}\" payment was submitted for admin review. Your request will stay here until it is approved or rejected.`,
+      link: `/requests`,
+    },
+    {
+      profile_id: file.seller_id,
+      type: "purchase_pending",
+      title: "New purchase request",
+      body: `A buyer submitted a purchase request for \"${file.title}\". Admin is reviewing the payment.`,
+      link: `/requests`,
+    },
+  ]);
 
   revalidatePath(`/checkout/${fileId}`);
   revalidatePath(`/files/${fileId}`);

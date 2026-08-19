@@ -32,7 +32,7 @@ export function DepartmentCard({
     <Link
       href={`/departments/${department.id}`}
       className={cn(
-        "group relative flex min-h-[186px] min-w-0 flex-col justify-between overflow-hidden rounded-2xl border bg-gradient-to-br p-3 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:min-h-[190px] sm:p-5",
+        "group relative flex min-h-[205px] min-w-0 flex-col justify-between overflow-hidden rounded-2xl border bg-gradient-to-br p-3.5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:min-h-[218px] sm:p-5",
         tones[tone]
       )}
     >
@@ -42,20 +42,20 @@ export function DepartmentCard({
           <span className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-xl sm:h-11 sm:w-11 sm:rounded-2xl", iconTones[tone])}>
             <GraduationCap className="h-5 w-5 sm:h-6 sm:w-6" />
           </span>
-          <span className="max-w-[48%] truncate rounded-full border bg-background/70 px-2 py-1 text-[9px] font-bold uppercase tracking-wide backdrop-blur sm:px-2.5 sm:text-[11px]">
+          <span className="max-w-[54%] break-words rounded-full border bg-background/70 px-2 py-1 text-center text-[9px] font-bold uppercase leading-3 tracking-wide backdrop-blur sm:px-2.5 sm:text-[11px] sm:leading-4">
             {department.short_name}
           </span>
         </div>
-        <h3 className="mt-3 line-clamp-3 text-[13px] font-bold leading-5 sm:mt-5 sm:text-lg sm:leading-snug">{department.name}</h3>
-        {department.resourceCount > 0 && <p className="mt-2 flex items-start gap-1 text-[10px] font-semibold leading-4 text-primary sm:text-xs"><Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" /><span className="line-clamp-2">Active resource community</span></p>}
+        <h3 className="mt-3 min-h-[3.75rem] break-words text-[13px] font-bold leading-5 sm:mt-5 sm:min-h-[3.6rem] sm:text-lg sm:leading-snug">{department.name}</h3>
+        {department.resourceCount > 0 && <p className="mt-2 flex min-h-8 items-start gap-1 text-[10px] font-semibold leading-4 text-primary sm:text-xs"><Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" /><span className="break-words">Active resource community</span></p>}
       </div>
       <div className="relative mt-3 flex min-w-0 items-center justify-between gap-1.5 sm:mt-5 sm:gap-3">
         <div className="grid min-w-0 flex-1 grid-cols-2 gap-1.5 text-[9px] font-medium text-muted-foreground sm:flex sm:gap-2 sm:text-xs">
-          <span className="inline-flex min-w-0 items-center justify-center gap-1 rounded-full bg-background/75 px-1.5 py-1.5 sm:px-2.5 sm:py-1">
-            <BookOpen className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" /> <span className="truncate">{department.courseCount} courses</span>
+          <span className="inline-flex min-w-0 items-center justify-center gap-1 rounded-full bg-background/75 px-1.5 py-1.5 text-center leading-4 sm:px-2.5 sm:py-1">
+            <BookOpen className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" /> <span className="break-words">{department.courseCount} courses</span>
           </span>
-          <span className="inline-flex min-w-0 items-center justify-center gap-1 rounded-full bg-background/75 px-1.5 py-1.5 sm:px-2.5 sm:py-1">
-            <FileText className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" /> <span className="truncate">{department.resourceCount} resources</span>
+          <span className="inline-flex min-w-0 items-center justify-center gap-1 rounded-full bg-background/75 px-1.5 py-1.5 text-center leading-4 sm:px-2.5 sm:py-1">
+            <FileText className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" /> <span className="break-words">{department.resourceCount} resources</span>
           </span>
         </div>
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-background/85 shadow-sm transition-transform group-hover:translate-x-1 sm:h-9 sm:w-9">

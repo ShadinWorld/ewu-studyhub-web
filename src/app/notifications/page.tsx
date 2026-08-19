@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { NotificationList } from "@/components/notifications/notification-list";
@@ -33,11 +34,14 @@ export default async function NotificationsPage() {
             {unreadCount ? `${unreadCount} unread notification${unreadCount === 1 ? "" : "s"}.` : "You're all caught up."}
           </p>
         </div>
-        {unreadCount > 0 && (
-          <form action={markAllNotificationsRead}>
-            <Button type="submit" variant="outline" size="sm">Mark all as read</Button>
-          </form>
-        )}
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline" size="sm"><Link href="/requests">My Requests</Link></Button>
+          {unreadCount > 0 && (
+            <form action={markAllNotificationsRead}>
+              <Button type="submit" variant="outline" size="sm">Mark all as read</Button>
+            </form>
+          )}
+        </div>
       </div>
 
 <NotificationList notifications={notifications ?? []} />

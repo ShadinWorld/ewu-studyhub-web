@@ -84,5 +84,5 @@ export default async function CheckoutPage({ params }: { params: { fileId: strin
 }
 
 function StatusPage({ title, message, href, label }: { title: string; message: string; href: string; label: string }) {
-  return <div className="flex min-h-screen flex-col"><Navbar /><main className="container flex flex-1 items-center justify-center py-16"><Card className="max-w-lg"><CardHeader><CardTitle>{title}</CardTitle><CardDescription>{message}</CardDescription></CardHeader><CardContent><Button asChild><Link href={href}>{label}</Link></Button></CardContent></Card></main><Footer /></div>;
+  return <div className="flex min-h-screen flex-col"><Navbar /><main className="container flex flex-1 items-center justify-center py-10 sm:py-16"><Card className="w-full max-w-lg"><CardHeader><CardTitle>{title}</CardTitle><CardDescription>{message}</CardDescription></CardHeader><CardContent><div className="grid gap-2 sm:flex sm:flex-wrap"><Button asChild><Link href={href}>{label}</Link></Button><Button asChild variant="outline"><Link href="/requests">View My Requests</Link></Button><Button asChild variant="ghost"><Link href="/notifications">Notifications</Link></Button></div></CardContent></Card></main><Footer /></div>;
 }

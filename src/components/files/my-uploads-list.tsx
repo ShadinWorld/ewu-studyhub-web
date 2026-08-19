@@ -45,6 +45,9 @@ export function MyUploadsList({ files }: { files: MyFile[] }) {
                 <p className="font-medium">{file.title}</p>
                 <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
                   <Badge variant={status.variant}>{status.label}</Badge>
+                  {file.visibility === "draft" && <span className="font-semibold text-amber-700 dark:text-amber-300">Admin approval pending</span>}
+                  {file.visibility === "published" && <span className="font-semibold text-emerald-700 dark:text-emerald-300">Approved & live</span>}
+                  {file.visibility === "rejected" && <span className="font-semibold text-destructive">Rejected by admin</span>}
                   <Badge variant={file.pricing_type === "free" ? "success" : "default"}>
                     {file.pricing_type === "free" ? "Free" : formatBDT(file.price_cents)}
                   </Badge>

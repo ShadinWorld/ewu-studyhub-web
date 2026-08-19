@@ -56,6 +56,32 @@ export function UploadForm({
       .slice(0, 8);
   }, [courses, courseQuery]);
 
+  // Exact course-code match: typing e.g. "CSE 103" immediately fills the
+  // Department and Course fields so the seller does not have to pick them twice.
+  const exactCourseMatch = useMemo(() => {
+    const q = normalize(courseQuery);
+    if (!q) return null;
+    return courses.find((c) => normalize(c.course_code) === q) ?? null;
+  }, [courses, courseQuery]);
+
+  function handleCourseSearchChange(value: string) {
+    setCourseQuery(value);
+    setShowSuggestions(true);
+    if (!value.trim()) {
+      setCourseId("");
+      setDepartmentId("");
+      return;
+    }
+    const q = normalize(value);
+    const exact = courses.find((c) => normalize(c.course_code) === q);
+    if (exact) {
+      setDepartmentId(exact.department_id);
+      setCourseId(exact.id);
+    } else if (courseId) {
+      setCourseId("");
+    }
+  }
+
   function selectCourse(course: UploadCourse) {
     setDepartmentId(course.department_id);
     setCourseId(course.id);
@@ -157,11 +183,7 @@ export function UploadForm({
             placeholder="Type a course code, e.g. CSE303…"
             className="pl-9 pr-9"
             value={courseQuery}
-            onChange={(e) => {
-              setCourseQuery(e.target.value);
-              setShowSuggestions(true);
-              if (courseId) setCourseId("");
-            }}
+            onChange={(e) => handleCourseSearchChange(e.target.value)}
             onFocus={() => setShowSuggestions(true)}
             onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
           />
@@ -173,12 +195,19 @@ export function UploadForm({
               onClick={() => {
                 setCourseQuery("");
                 setCourseId("");
+                setDepartmentId("");
               }}
             >
               <X className="h-4 w-4" />
             </button>
           )}
         </div>
+        {exactCourseMatch && (
+          <div className="flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/[0.04] px-3 py-2 text-xs sm:text-sm">
+            <span className="font-semibold text-primary">Auto-selected:</span>
+            <span className="min-w-0 break-words text-muted-foreground">{exactCourseMatch.course_code} — {exactCourseMatch.course_name}</span>
+          </div>
+        )}
         {showSuggestions && searchResults.length > 0 && (
           <ul className="absolute z-10 max-h-64 w-full overflow-auto rounded-md border bg-popover shadow-md">
             {searchResults.map((c) => (

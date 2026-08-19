@@ -35,7 +35,7 @@ export default async function DashboardPage() {
         .limit(5),
       supabase.from("wishlists").select("file_id", { count: "exact", head: true }).eq("profile_id", user.id),
       supabase.from("purchases").select("id", { count: "exact", head: true }).eq("buyer_id", user.id).eq("status", "pending"),
-      supabase.from("notifications").select("id,type,title,body,created_at,is_read,link").eq("profile_id", user.id).in("type", ["seller_verification_pending","resource_request_update","purchase_pending","purchase_rejected"]).order("created_at", { ascending: false }).limit(5),
+      supabase.from("notifications").select("id,type,title,body,created_at,is_read,link").eq("profile_id", user.id).in("type", ["seller_verification_pending","resource_request_update","purchase_pending","purchase_completed","report_update"]).order("created_at", { ascending: false }).limit(5),
     ]);
 
     const completedCount = (purchases ?? []).filter((p) => p.status === "completed").length;
@@ -59,6 +59,7 @@ export default async function DashboardPage() {
           <Button asChild className="h-12"><Link href="/search">Browse resources</Link></Button>
           <Button asChild variant="outline" className="h-12"><Link href="/purchases">My Purchases</Link></Button>
           <Button asChild variant="outline" className="h-12"><Link href="/saved">Saved</Link></Button>
+          <Button asChild variant="outline" className="h-12"><Link href="/requests">My Requests</Link></Button>
           <Button asChild variant="outline" className="relative h-12"><Link href="/notifications">Notifications{actionNotifications?.some((n) => !n.is_read) ? <span className="ml-1 rounded-full bg-primary px-1.5 py-0.5 text-[10px] text-primary-foreground">{actionNotifications.filter((n) => !n.is_read).length}</span> : null}</Link></Button>
           <Button asChild variant="outline" className="h-12"><Link href="/tools">Student Tools</Link></Button>
         </div>
@@ -114,7 +115,7 @@ export default async function DashboardPage() {
       .eq("files.seller_id", user.id)
       .eq("status", "completed"),
     supabase.from("payouts").select("id", { count: "exact", head: true }).eq("seller_id", user.id).eq("status", "pending"),
-    supabase.from("notifications").select("id,type,title,body,created_at,is_read,link").eq("profile_id", user.id).in("type", ["upload_pending","upload_approved","upload_rejected","payout_pending","payout_completed","seller_approved"]).order("created_at", { ascending: false }).limit(8),
+    supabase.from("notifications").select("id,type,title,body,created_at,is_read,link").eq("profile_id", user.id).in("type", ["upload_pending","upload_approved","upload_rejected","payout_pending","payout_completed","seller_approved","purchase_pending","purchase_completed","report_update"]).order("created_at", { ascending: false }).limit(8),
   ]);
 
   const totalRevenue = (purchaseAgg ?? []).reduce((sum, p: any) => sum + p.seller_earning_cents, 0);
@@ -140,6 +141,7 @@ export default async function DashboardPage() {
         <Button asChild variant="outline" className="h-12"><Link href="/dashboard/sales">Sales & earnings</Link></Button>
         <Button asChild variant="outline" className="h-12"><Link href="/dashboard/payment-settings">Payment settings</Link></Button>
         <Button asChild variant="outline" className="h-12"><Link href="/purchases">Purchases</Link></Button>
+        <Button asChild variant="outline" className="h-12"><Link href="/requests">My Requests</Link></Button>
         <Button asChild variant="outline" className="h-12"><Link href="/notifications">Notifications</Link></Button>
           <Button asChild variant="outline" className="h-12"><Link href="/tools">Student Tools</Link></Button>
       </div>
