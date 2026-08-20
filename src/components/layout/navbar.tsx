@@ -36,13 +36,13 @@ export async function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/80 bg-background/90 backdrop-blur-xl">
-      <div className="container flex h-14 items-center justify-between gap-2 sm:h-16">
+    <header className="sticky top-0 z-40 w-full border-b border-border/80 bg-background/95 backdrop-blur-xl">
+      <div className="container flex h-12 items-center justify-between gap-1.5 sm:h-16 sm:gap-2">
         <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
           <BackButton className="shrink-0" />
-          <Link href="/" className="flex min-w-0 items-center gap-2 font-bold text-base sm:text-lg">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary sm:h-10 sm:w-10">
-            <GraduationCap className="h-5 w-5 sm:h-6 sm:w-6" />
+          <Link href="/" className="flex min-w-0 items-center gap-1.5 font-bold text-sm sm:gap-2 sm:text-lg">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary sm:h-10 sm:w-10 sm:rounded-xl">
+            <GraduationCap className="h-4 w-4 sm:h-6 sm:w-6" />
           </span>
             <span className="truncate">EWU StudyHub</span>
           </Link>

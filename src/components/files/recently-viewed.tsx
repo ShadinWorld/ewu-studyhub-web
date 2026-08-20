@@ -20,7 +20,7 @@ export async function RecentlyViewed() {
 
   const { data: files } = await supabase
     .from("files")
-    .select("id, title, thumbnail_url, pricing_type, price_cents, average_rating, reviews_count, downloads_count, views_count, category, course_id, seller_id")
+    .select("id, title, thumbnail_url, file_kind, pricing_type, price_cents, average_rating, reviews_count, downloads_count, views_count, category, course_id, seller_id")
     .in("id", fileIds)
     .eq("visibility", "published");
 

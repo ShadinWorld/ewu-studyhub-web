@@ -38,7 +38,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Recor
 
   let query = supabase
     .from("files")
-    .select("id, title, thumbnail_url, pricing_type, price_cents, average_rating, reviews_count, downloads_count, views_count, category, course_id, seller_id, published_at", { count: "exact" })
+    .select("id, title, thumbnail_url, file_kind, pricing_type, price_cents, average_rating, reviews_count, downloads_count, views_count, category, course_id, seller_id, published_at", { count: "exact" })
     .eq("visibility", "published")
     .order("published_at", { ascending: false });
 

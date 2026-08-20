@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/shared/theme-provider";
 import { Toaster } from "sonner";
 import { MobileBottomNav } from "@/components/navigation/mobile-bottom-nav";
 import { WhatsAppSupportButton } from "@/components/support/whatsapp-support-button";
+import { RealtimeSyncProvider } from "@/components/shared/realtime-sync-provider";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -22,7 +23,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="ewu-blue" themes={["ewu-blue", "pink", "dark"]} disableTransitionOnChange>
-          {children}
+          <RealtimeSyncProvider>
+            {children}
+          </RealtimeSyncProvider>
           <MobileBottomNav />
           <WhatsAppSupportButton />
           <Toaster richColors position="top-center" />

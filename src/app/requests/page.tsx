@@ -40,7 +40,7 @@ export default async function MyRequestsPage() {
     }
 
     for (const payout of payouts ?? []) {
-      const status = payout.status === "completed" ? "Paid" : payout.status === "failed" || payout.status === "rejected" ? "Rejected" : "Under review";
+      const status = payout.status === "completed" ? "Paid" : payout.status === "failed" ? "Rejected" : "Under review";
       const tone = status === "Paid" ? "completed" : status === "Rejected" ? "rejected" : "pending";
       const note = notes.find((n) => ["payout_pending", "payout_completed", "report_update"].includes(n.type) && (n.body ?? "").toLowerCase().includes("payout"));
       requests.push({ id: payout.id, type: "Payout request", reference: `Payout #${payout.id.slice(0, 8).toUpperCase()}`, amountCents: payout.amount_cents, submittedAt: payout.created_at, status, tone, detail: note?.body ?? "Your payout request and admin processing status.", link: "/dashboard/payment-settings" });

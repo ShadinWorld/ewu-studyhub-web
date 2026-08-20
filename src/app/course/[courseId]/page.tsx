@@ -59,7 +59,7 @@ export default async function CourseDetailPage({
   let query = supabase
     .from("files")
     .select(
-      "id, title, thumbnail_url, pricing_type, price_cents, average_rating, reviews_count, downloads_count, category, year, semester, seller_id"
+      "id, title, thumbnail_url, file_kind, pricing_type, price_cents, average_rating, reviews_count, downloads_count, category, year, semester, seller_id"
     )
     .eq("course_id", course.id)
     .eq("visibility", "published");

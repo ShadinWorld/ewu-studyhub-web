@@ -41,7 +41,7 @@ export default async function TrendingPage() {
   const { data: files } = await supabase
     .from("files")
     .select(
-      "id, title, thumbnail_url, pricing_type, price_cents, average_rating, reviews_count, downloads_count, views_count, category, seller_id, course_id"
+      "id, title, thumbnail_url, file_kind, pricing_type, price_cents, average_rating, reviews_count, downloads_count, views_count, category, seller_id, course_id"
     )
     .eq("visibility", "published");
 

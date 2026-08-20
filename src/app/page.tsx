@@ -46,7 +46,7 @@ async function TrendingFiles() {
   const { data: files } = await supabase
     .from("files")
     .select(
-      "id, title, thumbnail_url, pricing_type, price_cents, average_rating, reviews_count, downloads_count, views_count, category, course_id, seller_id"
+      "id, title, thumbnail_url, file_kind, pricing_type, price_cents, average_rating, reviews_count, downloads_count, views_count, category, course_id, seller_id"
     )
     .eq("visibility", "published")
     .order("downloads_count", { ascending: false })
@@ -236,7 +236,7 @@ async function DepartmentsPreview() {
 
 async function RecentResources() {
   const supabase = createClient();
-  const { data: files } = await supabase.from("files").select("id,title,thumbnail_url,pricing_type,price_cents,average_rating,reviews_count,downloads_count,views_count,category,course_id,seller_id").eq("visibility", "published").order("created_at", { ascending: false }).limit(8);
+  const { data: files } = await supabase.from("files").select("id,title,thumbnail_url,file_kind,pricing_type,price_cents,average_rating,reviews_count,downloads_count,views_count,category,course_id,seller_id").eq("visibility", "published").order("created_at", { ascending: false }).limit(8);
   if (!files?.length) return null;
   const courseIds = Array.from(new Set(files.map(f=>f.course_id).filter((x): x is string=>Boolean(x))));
   const sellerIds = Array.from(new Set(files.map(f=>f.seller_id).filter((x): x is string=>Boolean(x))));
@@ -385,7 +385,7 @@ function StudentToolsPreview() {
     ["/tools/deadlines", "Deadline Tracker", "Never miss an important date", FileClock],
     ["/tools/resource-request", "Request a Resource", "Ask for missing materials", FileQuestion],
   ] as const;
-  return <section className="container pt-8 sm:pt-10"><div className="mb-4 flex items-end justify-between gap-3"><div><p className="text-sm font-semibold text-primary">Student tools</p><h2 className="mt-1 text-xl font-bold sm:text-2xl">More than a resource marketplace</h2><p className="mt-1 text-sm text-muted-foreground">Useful tools for everyday EWU student life.</p></div><Link href="/tools" className="hidden text-sm font-semibold text-primary sm:inline-flex">View all <ArrowRight className="ml-1 h-4 w-4"/></Link></div><div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">{tools.map(([href,title,text,Icon])=><Link key={href} href={href} className="group rounded-2xl border bg-card p-4 transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-md"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon className="h-5 w-5"/></div><p className="mt-3 font-semibold group-hover:text-primary">{title}</p><p className="mt-1 text-xs leading-5 text-muted-foreground">{text}</p></Link>)}</div></section>;
+  return <section className="container pt-8 sm:pt-10"><div className="mb-4 flex items-end justify-between gap-3"><div><p className="text-sm font-semibold text-primary">Study tools</p><h2 className="mt-1 text-xl font-bold sm:text-2xl">Study Essentials</h2><p className="mt-1 text-sm text-muted-foreground">Useful EWU tools, kept compact so the homepage stays focused.</p></div><Link href="/tools" className="hidden text-sm font-semibold text-primary sm:inline-flex">View all <ArrowRight className="ml-1 h-4 w-4"/></Link></div><div className="grid grid-cols-2 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4">{tools.map(([href,title,text,Icon])=><Link key={href} href={href} className="group rounded-2xl border bg-card p-3 transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-md sm:p-4"><div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary sm:h-10 sm:w-10"><Icon className="h-4 w-4 sm:h-5 sm:w-5"/></div><p className="mt-2 line-clamp-1 text-sm font-semibold group-hover:text-primary sm:mt-3">{title}</p><p className="mt-1 line-clamp-2 text-[10px] leading-4 text-muted-foreground sm:text-xs sm:leading-5">{text}</p></Link>)}</div></section>;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -400,7 +400,7 @@ async function SellerResourcesHome() {
   const { data: profile } = await supabase.from("profiles").select("is_seller, role").eq("id", user.id).maybeSingle();
   const isSeller = Boolean(profile?.is_seller || profile?.role === "seller");
   if (!isSeller) return null;
-  const { data: files } = await supabase.from("files").select("id,title,thumbnail_url,pricing_type,price_cents,average_rating,reviews_count,downloads_count,views_count,category,course_id,seller_id").eq("seller_id", user.id).neq("visibility", "rejected").order("created_at", { ascending: false }).limit(6);
+  const { data: files } = await supabase.from("files").select("id,title,thumbnail_url,file_kind,pricing_type,price_cents,average_rating,reviews_count,downloads_count,views_count,category,course_id,seller_id").eq("seller_id", user.id).neq("visibility", "rejected").order("created_at", { ascending: false }).limit(6);
   if (!files?.length) return null;
   const courseIds = Array.from(new Set(files.map(f => f.course_id).filter((x): x is string => Boolean(x))));
   const { data: courses } = courseIds.length ? await supabase.from("courses").select("id,course_code").in("id", courseIds) : { data: [] as {id:string;course_code:string}[] };

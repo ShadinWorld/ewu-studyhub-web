@@ -11,6 +11,7 @@ export interface ResourceCardData {
   id: string;
   title: string;
   thumbnail_url: string | null;
+  file_kind?: string | null;
   pricing_type: FilePricingType;
   price_cents: number;
   average_rating: number;
@@ -54,7 +55,10 @@ export function ResourceCard({ file }: { file: ResourceCardData }) {
         <div className="flex min-w-0 max-w-[78%] flex-wrap gap-1.5"><StatusBadge file={file} />{file.downloads_count >= 100 && <Badge className="rounded-full bg-foreground/85 px-2.5 text-[10px] text-background shadow-sm hover:bg-foreground/85"><Sparkles className="mr-1 h-3 w-3" />POPULAR</Badge>}</div>
         {!file.isOwner && <SaveResourceButton fileId={file.id} saved={Boolean(file.saved)} />}
       </div>
-      {file.course_code && <div className="absolute bottom-2 left-2 z-10"><Badge variant="secondary" className="rounded-full bg-background/90 font-mono text-[11px] shadow-sm backdrop-blur">{file.course_code}</Badge></div>}
+      <div className="absolute bottom-2 left-2 right-2 z-10 flex items-end justify-between gap-2">
+        {file.course_code ? <Badge variant="secondary" className="max-w-[60%] truncate rounded-full bg-background/90 font-mono text-[11px] shadow-sm backdrop-blur">{file.course_code}</Badge> : <span />}
+        {file.file_kind && <Badge variant="secondary" className="shrink-0 rounded-full bg-background/95 px-2.5 text-[10px] font-bold uppercase tracking-wide text-foreground shadow-sm backdrop-blur">{file.file_kind}</Badge>}
+      </div>
     </div>
     <div className="flex min-h-[178px] flex-1 flex-col p-2.5 sm:min-h-[178px] sm:p-4">
       <Link href={`/files/${file.id}`} className="block min-w-0"><Badge variant="outline" className="mb-2 w-fit rounded-full text-[11px] font-normal">{RESOURCE_CATEGORY_LABELS[file.category]}</Badge><h3 className="line-clamp-2 break-words text-[12px] font-bold leading-4 transition-colors group-hover:text-primary sm:text-sm sm:leading-snug">{file.title}</h3></Link>

@@ -37,6 +37,32 @@ export async function signInWithGoogleAction(_prevState: FormState, formData: Fo
   redirect(data.url);
 }
 
+
+export async function forgotPasswordAction(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const email = String(formData.get("email") || "").trim().toLowerCase();
+  if (!email) {
+    return { error: "Please enter your email address." };
+  }
+
+  const h = headers();
+  const forwardedHost = h.get("x-forwarded-host") || h.get("host");
+  const forwardedProto = h.get("x-forwarded-proto") || "https";
+  const derivedOrigin = forwardedHost ? `${forwardedProto}://${forwardedHost}` : null;
+  const origin = (process.env.NEXT_PUBLIC_SITE_URL || derivedOrigin || "http://localhost:3000").replace(/\/+$/, "");
+
+  const supabase = createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${origin}/reset-password`,
+  });
+
+  if (error) {
+    console.error("Forgot password error:", error);
+    return { error: "Unable to send the reset email. Please try again." };
+  }
+
+  return { success: "Password reset instructions have been sent to your email." };
+}
+
 export async function logoutAction() {
   const supabase = createClient();
   await supabase.auth.signOut();

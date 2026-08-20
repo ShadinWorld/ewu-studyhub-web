@@ -85,7 +85,7 @@ export function UploadForm({
   function selectCourse(course: UploadCourse) {
     setDepartmentId(course.department_id);
     setCourseId(course.id);
-    setCourseQuery(`${course.course_code} — ${course.course_name}`);
+    setCourseQuery(course.course_code);
     setShowSuggestions(false);
   }
 
@@ -95,13 +95,14 @@ export function UploadForm({
     const current = courses.find((c) => c.id === courseId);
     if (current && current.department_id !== newDeptId) {
       setCourseId("");
+      setCourseQuery("");
     }
   }
 
   function handleCourseChange(newCourseId: string) {
     setCourseId(newCourseId);
     const course = courses.find((c) => c.id === newCourseId);
-    setCourseQuery(course ? `${course.course_code} — ${course.course_name}` : "");
+    setCourseQuery(course ? course.course_code : "");
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {

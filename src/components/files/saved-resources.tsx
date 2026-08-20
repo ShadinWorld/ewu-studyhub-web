@@ -12,7 +12,7 @@ export async function SavedResources() {
   const fileIds = (rows ?? []).map((row) => row.file_id);
   if (!fileIds.length) return null;
 
-  const { data: files } = await supabase.from("files").select("id, title, thumbnail_url, pricing_type, price_cents, average_rating, reviews_count, downloads_count, views_count, category, course_id, seller_id").in("id", fileIds).eq("visibility", "published");
+  const { data: files } = await supabase.from("files").select("id, title, thumbnail_url, file_kind, pricing_type, price_cents, average_rating, reviews_count, downloads_count, views_count, category, course_id, seller_id").in("id", fileIds).eq("visibility", "published");
   const courseIds = Array.from(new Set((files ?? []).map((file) => file.course_id).filter((id): id is string => Boolean(id))));
   const sellerIds = Array.from(new Set((files ?? []).map((file) => file.seller_id)));
   const [{ data: courses }, { data: sellers }] = await Promise.all([
