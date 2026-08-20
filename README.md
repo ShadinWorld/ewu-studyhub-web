@@ -96,3 +96,7 @@ docs/
   `src/app/api/files/[id]/download/route.ts`.
 - Uploads are validated for MIME type, size (100MB cap), and sha256-hashed
   for duplicate detection before ever touching storage.
+
+## AI continuity
+
+Private continuity documentation is stored in `.ai/` inside the project ZIP. Read `.ai/00_AI_START_HERE.md` first when continuing the project in a new AI session. The `.ai/` directory is intentionally ignored by GitHub/local Git tracking.

@@ -10,7 +10,7 @@ import { HomepageBannerManager } from "@/components/admin/homepage-banner-manage
 export default async function AdminAcademicToolsPage(){const supabase=createClient();const admin=createAdminClient();const [{data:deadlines},{data:requests},{data:announcements},{data:documents},{data:departments},{data:courses},{data:bannerSettings},{data:dailyStats}]=await Promise.all([
   admin.from("deadlines").select("id,title,due_at,category,term,year").order("due_at",{ascending:true}).limit(50),
   admin.from("resource_requests").select("id,title,status,admin_note,created_at,user_id,course_id").order("created_at",{ascending:false}).limit(50),
-  admin.from("announcements").select("id,title,body,badge,cta_label,cta_link,image_url,mobile_image_url,image_alt,starts_at,ends_at,is_active,display_order,status,audience,is_dismissible,display_frequency,target_department_id,target_course_id,impression_count,click_count").order("display_order",{ascending:true}).order("created_at",{ascending:false}).limit(100),
+  admin.from("announcements").select("id,title,body,badge,cta_label,cta_link,image_url,mobile_image_url,image_alt,starts_at,ends_at,is_active,display_order,status,audience,is_dismissible,display_frequency,publish_mode,duration_days,target_department_id,target_course_id,impression_count,click_count").order("display_order",{ascending:true}).order("created_at",{ascending:false}).limit(100),
   admin.from("academic_documents").select("id,document_type,term,year,title,mime_type,file_size_bytes,created_at").order("year",{ascending:false}).order("created_at",{ascending:false}).limit(20),
   admin.from("departments").select("id,name,short_name").order("short_name"),
   admin.from("courses").select("id,course_code,course_name,department_id").order("course_code").limit(2000),

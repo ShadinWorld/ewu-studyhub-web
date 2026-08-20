@@ -414,7 +414,7 @@ export interface ResourceRequest {
 
 export interface Announcement {
   id: string; title: string; body: string; badge: string | null; cta_label: string | null; cta_link: string | null; image_url: string | null; starts_at: string | null; ends_at: string | null; is_active: boolean; priority: number; created_by: string; created_at: string; updated_at: string;
-  audience: "all" | "student" | "seller" | "admin"; mobile_image_url: string | null; image_storage_path: string | null; mobile_image_storage_path: string | null; image_alt: string | null; display_order: number; status: "draft" | "scheduled" | "published" | "hidden"; is_dismissible: boolean; display_frequency: "every_visit" | "once_per_session" | "once_per_day"; target_department_id: string | null; target_course_id: string | null; impression_count: number; click_count: number; updated_by: string | null;
+  audience: "all" | "student" | "seller" | "admin"; mobile_image_url: string | null; image_storage_path: string | null; mobile_image_storage_path: string | null; image_alt: string | null; display_order: number; status: "draft" | "scheduled" | "published" | "hidden"; is_dismissible: boolean; display_frequency: "every_visit" | "once_per_session" | "once_per_day"; publish_mode: "exact_dates" | "duration"; duration_days: number | null; target_department_id: string | null; target_course_id: string | null; impression_count: number; click_count: number; updated_by: string | null;
 }
 
 export interface HomepageBannerSetting {

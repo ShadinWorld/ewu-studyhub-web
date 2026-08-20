@@ -10,3 +10,6 @@ npm-debug.log*
 next-env.d.ts
 *.tsbuildinfo
 *.zip
+
+# Private AI/project continuity documentation (keep in ZIP/local, not GitHub)
+.ai/

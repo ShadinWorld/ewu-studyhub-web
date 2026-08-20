@@ -458,6 +458,11 @@ export default function HomePage() {
       <Navbar />
 
       <main className="flex-1 pb-16 md:pb-0">
+        {/* The campaign banner is intentionally the first major visual element. */}
+        <Suspense fallback={<div className="min-h-[320px] bg-muted/20 sm:min-h-[390px] lg:min-h-[470px]" />}>
+          <HomepageBannerHero />
+        </Suspense>
+
         {/* ------------------------------------------------------------------ */}
         {/* Hero                                                               */}
         {/* ------------------------------------------------------------------ */}
@@ -526,8 +531,6 @@ export default function HomePage() {
             </div>
           </div>
         </section>
-
-        <Suspense fallback={<div className="min-h-[240px] bg-muted/20 sm:min-h-[300px]" />}><HomepageBannerHero /></Suspense>
 
         <PersonalizedShortcuts />
         <SellerCongratulations />
