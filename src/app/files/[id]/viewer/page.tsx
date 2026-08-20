@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import { formatBDT } from "@/lib/utils";
+import { PdfCanvasPreview } from "@/components/files/pdf-canvas-preview";
 
 function previewCount(pageCount: number | null) {
   if (!pageCount || pageCount <= 0) return 0;
@@ -67,7 +68,7 @@ export default async function ResourceViewerPage({ params, searchParams }: { par
                   return (
                     <article key={pageNumber} className="overflow-hidden rounded-2xl border bg-white shadow-sm">
                       <div className="border-b bg-muted/40 px-4 py-2 text-xs font-semibold text-muted-foreground">Page {pageNumber}</div>
-                      <iframe title={`Page ${pageNumber} of ${file.title}`} src={`/api/files/${file.id}/preview/page/${pageNumber}`} className="h-[78vh] min-h-[620px] w-full bg-white" />
+                      <PdfCanvasPreview urls={[`/api/files/${file.id}/preview/page/${pageNumber}`]} />
                     </article>
                   );
                 })}
@@ -99,7 +100,7 @@ export default async function ResourceViewerPage({ params, searchParams }: { par
               <div className="border-b bg-muted/40 px-4 py-2 text-xs font-semibold text-muted-foreground">Image preview · 30% visible / 70% locked</div>
               <div className="relative aspect-[4/5] w-full overflow-hidden bg-muted/20">
                 <div className="absolute inset-x-0 top-0 h-[30%] overflow-hidden bg-white">
-                  <iframe title={`Partial preview of ${file.title}`} src={`/api/files/${file.id}/preview/image`} className="h-full w-full bg-white" />
+                  <PdfCanvasPreview urls={[`/api/files/${file.id}/preview/image`]} className="h-full" />
                 </div>
                 <div className="absolute inset-x-0 bottom-0 h-[70%] bg-muted/20 p-4 sm:p-7">
                   <div className="flex h-full flex-col items-center justify-center rounded-xl border border-dashed border-muted-foreground/25 bg-background px-6 text-center sm:px-10">

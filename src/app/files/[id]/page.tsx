@@ -18,6 +18,7 @@ import { ReportResourceButton } from "@/components/files/report-resource-button"
 import { ResourceDetailActions } from "@/components/files/resource-detail-actions";
 import { StickyResourceActionBar } from "@/components/files/sticky-resource-action-bar";
 import { QualityIndicator } from "@/components/files/quality-indicator";
+import { PdfCanvasPreview } from "@/components/files/pdf-canvas-preview";
 import type { ResourceCardData } from "@/components/files/resource-card";
 import { ResourceCardGrid } from "@/components/files/resource-card";
 import type { FilePricingType } from "@/types/database.types";
@@ -118,7 +119,7 @@ export default async function FileDetailPage({ params, searchParams }: { params:
     <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start"><div className="min-w-0">
       <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
         <div className="relative aspect-[16/9] overflow-hidden bg-muted sm:aspect-[2/1]">
-          {showInlinePreview ? <iframe title={`Preview of ${file.title}`} src={previewUrl!} className="h-full w-full bg-white" /> : file.thumbnail_url && /\.(jpe?g|png|webp|gif)(\?|$)/i.test(file.thumbnail_url) ? <Image src={file.thumbnail_url} alt={file.title} fill priority className="object-cover" sizes="(max-width: 1024px) 100vw, 70vw" /> : <div className="flex h-full items-center justify-center bg-gradient-to-br from-primary/10 via-accent/50 to-muted"><FileText className="h-16 w-16 text-muted-foreground" /></div>}
+          {showInlinePreview ? <div className="h-full overflow-auto bg-white p-2 sm:p-4"><PdfCanvasPreview urls={[`/api/files/${file.id}/preview/page/1`]} /></div> : file.thumbnail_url && /\.(jpe?g|png|webp|gif)(\?|$)/i.test(file.thumbnail_url) ? <Image src={file.thumbnail_url} alt={file.title} fill priority className="object-cover" sizes="(max-width: 1024px) 100vw, 70vw" /> : <div className="flex h-full items-center justify-center bg-gradient-to-br from-primary/10 via-accent/50 to-muted"><FileText className="h-16 w-16 text-muted-foreground" /></div>}
           {!showInlinePreview && previewUrl && (file.file_kind === "pdf" || file.file_kind === "image") && <div className="absolute inset-0 flex items-center justify-center bg-foreground/10 p-4 backdrop-blur-[1px]"><Link href={alreadyPurchased ? `/files/${file.id}/viewer` : file.file_kind === "image" ? `/files/${file.id}/viewer?preview=1` : `/files/${file.id}?preview=1`} className="inline-flex items-center gap-2 rounded-xl bg-background/95 px-4 py-2.5 text-sm font-semibold text-foreground shadow-lg transition hover:bg-background"><Eye className="h-4 w-4" /> {alreadyPurchased ? "View resource" : "Preview"}</Link></div>}
           <div className="absolute inset-x-3 top-3 flex flex-wrap items-center justify-between gap-2"><Badge className="rounded-full bg-background/90 text-foreground shadow-sm backdrop-blur">{RESOURCE_CATEGORY_LABELS[file.category]}</Badge><div className="flex gap-2"><Badge variant="secondary" className="rounded-full bg-background/90 shadow-sm backdrop-blur">{file.file_kind.toUpperCase()}</Badge>{isFree ? <Badge variant="success" className="rounded-full">FREE</Badge> : <Badge className="rounded-full">{formatBDT(file.price_cents)}</Badge>}</div></div>
         </div>
