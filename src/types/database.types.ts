@@ -413,20 +413,16 @@ export interface ResourceRequest {
 }
 
 export interface Announcement {
-  id: string;
-  title: string;
-  body: string;
-  badge: string | null;
-  cta_label: string | null;
-  cta_link: string | null;
-  image_url: string | null;
-  starts_at: string | null;
-  ends_at: string | null;
-  is_active: boolean;
-  priority: number;
-  created_by: string;
-  created_at: string;
-  updated_at: string;
+  id: string; title: string; body: string; badge: string | null; cta_label: string | null; cta_link: string | null; image_url: string | null; starts_at: string | null; ends_at: string | null; is_active: boolean; priority: number; created_by: string; created_at: string; updated_at: string;
+  audience: "all" | "student" | "seller" | "admin"; mobile_image_url: string | null; image_storage_path: string | null; mobile_image_storage_path: string | null; image_alt: string | null; display_order: number; status: "draft" | "scheduled" | "published" | "hidden"; is_dismissible: boolean; display_frequency: "every_visit" | "once_per_session" | "once_per_day"; target_department_id: string | null; target_course_id: string | null; impression_count: number; click_count: number; updated_by: string | null;
+}
+
+export interface HomepageBannerSetting {
+  audience: "all" | "student" | "seller" | "admin"; max_visible: number; autoplay: boolean; auto_rotate_seconds: number; show_dots: boolean; show_arrows: boolean; transition: "fade" | "slide" | "fade_slide"; updated_at: string;
+}
+
+export interface AnnouncementDailyStat {
+  announcement_id: string; stat_date: string; impression_count: number; click_count: number;
 }
 
 export interface Notification {
@@ -525,6 +521,8 @@ export interface Database {
       deadlines: Table<Deadline>;
       resource_requests: Table<ResourceRequest>;
       announcements: Table<Announcement>;
+      homepage_banner_settings: Table<HomepageBannerSetting>;
+      announcement_daily_stats: Table<AnnouncementDailyStat>;
     };
     Views: Record<string, never>;
     Functions: {
@@ -541,6 +539,8 @@ export interface Database {
         Args: { p_file_id: string } & Record<string, unknown>;
         Returns: void;
       };
+      increment_announcement_impression: { Args: { p_announcement_id: string } & Record<string, unknown>; Returns: void; };
+      increment_announcement_click: { Args: { p_announcement_id: string } & Record<string, unknown>; Returns: void; };
       approve_manual_bkash_purchase: {
         Args: { p_purchase_id: string } & Record<string, unknown>;
         Returns: void;

@@ -1,0 +1,2 @@
+import { NextResponse } from "next/server"; import { createClient } from "@/lib/supabase/server";
+export async function POST(request:Request){try{const {id}=await request.json();if(!id)return NextResponse.json({error:"Missing id"},{status:400});const {error}=await createClient().rpc("increment_announcement_click",{p_announcement_id:String(id)});if(error)return NextResponse.json({error:error.message},{status:400});return NextResponse.json({ok:true})}catch{return NextResponse.json({error:"Invalid request"},{status:400})}}

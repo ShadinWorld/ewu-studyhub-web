@@ -9,6 +9,7 @@ import { ResourceFilters } from "@/components/files/resource-filters";
 import { ResourceCardGrid, type ResourceCardData } from "@/components/files/resource-card";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import type { ResourceCategory } from "@/types/database.types";
+import { CoursePreferenceTracker } from "@/components/homepage/course-preference-tracker";
 
 export async function generateMetadata({ params }: { params: { courseId: string } }) {
   const supabase = createClient();
@@ -138,6 +139,7 @@ export default async function CourseDetailPage({
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
+      <CoursePreferenceTracker courseId={course.id} />
       <main className="flex-1">
         <section className="border-b bg-muted/30">
           <div className="container py-10">

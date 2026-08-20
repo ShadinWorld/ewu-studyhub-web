@@ -34,6 +34,7 @@ import { SavedResources } from "@/components/files/saved-resources";
 import { FAQSection } from "@/components/faq/faq-section";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { SupportFormCard } from "@/components/support/support-form";
+import { HomepageBannerCarousel, type HomepageBanner } from "@/components/homepage/homepage-banner-carousel";
 
 /* -------------------------------------------------------------------------- */
 /* Trending Resources                                                         */
@@ -353,21 +354,14 @@ async function PopularCourses() {
 /* Homepage announcements + tools                                             */
 /* -------------------------------------------------------------------------- */
 
-async function HomepageAnnouncements() {
-  const supabase = createClient();
-  const now = Date.now();
-  const { data: rows } = await supabase
-    .from("announcements")
-    .select("id,title,body,badge,cta_label,cta_link,image_url,starts_at,ends_at,priority,created_at")
-    .eq("is_active", true)
-    .order("priority", { ascending: false })
-    .order("created_at", { ascending: false })
-    .limit(10);
-  const data = (rows ?? []).filter(a => (!a.starts_at || new Date(a.starts_at).getTime() <= now) && (!a.ends_at || new Date(a.ends_at).getTime() >= now)).slice(0,3);
-  if (!data.length) return null;
-  return <section className="container pt-6 sm:pt-8"><div className="mb-4 flex items-end justify-between gap-3"><div><p className="text-sm font-semibold text-primary">Important updates</p><h2 className="mt-1 text-xl font-bold sm:text-2xl">What's happening on StudyHub</h2></div><Megaphone className="h-5 w-5 text-primary"/></div><div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">{data.map(a=><article key={a.id} className="rounded-2xl border bg-card p-5 shadow-sm"><div className="flex items-start justify-between gap-3">{a.badge&&<span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-primary">{a.badge}</span>}<Megaphone className="h-4 w-4 text-muted-foreground"/></div><h3 className="mt-3 text-lg font-bold">{a.title}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{a.body}</p>{a.cta_link&&a.cta_label&&<Link href={a.cta_link} className="mt-4 inline-flex text-sm font-semibold text-primary hover:underline">{a.cta_label}<ArrowRight className="ml-1 h-4 w-4"/></Link>}</article>)}</div></section>;
+async function HomepageBannerHero(){
+  const supabase=createClient(); const {data:{user}}=await supabase.auth.getUser(); let role:"guest"|"student"|"seller"|"admin"="guest",departmentId:string|null=null,firstName="there",departmentName="your department";
+  if(user){const {data:p}=await supabase.from("profiles").select("role,is_seller,department_id,full_name").eq("id",user.id).maybeSingle();if(p){role=p.role==="admin"||p.role==="super_admin"?"admin":(p.is_seller||p.role==="seller"?"seller":"student");departmentId=p.department_id;firstName=(p.full_name||user.user_metadata?.full_name||"there").split(/\s+/)[0]||"there";if(p.department_id){const {data:d}=await supabase.from("departments").select("name").eq("id",p.department_id).maybeSingle();departmentName=d?.name??"your department";}}}
+  const bannerAudience: "student" | "seller" | "admin" | "all" = role === "guest" ? "all" : role;
+  const [{data:banners},{data:setting}]=await Promise.all([supabase.from("announcements").select("id,title,body,badge,cta_label,cta_link,image_url,mobile_image_url,image_alt,starts_at,ends_at,display_order,audience,is_dismissible,display_frequency,target_department_id,target_course_id,impression_count,click_count").eq("is_active",true).in("status",["published","scheduled"]).order("display_order",{ascending:true}).order("created_at",{ascending:false}).limit(30),supabase.from("homepage_banner_settings").select("max_visible,autoplay,auto_rotate_seconds,show_dots,show_arrows,transition").eq("audience",bannerAudience).maybeSingle()]);
+  const now=Date.now(); const eligible=(banners??[]).filter(b=>(!b.starts_at||new Date(b.starts_at).getTime()<=now)&&(!b.ends_at||new Date(b.ends_at).getTime()>=now)&&(!b.target_department_id||b.target_department_id===departmentId)) as HomepageBanner[]; if(!eligible.length)return null;
+  return <HomepageBannerCarousel banners={eligible} settings={setting??{max_visible:5,autoplay:true,auto_rotate_seconds:6,show_dots:true,show_arrows:true,transition:"fade_slide"}} personalization={{firstName,departmentName}}/>;
 }
-
 
 async function PendingActionsHome() {
   const supabase = createClient();
@@ -533,11 +527,12 @@ export default function HomePage() {
           </div>
         </section>
 
+        <Suspense fallback={<div className="min-h-[240px] bg-muted/20 sm:min-h-[300px]" />}><HomepageBannerHero /></Suspense>
+
         <PersonalizedShortcuts />
         <SellerCongratulations />
         <SellerResourcesHome />
 
-        <HomepageAnnouncements />
         <StudentToolsPreview />
         <RecentResources />
 
