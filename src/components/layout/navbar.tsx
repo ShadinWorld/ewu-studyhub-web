@@ -95,9 +95,14 @@ export async function Navbar() {
               />
             </>
           ) : (
-            <Button size="sm" asChild className="hidden sm:inline-flex">
-              <Link href="/login">Continue with Google</Link>
-            </Button>
+            <div className="flex items-center gap-1.5">
+              <Button size="sm" variant="outline" asChild>
+                <Link href="/login">Log in</Link>
+              </Button>
+              <Button size="sm" asChild className="hidden sm:inline-flex">
+                <Link href="/signup">Sign up</Link>
+              </Button>
+            </div>
           )}
         </div>
       </div>

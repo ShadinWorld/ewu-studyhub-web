@@ -22,6 +22,9 @@ export default async function CheckoutPage({ params }: { params: { fileId: strin
     .eq("visibility", "published")
     .single();
   if (!file || file.pricing_type !== "paid") notFound();
+  if (file.seller_id === user.id) {
+    return <StatusPage title="Your resource" message="You uploaded this resource, so a purchase is not needed. You already own it." href={`/files/${file.id}`} label="Open resource" />;
+  }
 
   const { data: existing } = await supabase
     .from("purchases")

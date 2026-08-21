@@ -83,3 +83,24 @@ export async function saveResponseTimeSettings(formData: FormData) {
   revalidatePath("/requests");
   redirect("/admin/settings?saved=Response%20time%20settings%20saved");
 }
+export async function saveQuickAttentionControls(formData: FormData) {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+  if (!profile || !["admin", "super_admin"].includes(profile.role)) throw new Error("Not authorized");
+  const admin = supabase as any;
+  const titles = Array.from({ length: 8 }, (_, i) => String(formData.get(`attention_title_${i + 1}`) ?? "").trim());
+  const hrefs = Array.from({ length: 8 }, (_, i) => String(formData.get(`attention_href_${i + 1}`) ?? "/admin/pending").trim());
+  const icons = Array.from({ length: 8 }, (_, i) => String(formData.get(`attention_icon_${i + 1}`) ?? "BellRing").trim());
+  const enabled = Array.from({ length: 8 }, (_, i) => formData.get(`attention_enabled_${i + 1}`) === "on");
+  const { data: current } = await admin.from("homepage_quick_attention").select("id").eq("audience", "admin").order("display_order", { ascending: true }).limit(8);
+  for (let i = 0; i < 8; i++) {
+    const row = current?.[i];
+    if (!row) continue;
+    await admin.from("homepage_quick_attention").update({ title: titles[i] || `Attention ${i + 1}`, href: hrefs[i] || "/admin/pending", icon: icons[i] || "BellRing", is_enabled: enabled[i], display_order: i + 1, updated_at: new Date().toISOString() }).eq("id", row.id);
+  }
+  revalidatePath("/");
+  revalidatePath("/admin/settings");
+  redirect("/admin/settings?saved=Quick%20attention%20saved");
+}

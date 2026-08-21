@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatBDT } from "@/lib/utils";
 import { RESOURCE_CATEGORY_LABELS } from "@/lib/constants";
 import { SaveResourceButton } from "@/components/files/save-resource-button";
+import { createClient } from "@/lib/supabase/server";
 import type { ResourceCategory, FilePricingType, PurchaseStatus } from "@/types/database.types";
 
 export interface ResourceCardData {
@@ -25,6 +26,7 @@ export interface ResourceCardData {
   purchaseStatus?: PurchaseStatus | null;
   rejectionReason?: string | null;
   isOwner?: boolean;
+  seller_id?: string | null;
 }
 
 function StatusBadge({ file }: { file: ResourceCardData }) {
@@ -38,7 +40,7 @@ function StatusBadge({ file }: { file: ResourceCardData }) {
 }
 
 function ActionArea({ file }: { file: ResourceCardData }) {
-  if (file.isOwner) return <><Link href={`/files/${file.id}`} className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"><Eye className="h-3.5 w-3.5" />View</Link><Link href="/dashboard" className="inline-flex h-9 flex-1 items-center justify-center rounded-lg border bg-background px-3 text-xs font-semibold hover:bg-accent">Manage</Link></>;
+  if (file.isOwner) return <><Link href={`/files/${file.id}`} className="inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-1 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"><Eye className="h-3.5 w-3.5" />View</Link><a href={`/api/files/${file.id}/download`} className="inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-1 rounded-lg border bg-background px-2 text-[11px] font-semibold hover:bg-accent sm:px-3 sm:text-xs"><Download className="h-3.5 w-3.5" />Download</a></>;
   if (file.purchaseStatus === "pending") return <div className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-amber-500/10 px-3 text-xs font-semibold text-amber-700 dark:text-amber-300"><Clock3 className="h-3.5 w-3.5" /> Waiting for approval </div>;
   if (file.purchaseStatus === "completed") return <><Link href={`/files/${file.id}/viewer`} className="inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-1 rounded-lg bg-primary px-2 text-[11px] font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 sm:px-3 sm:text-xs"><Eye className="h-3.5 w-3.5 shrink-0" /> View</Link><a href={`/api/files/${file.id}/download`} className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground" aria-label="Download resource"><Download className="h-3.5 w-3.5" /></a></>;
   if (file.pricing_type === "free") return <><Link href={`/files/${file.id}?preview=1`} className="inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-1 rounded-lg bg-primary px-2 text-[11px] font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 sm:px-3 sm:text-xs"><Eye className="h-3.5 w-3.5 shrink-0" /> Preview</Link><a href={`/api/files/${file.id}/download`} className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground" aria-label="Download resource"><Download className="h-3.5 w-3.5" /></a></>;
@@ -69,8 +71,11 @@ export function ResourceCard({ file }: { file: ResourceCardData }) {
   </article>;
 }
 
-export function ResourceCardGrid({ files, horizontalMobile = false }: { files: ResourceCardData[]; horizontalMobile?: boolean }) {
+export async function ResourceCardGrid({ files, horizontalMobile = false }: { files: ResourceCardData[]; horizontalMobile?: boolean }) {
   void horizontalMobile;
-  if (files.length === 0) return <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed bg-muted/20 px-6 py-16 text-center"><FileText className="h-9 w-9 text-muted-foreground"/><p className="mt-3 text-sm font-semibold">No resources found</p><p className="mt-1 max-w-sm text-sm text-muted-foreground">Try a different search or filter, or check back later.</p></div>;
-  return <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">{files.map(file => <div key={file.id} className="min-w-0"><ResourceCard file={file}/></div>)}</div>;
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const normalizedFiles = files.map((file) => ({ ...file, isOwner: Boolean(file.isOwner || (user && file.seller_id === user.id)) }));
+  if (normalizedFiles.length === 0) return <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed bg-muted/20 px-6 py-16 text-center"><FileText className="h-9 w-9 text-muted-foreground"/><p className="mt-3 text-sm font-semibold">No resources found</p><p className="mt-1 max-w-sm text-sm text-muted-foreground">Try a different search or filter, or check back later.</p></div>;
+  return <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">{normalizedFiles.map(file => <div key={file.id} className="min-w-0"><ResourceCard file={file}/></div>)}</div>;
 }

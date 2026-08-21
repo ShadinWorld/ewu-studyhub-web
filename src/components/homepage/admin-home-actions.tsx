@@ -6,8 +6,20 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { MinimizableSection } from "@/components/homepage/minimizable-section";
 
 const iconMap: Record<string, any> = { Upload, Users, WalletCards, CreditCard, Flag, ClipboardList, LifeBuoy, Settings, LayoutDashboard, UserCheck };
+
+type AttentionItem = {
+  id?: string | null;
+  title: string;
+  href: string;
+  count: number;
+  tone: string;
+  icon?: string | null;
+  display_order?: number | null;
+  is_enabled?: boolean | null;
+};
 
 export async function AdminHomeActions() {
   const supabase = createClient();
@@ -17,52 +29,85 @@ export async function AdminHomeActions() {
   if (!profile || !["admin", "super_admin"].includes(profile.role)) return null;
 
   const admin = supabase as any;
-  const [{ data: actions }, pending] = await Promise.all([
+  const [{ data: actions }, { data: attentionSettings }, pending] = await Promise.all([
     admin.from("homepage_quick_actions").select("id,title,icon,href,display_order,is_enabled").eq("audience", "admin").eq("is_enabled", true).order("display_order", { ascending: true }).limit(9),
+    admin.from("homepage_quick_attention").select("id,title,icon,href,display_order,is_enabled").eq("audience", "admin").eq("is_enabled", true).order("display_order", { ascending: true }).limit(8),
     getPendingSummary(admin),
   ]);
 
-  const needs = [
-    { label: "Resource approvals", count: pending.uploads, href: "/admin/pending?type=resources", tone: "bg-amber-500" },
-    { label: "Seller verification", count: pending.sellers, href: "/admin/pending?type=sellers", tone: "bg-orange-500" },
-    { label: "Payout requests", count: pending.payouts, href: "/admin/pending?type=payouts", tone: "bg-rose-500" },
-    { label: "Purchase requests", count: pending.purchases, href: "/admin/pending?type=purchases", tone: "bg-sky-500" },
-  ];
+  const attentionLookup: Record<string, { count: number; tone: string; href: string }> = {
+    "/admin/pending?type=resources": { count: pending.uploads, tone: "bg-amber-500", href: "/admin/pending?type=resources" },
+    "/admin/pending?type=sellers": { count: pending.sellers, tone: "bg-orange-500", href: "/admin/pending?type=sellers" },
+    "/admin/pending?type=payouts": { count: pending.payouts, tone: "bg-rose-500", href: "/admin/pending?type=payouts" },
+    "/admin/pending?type=purchases": { count: pending.purchases, tone: "bg-sky-500", href: "/admin/pending?type=purchases" },
+    "/admin/pending?type=resource_requests": { count: pending.resourceRequests, tone: "bg-violet-500", href: "/admin/pending?type=resource_requests" },
+    "/admin/pending?type=reports": { count: pending.reports, tone: "bg-red-500", href: "/admin/pending?type=reports" },
+    "/admin/pending?type=support": { count: pending.support, tone: "bg-cyan-500", href: "/admin/pending?type=support" },
+    "/admin/pending": { count: pending.total, tone: pending.total ? "bg-primary" : "bg-emerald-500", href: "/admin/pending" },
+  };
+  const needs: AttentionItem[] = (attentionSettings ?? []).map((item: any) => ({
+    ...item,
+    ...(attentionLookup[item.href] ?? { count: 0, tone: "bg-muted-foreground", href: item.href }),
+  }));
+  const quickAttention = needs.filter((item) => item.count > 0).slice(0, 8);
+  const visibleNeeds = quickAttention.length ? quickAttention : needs.slice(0, 4);
+  const overdue = needs.filter((item) => item.count > 0).length;
 
   return (
     <div className="container space-y-5 pt-6 sm:pt-8">
+      <MinimizableSection id="admin-quick-attention" title="Quick Attention" description="Live shortcuts to the queues that need attention." className="rounded-3xl bg-card">
       <section className="rounded-3xl border bg-card p-4 shadow-sm sm:p-5">
         <div className="mb-4 flex items-end justify-between gap-3">
-          <div><p className="text-sm font-semibold text-primary">Admin workspace</p><h2 className="mt-1 text-xl font-bold sm:text-2xl">Quick Actions</h2><p className="mt-1 text-xs text-muted-foreground sm:text-sm">Your most-used admin shortcuts, customized from Admin → Settings.</p></div>
+          <div><p className="text-sm font-semibold text-primary">Admin workspace</p><h2 className="mt-1 text-xl font-bold sm:text-2xl">Quick Attention</h2><p className="mt-1 text-xs text-muted-foreground sm:text-sm">The most important items waiting for you right now.</p></div>
+          <Button asChild size="sm" variant="outline"><Link href="/admin/pending">View all pending</Link></Button>
+        </div>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+          {visibleNeeds.map((item) => <Link key={item.id ?? item.href} href={item.href} className="rounded-2xl border bg-background p-3 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-sm sm:p-4"><div className="flex items-center justify-between gap-2"><span className={`h-2.5 w-2.5 rounded-full ${item.tone}`} /><span className="text-xl font-bold">{item.count}</span></div><p className="mt-2 text-xs font-semibold leading-4 sm:text-sm">{item.title}</p><p className="mt-1 text-[11px] text-muted-foreground">{item.count ? "Needs review" : "Clear"}</p></Link>)}
+          <Link href="/admin/pending" className="rounded-2xl border border-dashed bg-primary/5 p-3 transition hover:border-primary/50 sm:p-4"><ArrowRight className="h-5 w-5 text-primary"/><p className="mt-2 text-xs font-semibold leading-4 sm:text-sm">Pending Work</p><p className="mt-1 text-[11px] text-muted-foreground">Open the full queue</p></Link>
+        </div>
+        {overdue > 0 ? <p className="mt-3 flex items-center gap-2 text-xs text-muted-foreground"><Clock3 className="h-3.5 w-3.5" />Items are tracked against your configured response-time target (default 6 hours).</p> : null}
+      </section>
+      </MinimizableSection>
+
+      <MinimizableSection id="admin-needs-attention" title="Needs Attention" description="All pending admin queues in one place." className="rounded-3xl bg-card">
+      <section className="rounded-3xl border bg-card p-4 shadow-sm sm:p-5">
+        <div className="mb-4 flex items-end justify-between gap-3">
+          <div><p className="text-sm font-semibold text-primary">Admin workspace</p><h2 className="mt-1 text-xl font-bold sm:text-2xl">Needs Attention</h2><p className="mt-1 text-xs text-muted-foreground sm:text-sm">Every pending queue in one place, with direct links and live counts.</p></div>
+          <Button asChild size="sm" variant="outline"><Link href="/admin/pending">View all</Link></Button>
+        </div>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {needs.map((item) => <Link key={item.id ?? item.href} href={item.href} className="flex items-center justify-between rounded-xl border p-3 hover:border-primary/40"><div className="flex min-w-0 items-center gap-2"><span className={`h-2.5 w-2.5 shrink-0 rounded-full ${item.tone}`} /><span className="truncate text-sm font-medium">{item.title}</span></div><span className="rounded-full bg-muted px-2 py-1 text-xs font-bold">{item.count}</span></Link>)}
+        </div>
+      </section>
+      </MinimizableSection>
+
+      <MinimizableSection id="admin-quick-actions" title="Quick Actions" description="Your configurable shortcuts." className="rounded-3xl bg-card">
+      <section className="rounded-3xl border bg-card p-4 shadow-sm sm:p-5">
+        <div className="mb-4 flex items-end justify-between gap-3">
+          <div><p className="text-sm font-semibold text-primary">Admin workspace</p><h2 className="mt-1 text-xl font-bold sm:text-2xl">Quick Actions</h2><p className="mt-1 text-xs text-muted-foreground sm:text-sm">Your most-used admin shortcuts. The last tile lets you add or edit them.</p></div>
           <Button asChild size="sm" variant="outline"><Link href="/admin/settings">Customize</Link></Button>
         </div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
-          {(actions ?? []).map((action: any) => { const Icon = iconMap[action.icon] ?? LayoutDashboard; return <Link key={action.id} href={action.href} className="group rounded-2xl border bg-background p-3 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-sm sm:p-4"><Icon className="h-5 w-5 text-primary"/><p className="mt-3 text-sm font-semibold leading-5">{action.title}</p><p className="mt-1 text-[11px] text-muted-foreground">Open</p></Link>; })}
+          {(actions ?? []).map((action: any) => { const Icon = iconMap[action.icon] ?? LayoutDashboard; return <Link key={action.id} href={action.href} className="group rounded-2xl border bg-background p-3 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-sm sm:p-4"><Icon className="h-5 w-5 text-primary"/><p className="mt-3 line-clamp-2 text-sm font-semibold leading-5">{action.title}</p><p className="mt-1 text-[11px] text-muted-foreground">Open</p></Link>; })}
+          <Link href="/admin/settings" className="group rounded-2xl border border-dashed bg-primary/5 p-3 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-sm sm:p-4"><Settings className="h-5 w-5 text-primary"/><p className="mt-3 text-sm font-semibold leading-5">＋ Add / customize</p><p className="mt-1 text-[11px] text-muted-foreground">Choose your shortcuts</p></Link>
         </div>
       </section>
-
-      <section className="grid gap-4 lg:grid-cols-[1fr_1fr]">
-        <Card className="border-primary/20">
-          <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2"><Activity className="h-5 w-5 text-primary"/>Quick Attention</CardTitle></CardHeader>
-          <CardContent className="grid grid-cols-2 gap-2 sm:gap-3">{needs.slice(0,4).map((item) => <Link key={item.label} href={item.href} className="rounded-xl border bg-background p-3 hover:border-primary/40"><div className="flex items-center gap-2"><span className={`h-2.5 w-2.5 rounded-full ${item.tone}`}/><span className="text-xl font-bold">{item.count}</span></div><p className="mt-1 text-xs font-medium text-muted-foreground">{item.label}</p></Link>)}</CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2"><BellRing className="h-5 w-5 text-primary"/>Needs Attention</CardTitle></CardHeader>
-          <CardContent><div className="space-y-2">{needs.map((item) => <Link key={item.label} href={item.href} className="flex items-center justify-between rounded-xl border p-3 hover:border-primary/40"><div className="flex items-center gap-2"><span className={`h-2.5 w-2.5 rounded-full ${item.tone}`}/><span className="text-sm font-medium">{item.label}</span></div><span className="rounded-full bg-muted px-2 py-1 text-xs font-bold">{item.count}</span></Link>)}</div><Button asChild className="mt-4 w-full"><Link href="/admin/pending">View all pending work <ArrowRight className="h-4 w-4"/></Link></Button></CardContent>
-        </Card>
-      </section>
+      </MinimizableSection>
     </div>
   );
 }
 
 async function getPendingSummary(admin: any) {
-  const [{ count: uploads }, { count: sellers }, { count: payouts }, { count: purchases }] = await Promise.all([
+  const [{ count: uploads }, { count: sellers }, { count: payouts }, { count: purchases }, { count: resourceRequests }, { count: reports }, { count: support }] = await Promise.all([
     admin.from("files").select("id", { count: "exact", head: true }).eq("visibility", "draft"),
     admin.from("profiles").select("id", { count: "exact", head: true }).eq("student_id_verification_status", "pending"),
     admin.from("payouts").select("id", { count: "exact", head: true }).eq("status", "pending"),
     admin.from("purchases").select("id", { count: "exact", head: true }).eq("status", "pending"),
+    admin.from("resource_requests").select("id", { count: "exact", head: true }).eq("status", "open"),
+    admin.from("reports").select("id", { count: "exact", head: true }).eq("status", "open"),
+    admin.from("support_tickets").select("id", { count: "exact", head: true }).in("status", ["new", "in_review"]),
   ]);
-  return { uploads: uploads ?? 0, sellers: sellers ?? 0, payouts: payouts ?? 0, purchases: purchases ?? 0 };
+  return { uploads: uploads ?? 0, sellers: sellers ?? 0, payouts: payouts ?? 0, purchases: purchases ?? 0, resourceRequests: resourceRequests ?? 0, reports: reports ?? 0, support: support ?? 0, total: (uploads ?? 0) + (sellers ?? 0) + (payouts ?? 0) + (purchases ?? 0) + (resourceRequests ?? 0) + (reports ?? 0) + (support ?? 0) };
 }
 
 export async function UserRecentActivity() {

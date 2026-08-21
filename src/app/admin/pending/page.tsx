@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 
-const filters = ["all", "resources", "sellers", "payouts", "purchases"] as const;
+const filters = ["all", "resources", "sellers", "payouts", "purchases", "resource_requests", "reports", "support"] as const;
 
 export default async function AdminPendingPage({ searchParams }: { searchParams?: { type?: string } }) {
   const supabase = createClient();
@@ -19,11 +19,14 @@ export default async function AdminPendingPage({ searchParams }: { searchParams?
   const admin = createAdminClient();
   const requestedType = searchParams?.type ?? "all";
   const type = filters.includes(requestedType as any) ? requestedType : "all";
-  const [{ data: resources }, { data: sellers }, { data: payouts }, { data: purchases }] = await Promise.all([
+  const [{ data: resources }, { data: sellers }, { data: payouts }, { data: purchases }, { data: resourceRequests }, { data: reports }, { data: support }] = await Promise.all([
     (type === "all" || type === "resources") ? admin.from("files").select("id,title,created_at,seller_id").eq("visibility", "draft").order("created_at", { ascending: true }).limit(100) : Promise.resolve({ data: [] }),
     (type === "all" || type === "sellers") ? admin.from("profiles").select("id,full_name,university_email,created_at").eq("student_id_verification_status", "pending").order("created_at", { ascending: true }).limit(100) : Promise.resolve({ data: [] }),
     (type === "all" || type === "payouts") ? admin.from("payouts").select("id,amount_cents,status,created_at,seller_id").eq("status", "pending").order("created_at", { ascending: true }).limit(100) : Promise.resolve({ data: [] }),
     (type === "all" || type === "purchases") ? admin.from("purchases").select("id,amount_cents,status,created_at,buyer_id,file_id,files(title)").eq("status", "pending").order("created_at", { ascending: true }).limit(100) : Promise.resolve({ data: [] }),
+    (type === "all" || type === "resource_requests") ? admin.from("resource_requests").select("id,title,status,created_at,user_id").eq("status", "open").order("created_at", { ascending: true }).limit(100) : Promise.resolve({ data: [] }),
+    (type === "all" || type === "reports") ? admin.from("reports").select("id,reason,status,created_at,reporter_id,file_id,files(title)").eq("status", "open").order("created_at", { ascending: true }).limit(100) : Promise.resolve({ data: [] }),
+    (type === "all" || type === "support") ? admin.from("support_tickets").select("id,subject,category,status,created_at,user_id").in("status", ["new","in_review"]).order("created_at", { ascending: true }).limit(100) : Promise.resolve({ data: [] }),
   ]);
   const ids = Array.from(new Set([...(resources ?? []).map((x: any) => x.seller_id), ...(payouts ?? []).map((x: any) => x.seller_id), ...(purchases ?? []).map((x: any) => x.buyer_id)].filter(Boolean)));
   const { data: people } = ids.length ? await admin.from("profiles").select("id,full_name").in("id", ids) : { data: [] };
@@ -33,6 +36,9 @@ export default async function AdminPendingPage({ searchParams }: { searchParams?
     ...(sellers ?? []).map((r: any) => ({ key: `s-${r.id}`, type: "Seller verification", title: r.full_name ?? "Seller request", who: r.university_email ?? "EWU student", created: r.created_at, href: "/admin/sellers" })),
     ...(payouts ?? []).map((r: any) => ({ key: `p-${r.id}`, type: "Payout request", title: `BDT ${(r.amount_cents / 100).toFixed(2)}`, who: names.get(r.seller_id) ?? "Seller", created: r.created_at, href: "/admin/payouts" })),
     ...(purchases ?? []).map((r: any) => ({ key: `b-${r.id}`, type: "Purchase request", title: r.files?.title ?? "Resource purchase", who: names.get(r.buyer_id) ?? "Buyer", created: r.created_at, href: "/admin/payments" })),
+    ...(resourceRequests ?? []).map((r: any) => ({ key: `rr-${r.id}`, type: "Resource request", title: r.title, who: names.get(r.user_id) ?? "Student", created: r.created_at, href: "/admin/academic-tools" })),
+    ...(reports ?? []).map((r: any) => ({ key: `rep-${r.id}`, type: "Report", title: r.files?.title ?? String(r.reason).replaceAll("_", " "), who: names.get(r.reporter_id) ?? "User", created: r.created_at, href: "/admin/reports" })),
+    ...(support ?? []).map((r: any) => ({ key: `sup-${r.id}`, type: "Support", title: r.subject || `${String(r.category).replaceAll("_", " ")} request`, who: names.get(r.user_id) ?? "User", created: r.created_at, href: "/admin/support" })),
   ].sort((a, b) => new Date(a.created).getTime() - new Date(b.created).getTime());
 
   return <div className="flex min-h-screen flex-col"><Navbar /><main className="container max-w-5xl flex-1 py-6 sm:py-10"><div className="flex items-start gap-3"><Button asChild variant="outline" size="icon"><Link href="/admin" aria-label="Back"><ArrowLeft className="h-4 w-4" /></Link></Button><div><p className="text-sm font-semibold text-primary">Admin work queue</p><h1 className="text-2xl font-bold sm:text-3xl">Pending Work</h1><p className="mt-1 text-sm text-muted-foreground">Everything currently waiting for an admin decision, ordered by oldest waiting item first.</p></div></div>

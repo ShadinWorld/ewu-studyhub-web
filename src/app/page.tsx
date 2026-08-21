@@ -36,6 +36,7 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { SupportFormCard } from "@/components/support/support-form";
 import { HomepageBannerCarousel, type HomepageBanner } from "@/components/homepage/homepage-banner-carousel";
 import { AdminHomeActions, UserRecentActivity } from "@/components/homepage/admin-home-actions";
+import { MinimizableSection } from "@/components/homepage/minimizable-section";
 
 /* -------------------------------------------------------------------------- */
 /* Trending Resources                                                         */
@@ -137,6 +138,7 @@ async function TrendingFiles() {
       : null,
     seller_name: sellerNames.get(file.seller_id) ?? null,
     purchaseStatus: purchaseStatusByFileId.get(file.id) ?? null,
+    isOwner: Boolean(user && file.seller_id === user.id),
   }));
 
   return <ResourceCardGrid files={resources} />;
@@ -238,6 +240,7 @@ async function DepartmentsPreview() {
 
 async function RecentResources() {
   const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
   const { data: files } = await supabase.from("files").select("id,title,thumbnail_url,file_kind,pricing_type,price_cents,average_rating,reviews_count,downloads_count,views_count,category,course_id,seller_id").eq("visibility", "published").order("created_at", { ascending: false }).limit(8);
   if (!files?.length) return null;
   const courseIds = Array.from(new Set(files.map(f=>f.course_id).filter((x): x is string=>Boolean(x))));
@@ -248,8 +251,8 @@ async function RecentResources() {
   ]);
   const courseMap=new Map((courses??[]).map(c=>[c.id,c.course_code]));
   const sellerMap=new Map((sellers??[]).map(x=>[x.id,x.full_name]));
-  const resources: ResourceCardData[]=files.map(f=>({...f,course_code:f.course_id?courseMap.get(f.course_id)??null:null,seller_name:sellerMap.get(f.seller_id)??null,purchaseStatus:null}));
-  return <section className="container pt-10 sm:pt-12"><div className="mb-4 flex items-end justify-between gap-3"><div><p className="text-sm font-semibold text-primary">Fresh uploads</p><h2 className="mt-1 text-xl font-bold sm:text-2xl">Recently added resources</h2><p className="mt-1 text-sm text-muted-foreground">The latest resources added by EWU StudyHub sellers.</p></div><Link href="/search?sort=recent" className="text-sm font-semibold text-primary">View all <ArrowRight className="ml-1 inline h-4 w-4"/></Link></div><ResourceCardGrid files={resources}/></section>;
+  const resources: ResourceCardData[]=files.map(f=>({...f,course_code:f.course_id?courseMap.get(f.course_id)??null:null,seller_name:sellerMap.get(f.seller_id)??null,purchaseStatus:null,isOwner:Boolean(user && f.seller_id===user.id)}));
+  return <MinimizableSection id="recently-added" title="Recently Added Resources" description="The latest resources added by EWU StudyHub sellers." className="py-1 sm:py-2"><div className="container pb-6 sm:pb-8"><div className="mb-4 flex items-end justify-between gap-3"><div><Link href="/search?sort=recent" className="text-sm font-semibold text-primary">View all <ArrowRight className="ml-1 inline h-4 w-4"/></Link></div></div><ResourceCardGrid files={resources}/></div></MinimizableSection>;
 }
 
 async function PopularCourses() {
@@ -380,7 +383,7 @@ function StudentToolsPreview() {
     ["/tools/deadlines", "Deadline Tracker", "Never miss an important date", FileClock],
     ["/tools/resource-request", "Request a Resource", "Ask for missing materials", FileQuestion],
   ] as const;
-  return <section className="container pt-8 sm:pt-10"><div className="mb-4 flex items-end justify-between gap-3"><div><p className="text-sm font-semibold text-primary">Study tools</p><h2 className="mt-1 text-xl font-bold sm:text-2xl">Study Essentials</h2><p className="mt-1 text-sm text-muted-foreground">Useful EWU tools, kept compact so the homepage stays focused.</p></div><Link href="/tools" className="hidden text-sm font-semibold text-primary sm:inline-flex">View all <ArrowRight className="ml-1 h-4 w-4"/></Link></div><div className="grid grid-cols-2 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4">{tools.map(([href,title,text,Icon])=><Link key={href} href={href} className="group rounded-2xl border bg-card p-3 transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-md sm:p-4"><div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary sm:h-10 sm:w-10"><Icon className="h-4 w-4 sm:h-5 sm:w-5"/></div><p className="mt-2 line-clamp-1 text-sm font-semibold group-hover:text-primary sm:mt-3">{title}</p><p className="mt-1 line-clamp-2 text-[10px] leading-4 text-muted-foreground sm:text-xs sm:leading-5">{text}</p></Link>)}</div></section>;
+  return <MinimizableSection id="study-tools" title="Study Essentials" description="Useful EWU tools, kept compact so the homepage stays focused." className="py-1 sm:py-2"><div className="container pb-6 sm:pb-8"><div className="mb-4"><Link href="/tools" className="text-sm font-semibold text-primary">View all <ArrowRight className="ml-1 inline h-4 w-4"/></Link></div><div className="grid grid-cols-2 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4">{tools.map(([href,title,text,Icon])=><Link key={href} href={href} className="group rounded-2xl border bg-card p-3 transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-md sm:p-4"><div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary sm:h-10 sm:w-10"><Icon className="h-4 w-4 sm:h-5 sm:w-5"/></div><p className="mt-2 line-clamp-1 text-sm font-semibold group-hover:text-primary sm:mt-3">{title}</p><p className="mt-1 line-clamp-2 text-[10px] leading-4 text-muted-foreground sm:text-xs sm:leading-5">{text}</p></Link>)}</div></div></MinimizableSection>;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -496,14 +499,14 @@ export default function HomePage() {
         {/* Recently Viewed                                                     */}
         {/* ------------------------------------------------------------------ */}
 
-        <section className="border-y bg-primary/[0.025] py-4 sm:py-6"><RecentlyViewed /></section>
-        <section className="border-y bg-accent/20 py-4 sm:py-6"><SavedResources /></section>
+        <MinimizableSection id="recently-viewed" title="Recently Viewed" description="Resources you recently opened." className="border-y bg-primary/[0.025] py-1 sm:py-2"><RecentlyViewed /></MinimizableSection>
+        <MinimizableSection id="saved-resources" title="Saved Resources" description="Resources you saved for later." className="border-y bg-accent/20 py-1 sm:py-2"><SavedResources /></MinimizableSection>
 
         {/* ------------------------------------------------------------------ */}
         {/* Trending Resources                                                  */}
         {/* ------------------------------------------------------------------ */}
 
-        <section className="border-y bg-muted/30"><div className="container py-12 sm:py-16">
+        <MinimizableSection id="popular-resources" title="Popular Resources" description="Resources students are discovering and downloading most." className="border-y bg-muted/30 py-1 sm:py-2"><div className="container py-4 sm:py-8">
           <div className="mb-6 flex items-end justify-between gap-4">
             <div>
               <p className="text-sm font-semibold text-primary">
@@ -542,14 +545,15 @@ export default function HomePage() {
           >
             <TrendingFiles />
           </Suspense>
-        </div></section>
+        </div>
+        </MinimizableSection>
 
 
         {/* ------------------------------------------------------------------ */}
         {/* Popular Resources                                                     */}
         {/* ------------------------------------------------------------------ */}
 
-        <section className="border-y bg-primary/[0.025]"><div className="container py-12 sm:py-16">
+        <MinimizableSection id="popular-courses" title="Popular Courses" description="Start with courses students are already using." className="border-y bg-primary/[0.025] py-1 sm:py-2"><div className="container py-4 sm:py-8">
           <div className="mb-6 flex items-end justify-between gap-4">
             <div>
               <p className="text-sm font-semibold text-primary">
@@ -588,14 +592,15 @@ export default function HomePage() {
           >
             <PopularCourses />
           </Suspense>
-        </div></section>
+        </div>
+        </MinimizableSection>
 
         {/* ------------------------------------------------------------------ */}
         {/* Departments                                                         */}
         {/* ------------------------------------------------------------------ */}
 
-        <section className="border-y bg-accent/15">
-          <div className="container py-12 sm:py-16">
+        <MinimizableSection id="departments" title="Departments" description="Find your program, then explore its courses." className="border-y bg-accent/15 py-1 sm:py-2">
+          <div className="container py-4 sm:py-8">
             <div className="mb-6 flex items-end justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold text-primary">
@@ -635,15 +640,18 @@ export default function HomePage() {
               <DepartmentsPreview />
             </Suspense>
           </div>
-        </section>
+        </MinimizableSection>
 
+        <MinimizableSection id="faqs" title="FAQs" description="Common questions about StudyHub." className="border-y bg-background py-1 sm:py-2">
         <FAQSection />
+        </MinimizableSection>
 
         {/* ------------------------------------------------------------------ */}
         {/* Feedback & Support                                                   */}
         {/* ------------------------------------------------------------------ */}
 
-        <section className="container pb-12">
+        <MinimizableSection id="feedback" title="Feedback & Support" description="Send a suggestion, complaint, or issue to the StudyHub admin team." className="py-1 sm:py-2">
+        <section className="container pb-6 sm:pb-8">
           <div className="rounded-3xl border bg-gradient-to-br from-accent/50 via-background to-background p-5 sm:p-7">
             <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
               <div>
@@ -656,12 +664,14 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+        </MinimizableSection>
 
         {/* ------------------------------------------------------------------ */}
         {/* Upload CTA                                                          */}
         {/* ------------------------------------------------------------------ */}
 
-        <section className="container pb-16">
+        <MinimizableSection id="upload-cta" title="Share What You Know" description="Upload useful academic resources and help another EWU student." className="py-1 sm:py-2">
+        <section className="container pb-10 sm:pb-12">
           <div className="rounded-2xl border bg-primary p-6 text-primary-foreground shadow-lg sm:p-8">
             <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
               <div>
@@ -693,6 +703,7 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+        </MinimizableSection>
       </main>
 
       <Footer />
