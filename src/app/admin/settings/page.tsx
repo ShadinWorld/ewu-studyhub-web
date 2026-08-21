@@ -5,13 +5,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { ShieldCheck, CreditCard, Activity, Users, Wallet } from "lucide-react";
-import { updateMarketplaceSettings } from "./actions";
+import { updateMarketplaceSettings, saveHomepageAdminControls, saveResponseTimeSettings } from "./actions";
 
 export default async function AdminSettingsPage() {
   const supabase = createClient();
-  const [{ data: settings }, { data: logs }] = await Promise.all([
+  const [{ data: settings }, { data: logs }, { data: quickActions }, { data: responseSettings }] = await Promise.all([
     supabase.from("platform_payment_settings").select("bkash_number, default_commission_percent, commission_type, default_commission_amount_cents").eq("id", true).single(),
     supabase.from("audit_logs").select("id, action, created_at, actor:profiles!audit_logs_actor_id_fkey(full_name)").order("created_at", { ascending: false }).limit(20),
+    (supabase as any).from("homepage_quick_actions").select("id,title,icon,href,display_order,is_enabled").eq("audience","admin").order("display_order"),
+    (supabase as any).from("platform_response_time_settings").select("category,estimated_hours").order("category"),
   ]);
   return <div className="space-y-6">
     <div><p className="text-sm font-semibold text-primary">Control center</p><h2 className="text-2xl font-bold">Settings & security</h2><p className="mt-1 text-sm text-muted-foreground">bKash-only payments, automatic seller payouts and marketplace controls.</p></div>
@@ -33,6 +35,10 @@ export default async function AdminSettingsPage() {
       </form>
     </CardContent></Card>
     <Card><CardHeader><CardTitle className="flex items-center gap-2"><Activity className="h-5 w-5" />Admin activity log</CardTitle><CardDescription>Recent role, seller and marketplace actions.</CardDescription></CardHeader><CardContent className="space-y-2">{logs?.length ? logs.map((log: any) => <div key={log.id} className="flex flex-col gap-1 rounded-xl border p-3 sm:flex-row sm:items-center sm:justify-between"><p className="text-sm font-medium">{String(log.action).replaceAll(".", " ")}</p><p className="text-xs text-muted-foreground">{log.actor?.full_name ?? "System"} · {new Date(log.created_at).toLocaleString()}</p></div>) : <p className="text-sm text-muted-foreground">No activity yet.</p>}</CardContent></Card>
+    <Card><CardHeader><CardTitle>Homepage Quick Actions</CardTitle><CardDescription>Choose the 3×3 admin shortcuts shown below the giant hero banner on the homepage. On phones the grid automatically becomes two columns.</CardDescription></CardHeader><CardContent><form action={saveHomepageAdminControls} className="space-y-3">{Array.from({ length: 9 }, (_, i) => { const row = (quickActions ?? [])[i] as any; return <div key={i} className="grid gap-2 rounded-xl border p-3 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end"><div><Label>Button {i + 1}</Label><Input name={`title_${i + 1}`} defaultValue={row?.title ?? `Action ${i + 1}`} /></div><div><Label>Destination</Label><Input name={`href_${i + 1}`} defaultValue={row?.href ?? "/admin"} /></div><div><Label>Icon</Label><Input name={`icon_${i + 1}`} defaultValue={row?.icon ?? "LayoutDashboard"} placeholder="Upload / Users / Settings" /></div><label className="flex items-center gap-2 text-sm"><input type="checkbox" name={`enabled_${i + 1}`} defaultChecked={row?.is_enabled !== false} /> Show</label></div> })}<Button type="submit">Save Quick Actions</Button></form></CardContent></Card>
+
+    <Card><CardHeader><CardTitle>Estimated Response Time</CardTitle><CardDescription>Default is 6 hours. Each request category can override the default; users see the expected response window on My Requests.</CardDescription></CardHeader><CardContent><form action={saveResponseTimeSettings} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{["default","seller_verification","resource_approval","payout_request","purchase_request","report","support","payment"].map((category) => { const row = (responseSettings ?? []).find((x: any) => x.category === category) as any; return <div key={category} className="space-y-2"><Label>{category.replaceAll("_"," ")}</Label><Input type="number" min="1" max="168" name={`hours_${category}`} defaultValue={row?.estimated_hours ?? 6} /></div> })}<div className="sm:col-span-2 lg:col-span-4"><Button type="submit">Save response times</Button></div></form></CardContent></Card>
+
     <Card><CardContent className="p-5"><Users className="h-5 w-5 text-primary" /><p className="mt-3 font-semibold">User management</p><p className="mt-1 text-sm text-muted-foreground"><Link className="text-primary underline" href="/admin/users">Open Users & roles</Link> to view profiles, contact users, manage status and permissions.</p></CardContent></Card>
   </div>;
 }

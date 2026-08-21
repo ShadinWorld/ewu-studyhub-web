@@ -35,6 +35,7 @@ import { FAQSection } from "@/components/faq/faq-section";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { SupportFormCard } from "@/components/support/support-form";
 import { HomepageBannerCarousel, type HomepageBanner } from "@/components/homepage/homepage-banner-carousel";
+import { AdminHomeActions, UserRecentActivity } from "@/components/homepage/admin-home-actions";
 
 /* -------------------------------------------------------------------------- */
 /* Trending Resources                                                         */
@@ -463,74 +464,26 @@ export default function HomePage() {
           <HomepageBannerHero />
         </Suspense>
 
-        {/* ------------------------------------------------------------------ */}
-        {/* Hero                                                               */}
-        {/* ------------------------------------------------------------------ */}
+        <AdminHomeActions />
 
-        <section className="relative overflow-hidden border-b bg-gradient-to-b from-accent/50 via-background to-background">
-          <div className="pointer-events-none absolute -right-32 -top-32 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
-
-          <div className="pointer-events-none absolute -left-32 bottom-0 h-64 w-64 rounded-full bg-accent blur-3xl" />
-
-          <div className="container relative py-16 sm:py-20 lg:py-24">
+        <section className="border-y bg-background py-8 sm:py-10">
+          <div className="container">
             <div className="mx-auto max-w-4xl text-center">
-              <div className="inline-flex items-center gap-2 rounded-full border bg-background/80 px-3 py-1.5 text-xs font-semibold text-primary shadow-sm">
+              <div className="inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-xs font-semibold text-primary shadow-sm">
                 <Sparkles className="h-3.5 w-3.5" />
                 Built for EWU students
               </div>
-
-              <h1 className="mx-auto mt-5 max-w-4xl text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-                Your EWU courses. Your resources. One place.
-              </h1>
-
-              <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
-                Find notes, question banks, slides, lab reports and
-                projects by course. Save useful resources and share
-                your own academic materials with the EWU community.
-              </p>
-
-              <form
-                action="/search"
-                className="mx-auto mt-8 flex max-w-2xl gap-2 rounded-xl border bg-background p-1.5 shadow-lg"
-              >
-                <div className="relative flex-1">
-                  <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-
-                  <Input
-                    name="q"
-                    placeholder="Search CSE303, Database Systems, notes…"
-                    className="h-11 border-0 pl-10 shadow-none focus-visible:ring-0"
-                  />
-                </div>
-
-                <Button
-                  type="submit"
-                  size="lg"
-                  className="h-11 px-5"
-                >
-                  Search
-                </Button>
+              <h1 className="mx-auto mt-4 max-w-4xl text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">Your EWU courses. Your resources. One place.</h1>
+              <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">Find notes, question banks, slides, lab reports and projects by course. Save useful resources and share your own academic materials with the EWU community.</p>
+              <form action="/search" className="mx-auto mt-6 flex max-w-2xl gap-2 rounded-xl border bg-card p-1.5 shadow-sm">
+                <div className="relative flex-1"><Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input name="q" placeholder="Search CSE303, Database Systems, notes…" className="h-11 border-0 pl-10 shadow-none focus-visible:ring-0" /></div>
+                <Button type="submit" size="lg" className="h-11 px-5">Search</Button>
               </form>
-
-              <div className="mt-5 flex flex-wrap justify-center gap-2">
-                <Button variant="outline" asChild>
-                  <Link href="/courses">
-                    <BookOpen className="h-4 w-4" />
-                    Browse courses
-                  </Link>
-                </Button>
-
-                <Button variant="ghost" asChild>
-                  <Link href="/departments">
-                    Browse departments
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </Button>
-                <LoggedOutHeroCTA />
-              </div>
             </div>
           </div>
         </section>
+
+        <UserRecentActivity />
 
         <PersonalizedShortcuts />
         <SellerCongratulations />
@@ -543,14 +496,14 @@ export default function HomePage() {
         {/* Recently Viewed                                                     */}
         {/* ------------------------------------------------------------------ */}
 
-        <RecentlyViewed />
-        <SavedResources />
+        <section className="border-y bg-primary/[0.025] py-4 sm:py-6"><RecentlyViewed /></section>
+        <section className="border-y bg-accent/20 py-4 sm:py-6"><SavedResources /></section>
 
         {/* ------------------------------------------------------------------ */}
         {/* Trending Resources                                                  */}
         {/* ------------------------------------------------------------------ */}
 
-        <section className="container py-12 sm:py-16">
+        <section className="border-y bg-muted/30"><div className="container py-12 sm:py-16">
           <div className="mb-6 flex items-end justify-between gap-4">
             <div>
               <p className="text-sm font-semibold text-primary">
@@ -589,14 +542,14 @@ export default function HomePage() {
           >
             <TrendingFiles />
           </Suspense>
-        </section>
+        </div></section>
 
 
         {/* ------------------------------------------------------------------ */}
         {/* Popular Resources                                                     */}
         {/* ------------------------------------------------------------------ */}
 
-        <section className="container pb-12 sm:pb-16">
+        <section className="border-y bg-primary/[0.025]"><div className="container py-12 sm:py-16">
           <div className="mb-6 flex items-end justify-between gap-4">
             <div>
               <p className="text-sm font-semibold text-primary">
@@ -635,13 +588,13 @@ export default function HomePage() {
           >
             <PopularCourses />
           </Suspense>
-        </section>
+        </div></section>
 
         {/* ------------------------------------------------------------------ */}
         {/* Departments                                                         */}
         {/* ------------------------------------------------------------------ */}
 
-        <section className="border-y bg-muted/20">
+        <section className="border-y bg-accent/15">
           <div className="container py-12 sm:py-16">
             <div className="mb-6 flex items-end justify-between gap-4">
               <div>

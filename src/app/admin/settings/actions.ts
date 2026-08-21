@@ -44,3 +44,42 @@ export async function updateMarketplaceSettings(formData: FormData) {
   revalidatePath("/admin/payouts");
   redirect("/admin/settings?saved=Marketplace%20settings%20saved");
 }
+
+export async function saveHomepageAdminControls(formData: FormData) {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+  if (!profile || !["admin", "super_admin"].includes(profile.role)) throw new Error("Not authorized");
+  const admin = supabase as any;
+  const titles = Array.from({ length: 9 }, (_, i) => String(formData.get(`title_${i + 1}`) ?? "").trim());
+  const hrefs = Array.from({ length: 9 }, (_, i) => String(formData.get(`href_${i + 1}`) ?? "").trim());
+  const enabled = Array.from({ length: 9 }, (_, i) => formData.get(`enabled_${i + 1}`) === "on");
+  const icons = Array.from({ length: 9 }, (_, i) => String(formData.get(`icon_${i + 1}`) ?? "LayoutDashboard").trim());
+  const { data: current } = await admin.from("homepage_quick_actions").select("id,display_order").eq("audience", "admin").order("display_order", { ascending: true }).limit(9);
+  for (let i = 0; i < 9; i++) {
+    const row = current?.[i];
+    if (!row) continue;
+    await admin.from("homepage_quick_actions").update({ title: titles[i] || `Action ${i + 1}`, href: hrefs[i] || "/admin", icon: icons[i] || "LayoutDashboard", is_enabled: enabled[i], display_order: i + 1, updated_at: new Date().toISOString() }).eq("id", row.id);
+  }
+  revalidatePath("/");
+  revalidatePath("/admin/settings");
+  redirect("/admin/settings?saved=Homepage%20quick%20actions%20saved");
+}
+
+export async function saveResponseTimeSettings(formData: FormData) {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+  if (!profile || !["admin", "super_admin"].includes(profile.role)) throw new Error("Not authorized");
+  const admin = supabase as any;
+  const categories = ["default", "seller_verification", "resource_approval", "payout_request", "purchase_request", "report", "support", "payment"];
+  for (const category of categories) {
+    const hours = Math.max(1, Math.min(168, Number(formData.get(`hours_${category}`) ?? 6)));
+    await admin.from("platform_response_time_settings").upsert({ category, estimated_hours: Number.isFinite(hours) ? hours : 6, updated_at: new Date().toISOString() });
+  }
+  revalidatePath("/admin/settings");
+  revalidatePath("/requests");
+  redirect("/admin/settings?saved=Response%20time%20settings%20saved");
+}

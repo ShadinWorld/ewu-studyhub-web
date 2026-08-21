@@ -23,12 +23,21 @@ export default async function MyRequestsPage() {
   const notes = notifications ?? [];
   const isSeller = Boolean(profile?.is_seller || profile?.role === "seller");
   const requests: RequestItem[] = [];
+  const { data: responseSettings } = await (supabase as any).from("platform_response_time_settings").select("category,estimated_hours");
+  const responseHours = new Map<string, number>(
+    (responseSettings ?? []).map((row: any): [string, number] => [
+      String(row.category),
+      Number(row.estimated_hours),
+    ])
+  );
+  const eta = (category: string): number =>
+    responseHours.get(category) ?? responseHours.get("default") ?? 6;
 
   if (profile?.student_id_verification_status !== "unverified" || profile?.student_id_document_url || profile?.university_email) {
     const status = profile?.student_id_verification_status === "verified" ? "Approved" : profile?.student_id_verification_status === "rejected" ? "Rejected" : "Under review";
     const tone = status === "Approved" ? "approved" : status === "Rejected" ? "rejected" : "pending";
     const note = notes.find((n) => ["seller_verification_pending", "seller_approved", "seller_rejected"].includes(n.type));
-    requests.push({ id: `seller-${user.id}`, type: "Seller verification", reference: "EWU seller verification", submittedAt: note?.created_at ?? new Date().toISOString(), status, tone, detail: note?.body ?? "Your EWU email and student ID verification request.", link: "/dashboard/become-seller" });
+    requests.push({ id: `seller-${user.id}`, type: "Seller verification", reference: "EWU seller verification", submittedAt: note?.created_at ?? new Date().toISOString(), status, tone, detail: note?.body ?? "Your EWU email and student ID verification request.", link: "/dashboard/become-seller", estimatedHours: eta("seller_verification") });
   }
 
   if (isSeller) {
@@ -36,14 +45,14 @@ export default async function MyRequestsPage() {
       const status = file.visibility === "published" ? "Approved" : file.visibility === "rejected" ? "Rejected" : file.visibility === "draft" ? "Under review" : "Archived";
       const tone = status === "Approved" ? "approved" : status === "Rejected" ? "rejected" : "pending";
       const note = notes.find((n) => ["upload_pending", "upload_approved", "upload_rejected"].includes(n.type) && (n.body ?? "").includes(file.title));
-      requests.push({ id: file.id, type: "Resource approval", reference: file.title, submittedAt: note?.created_at ?? file.created_at, status, tone, detail: file.rejection_reason ? `Admin reason: ${file.rejection_reason}` : note?.body ?? "Resource is waiting for admin review.", link: file.visibility === "published" ? `/files/${file.id}` : "/dashboard" });
+      requests.push({ id: file.id, type: "Resource approval", reference: file.title, submittedAt: note?.created_at ?? file.created_at, status, tone, detail: file.rejection_reason ? `Admin reason: ${file.rejection_reason}` : note?.body ?? "Resource is waiting for admin review.", link: file.visibility === "published" ? `/files/${file.id}` : "/dashboard", estimatedHours: eta("resource_approval") });
     }
 
     for (const payout of payouts ?? []) {
       const status = payout.status === "completed" ? "Paid" : payout.status === "failed" ? "Rejected" : "Under review";
       const tone = status === "Paid" ? "completed" : status === "Rejected" ? "rejected" : "pending";
       const note = notes.find((n) => ["payout_pending", "payout_completed", "report_update"].includes(n.type) && (n.body ?? "").toLowerCase().includes("payout"));
-      requests.push({ id: payout.id, type: "Payout request", reference: `Payout #${payout.id.slice(0, 8).toUpperCase()}`, amountCents: payout.amount_cents, submittedAt: payout.created_at, status, tone, detail: note?.body ?? "Your payout request and admin processing status.", link: "/dashboard/payment-settings" });
+      requests.push({ id: payout.id, type: "Payout request", reference: `Payout #${payout.id.slice(0, 8).toUpperCase()}`, amountCents: payout.amount_cents, submittedAt: payout.created_at, status, tone, detail: note?.body ?? "Your payout request and admin processing status.", link: "/dashboard/payment-settings", estimatedHours: eta("payout_request") });
     }
   }
 
@@ -51,7 +60,7 @@ export default async function MyRequestsPage() {
     const file = purchase.files as { title?: string | null } | null;
     const status = purchase.status === "completed" ? "Approved" : purchase.status === "failed" ? "Rejected" : "Under review";
     const tone = status === "Approved" ? "approved" : status === "Rejected" ? "rejected" : "pending";
-    requests.push({ id: purchase.id, type: "Purchase request", reference: file?.title ?? "Resource purchase", amountCents: purchase.amount_cents, submittedAt: purchase.payment_submitted_at ?? purchase.created_at, status, tone, detail: purchase.rejection_reason ? `Admin reason: ${purchase.rejection_reason}` : "bKash payment request sent for admin review.", link: purchase.status === "completed" ? `/files/${purchase.file_id}` : `/checkout/${purchase.file_id}` });
+    requests.push({ id: purchase.id, type: "Purchase request", reference: file?.title ?? "Resource purchase", amountCents: purchase.amount_cents, submittedAt: purchase.payment_submitted_at ?? purchase.created_at, status, tone, detail: purchase.rejection_reason ? `Admin reason: ${purchase.rejection_reason}` : "bKash payment request sent for admin review.", link: purchase.status === "completed" ? `/files/${purchase.file_id}` : `/checkout/${purchase.file_id}`, estimatedHours: eta("purchase_request") });
   }
 
   requests.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());

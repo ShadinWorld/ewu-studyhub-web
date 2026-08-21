@@ -18,6 +18,7 @@ export type RequestItem = {
   tone: "pending" | "approved" | "rejected" | "completed";
   detail?: string | null;
   link?: string | null;
+  estimatedHours?: number | null;
 };
 
 const filters = ["all", "pending", "approved", "rejected"] as const;
@@ -64,7 +65,9 @@ export function MyRequestsList({ requests }: { requests: RequestItem[] }) {
                   <Badge variant={statusTone(item.tone)}>{item.status}</Badge>
                 </div>
                 <div className="mt-3 space-y-1 text-xs text-muted-foreground sm:text-sm">
+                  <p>Request ID: {item.id.toString().slice(0, 12).toUpperCase()}</p>
                   <p>Submitted: {new Date(item.submittedAt).toLocaleString("en-BD")}</p>
+                  {item.estimatedHours != null && item.tone === "pending" && <p className="font-medium text-foreground">Estimated response: within {item.estimatedHours} hour{item.estimatedHours === 1 ? "" : "s"}</p>}
                   {item.amountCents != null && <p className="font-medium text-foreground">Amount: {formatBDT(item.amountCents)}</p>}
                   {item.detail && <p className="break-words">{item.detail}</p>}
                 </div>
