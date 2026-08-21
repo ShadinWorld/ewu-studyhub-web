@@ -16,3 +16,6 @@ After running SQL:
 7. Request payout.
 
 This fix supports both is_seller = true and role = 'seller'.
+
+
+Latest update: 0052 — activity-event enum cast hardening for purchase approval and related workflows.

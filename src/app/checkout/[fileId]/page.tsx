@@ -62,7 +62,7 @@ export default async function CheckoutPage({ params }: { params: { fileId: strin
               <p className="text-3xl font-bold">{formatBDT(file.price_cents)}</p>
               <p className="mt-4 text-sm">Send the exact amount to this bKash number:</p>
               <p className="mt-1 text-2xl font-bold tracking-wide">{paymentSettings?.bkash_number ?? "01716529460"}</p>
-              <p className="mt-2 text-xs text-muted-foreground">Use Send Money from your bKash account, then submit the transaction details below.</p>
+              <p className="mt-2 text-xs text-muted-foreground">Use Send Money from your bKash account, then submit the payment details below.</p>
             </div>
 
             <form action={submitBkashPayment} className="mt-6 space-y-4">
@@ -72,8 +72,8 @@ export default async function CheckoutPage({ params }: { params: { fileId: strin
                 <Input id="buyer_bkash_number" name="buyer_bkash_number" inputMode="numeric" placeholder="01XXXXXXXXX" required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="payment_reference">bKash Transaction ID <span className="text-muted-foreground">(optional)</span></Label>
-                <Input id="payment_reference" name="payment_reference" placeholder="e.g. 8A7B6C5D4E" />
+                <Label htmlFor="payment_reference">bKash Transaction ID <span className="text-muted-foreground">(optional — you can leave this blank)</span></Label>
+                <Input id="payment_reference" name="payment_reference" placeholder="Optional: e.g. 8A7B6C5D4E" />
               </div>
               <p className="text-xs text-muted-foreground">Your payment will remain pending until an admin checks the transaction. Access is granted only after approval.</p>
               <Button type="submit" className="w-full" size="lg">Submit payment for verification</Button>

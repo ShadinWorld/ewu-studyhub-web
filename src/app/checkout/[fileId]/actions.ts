@@ -15,9 +15,10 @@ export async function submitBkashPayment(formData: FormData): Promise<void> {
   const senderNumber = String(
     formData.get("buyer_bkash_number") ?? ""
   ).trim();
-  const transactionId = String(
+  const transactionIdRaw = String(
     formData.get("payment_reference") ?? ""
   ).trim();
+  const transactionId = transactionIdRaw || null;
 
   if (!fileId) {
     throw new Error("Resource not found.");
@@ -31,7 +32,7 @@ export async function submitBkashPayment(formData: FormData): Promise<void> {
     throw new Error("Enter a valid 11-digit bKash number.");
   }
 
-  if (transactionId.length > 100) {
+  if (transactionId && transactionId.length > 100) {
     throw new Error("Transaction ID is too long.");
   }
 
