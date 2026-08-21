@@ -8,6 +8,7 @@ export function StickyResourceActionBar({
   fileId,
   isFree,
   alreadyPurchased,
+  isOwner = false,
   paymentPending,
   paymentRejected,
   price,
@@ -16,12 +17,13 @@ export function StickyResourceActionBar({
   fileId: string;
   isFree: boolean;
   alreadyPurchased: boolean;
+  isOwner?: boolean;
   paymentPending: boolean;
   paymentRejected: boolean;
   price: number;
   hasPreview?: boolean;
 }) {
-  const owned = isFree || alreadyPurchased;
+  const owned = isFree || alreadyPurchased || isOwner;
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 p-2.5 shadow-2xl backdrop-blur lg:hidden">
       <div className="container flex items-center gap-2">

@@ -100,3 +100,13 @@ docs/
 ## AI continuity
 
 Private continuity documentation is stored in `.ai/` inside the project ZIP. Read `.ai/00_AI_START_HERE.md` first when continuing the project in a new AI session. The `.ai/` directory is intentionally ignored by GitHub/local Git tracking.
+
+
+## Production hardening (free-only)
+The project includes a local verification script (`npm run verify`), production-readiness runbook (`docs/PRODUCTION_READINESS.md`), owner-safe paid-resource access, transaction timelines and receipt views. Do not commit `.ai/` or secrets. Apply Supabase migrations from `supabase/migrations/` in the live project before using new DB-backed features.
+
+
+## Free-only release workflow
+See `docs/MANUAL_EXTERNAL_STEPS.md` for the manual Supabase, Vercel, GitHub, and real-device steps that cannot be performed purely from source code.
+
+Free local gates: `npm run verify` and `npm run production-audit`.

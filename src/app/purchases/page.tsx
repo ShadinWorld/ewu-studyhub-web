@@ -54,6 +54,7 @@ export default async function PurchasesPage() {
                   </div>
 
                   <div className="flex shrink-0 flex-wrap gap-2">
+                    <Button asChild size="sm" variant="outline"><Link href={`/purchases/${purchase.id}`}>Details</Link></Button>
                     {completed && purchase.file_id && (
                       <>
                         <Button asChild size="sm"><a href={`/api/files/${purchase.file_id}/view`} target="_blank" rel="noopener noreferrer">View</a></Button>

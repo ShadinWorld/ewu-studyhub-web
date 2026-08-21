@@ -76,7 +76,7 @@ export default async function SellerSalesPage() {
                       <span>Transaction: {String(sale.payment_reference ?? "—")}</span>
                     </div>
                   </div>
-                  {sale.file_id && <Button asChild size="sm" variant="outline"><Link href={`/files/${sale.file_id}`}>View resource</Link></Button>}
+                  {sale.file_id && <div className="flex flex-wrap gap-2">{sale.file_id && <Button asChild size="sm" variant="outline"><Link href={`/files/${sale.file_id}`}>View resource</Link></Button>}<Button asChild size="sm"><Link href={`/dashboard/sales/${sale.id}`}>Sale details</Link></Button></div>}
                 </div>
               </CardContent>
             </Card>

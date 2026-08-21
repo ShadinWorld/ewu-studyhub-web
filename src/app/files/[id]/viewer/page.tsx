@@ -15,13 +15,15 @@ export default async function ResourceViewerPage({ params, searchParams }: { par
   const supabase = createClient();
   const { data: file } = await supabase
     .from("files")
-    .select("id, title, pricing_type, visibility, page_count, file_kind, price_cents")
+    .select("id, title, pricing_type, visibility, page_count, file_kind, price_cents, seller_id")
     .eq("id", params.id)
     .single();
 
   if (!file || file.visibility !== "published") notFound();
 
-  const previewOnly = searchParams?.preview === "1";
+  const { data: { user } } = await supabase.auth.getUser();
+  const isOwner = Boolean(user && file.seller_id === user.id);
+  const previewOnly = searchParams?.preview === "1" && !isOwner;
   const isPaid = file.pricing_type === "paid";
   const isPdf = file.file_kind === "pdf";
   const isImage = file.file_kind === "image";
@@ -29,19 +31,16 @@ export default async function ResourceViewerPage({ params, searchParams }: { par
   const freePages = isPdf ? previewCount(totalPages) : 0;
   const lockedPages = isPaid && previewOnly && isPdf ? Math.max(0, totalPages - freePages) : 0;
 
-  if (!previewOnly || !isPaid) {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (isPaid) {
-      if (!user) redirect(`/login?next=/files/${file.id}`);
-      const { data: purchase } = await supabase
-        .from("purchases")
-        .select("id")
-        .eq("file_id", file.id)
-        .eq("buyer_id", user.id)
-        .eq("status", "completed")
-        .maybeSingle();
-      if (!purchase) redirect(`/checkout/${file.id}`);
-    }
+  if (!previewOnly && isPaid && !isOwner) {
+    if (!user) redirect(`/login?next=/files/${file.id}`);
+    const { data: purchase } = await supabase
+      .from("purchases")
+      .select("id")
+      .eq("file_id", file.id)
+      .eq("buyer_id", user.id)
+      .eq("status", "completed")
+      .maybeSingle();
+    if (!purchase) redirect(`/checkout/${file.id}`);
   }
 
   const fullSource = `/api/files/${file.id}/view`;

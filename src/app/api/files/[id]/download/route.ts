@@ -25,9 +25,10 @@ export async function GET(request: Request, { params }: { params: { id: string }
     return NextResponse.json({ error: "File not found." }, { status: 404 });
   }
 
+  const isOwner = file.seller_id === user.id;
   let purchaseId: string | null = null;
 
-  if (file.pricing_type === "paid") {
+  if (file.pricing_type === "paid" && !isOwner) {
     const { data: purchase } = await supabase
       .from("purchases")
       .select("id")

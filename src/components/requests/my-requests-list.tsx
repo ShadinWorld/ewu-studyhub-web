@@ -19,6 +19,9 @@ export type RequestItem = {
   detail?: string | null;
   link?: string | null;
   estimatedHours?: number | null;
+  entityId?: string | null;
+  entityType?: string | null;
+  timeline?: { title: string; body?: string | null; created_at: string }[];
 };
 
 const filters = ["all", "pending", "approved", "rejected"] as const;
@@ -70,6 +73,7 @@ export function MyRequestsList({ requests }: { requests: RequestItem[] }) {
                   {item.estimatedHours != null && item.tone === "pending" && <p className="font-medium text-foreground">Estimated response: within {item.estimatedHours} hour{item.estimatedHours === 1 ? "" : "s"}</p>}
                   {item.amountCents != null && <p className="font-medium text-foreground">Amount: {formatBDT(item.amountCents)}</p>}
                   {item.detail && <p className="break-words">{item.detail}</p>}
+                  {item.timeline?.length ? <div className="mt-3 rounded-xl border bg-muted/20 p-3"><p className="text-[11px] font-semibold uppercase tracking-wide text-primary">Status history</p><div className="mt-2 space-y-2">{item.timeline.map((event, index) => <div key={`${event.created_at}-${index}`} className="flex gap-2"><span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary"/><div><p className="text-xs font-medium text-foreground">{event.title}</p><p className="text-[11px] text-muted-foreground">{event.body || "Status updated"} · {new Date(event.created_at).toLocaleString("en-BD")}</p></div></div>)}</div></div> : null}
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {item.link && <Button asChild size="sm" variant="outline"><Link href={item.link}>Open details</Link></Button>}

@@ -23,9 +23,10 @@ export default async function MyRequestsPage() {
   const notes = notifications ?? [];
   const isSeller = Boolean(profile?.is_seller || profile?.role === "seller");
   const requests: RequestItem[] = [];
-  const { data: responseSettings } = await (supabase as any).from("platform_response_time_settings").select("category,estimated_hours");
+  const { data: responseSettings } = await supabase.from("platform_response_time_settings").select("category,estimated_hours");
+  const { data: activityEvents } = await supabase.from("activity_events").select("entity_type,entity_id,event_type,title,body,created_at").eq("profile_id", user.id).order("created_at", { ascending: true }).limit(200);
   const responseHours = new Map<string, number>(
-    (responseSettings ?? []).map((row: any): [string, number] => [
+    (responseSettings ?? []).map((row): [string, number] => [
       String(row.category),
       Number(row.estimated_hours),
     ])
@@ -37,7 +38,7 @@ export default async function MyRequestsPage() {
     const status = profile?.student_id_verification_status === "verified" ? "Approved" : profile?.student_id_verification_status === "rejected" ? "Rejected" : "Under review";
     const tone = status === "Approved" ? "approved" : status === "Rejected" ? "rejected" : "pending";
     const note = notes.find((n) => ["seller_verification_pending", "seller_approved", "seller_rejected"].includes(n.type));
-    requests.push({ id: `seller-${user.id}`, type: "Seller verification", reference: "EWU seller verification", submittedAt: note?.created_at ?? new Date().toISOString(), status, tone, detail: note?.body ?? "Your EWU email and student ID verification request.", link: "/dashboard/become-seller", estimatedHours: eta("seller_verification") });
+    requests.push({ id: `SV-${user.id.slice(0,8).toUpperCase()}`, entityId: user.id, entityType: "seller_verification", type: "Seller verification", reference: "EWU seller verification", submittedAt: note?.created_at ?? new Date().toISOString(), status, tone, detail: note?.body ?? "Your EWU email and student ID verification request.", link: "/dashboard/become-seller", estimatedHours: eta("seller_verification") });
   }
 
   if (isSeller) {
@@ -45,14 +46,14 @@ export default async function MyRequestsPage() {
       const status = file.visibility === "published" ? "Approved" : file.visibility === "rejected" ? "Rejected" : file.visibility === "draft" ? "Under review" : "Archived";
       const tone = status === "Approved" ? "approved" : status === "Rejected" ? "rejected" : "pending";
       const note = notes.find((n) => ["upload_pending", "upload_approved", "upload_rejected"].includes(n.type) && (n.body ?? "").includes(file.title));
-      requests.push({ id: file.id, type: "Resource approval", reference: file.title, submittedAt: note?.created_at ?? file.created_at, status, tone, detail: file.rejection_reason ? `Admin reason: ${file.rejection_reason}` : note?.body ?? "Resource is waiting for admin review.", link: file.visibility === "published" ? `/files/${file.id}` : "/dashboard", estimatedHours: eta("resource_approval") });
+      requests.push({ id: `RES-${file.id.slice(0,8).toUpperCase()}`, entityId: file.id, entityType: "resource", type: "Resource approval", reference: file.title, submittedAt: note?.created_at ?? file.created_at, status, tone, detail: file.rejection_reason ? `Admin reason: ${file.rejection_reason}` : note?.body ?? "Resource is waiting for admin review.", link: file.visibility === "published" ? `/files/${file.id}` : "/dashboard", estimatedHours: eta("resource_approval") });
     }
 
     for (const payout of payouts ?? []) {
       const status = payout.status === "completed" ? "Paid" : payout.status === "failed" ? "Rejected" : "Under review";
       const tone = status === "Paid" ? "completed" : status === "Rejected" ? "rejected" : "pending";
       const note = notes.find((n) => ["payout_pending", "payout_completed", "report_update"].includes(n.type) && (n.body ?? "").toLowerCase().includes("payout"));
-      requests.push({ id: payout.id, type: "Payout request", reference: `Payout #${payout.id.slice(0, 8).toUpperCase()}`, amountCents: payout.amount_cents, submittedAt: payout.created_at, status, tone, detail: note?.body ?? "Your payout request and admin processing status.", link: "/dashboard/payment-settings", estimatedHours: eta("payout_request") });
+      requests.push({ id: `PO-${payout.id.slice(0,8).toUpperCase()}`, entityId: payout.id, entityType: "payout", type: "Payout request", reference: `Payout #${payout.id.slice(0, 8).toUpperCase()}`, amountCents: payout.amount_cents, submittedAt: payout.created_at, status, tone, detail: note?.body ?? "Your payout request and admin processing status.", link: "/dashboard/payment-settings", estimatedHours: eta("payout_request") });
     }
   }
 
@@ -60,10 +61,22 @@ export default async function MyRequestsPage() {
     const file = purchase.files as { title?: string | null } | null;
     const status = purchase.status === "completed" ? "Approved" : purchase.status === "failed" ? "Rejected" : "Under review";
     const tone = status === "Approved" ? "approved" : status === "Rejected" ? "rejected" : "pending";
-    requests.push({ id: purchase.id, type: "Purchase request", reference: file?.title ?? "Resource purchase", amountCents: purchase.amount_cents, submittedAt: purchase.payment_submitted_at ?? purchase.created_at, status, tone, detail: purchase.rejection_reason ? `Admin reason: ${purchase.rejection_reason}` : "bKash payment request sent for admin review.", link: purchase.status === "completed" ? `/files/${purchase.file_id}` : `/checkout/${purchase.file_id}`, estimatedHours: eta("purchase_request") });
+    requests.push({ id: `PUR-${purchase.id.slice(0,8).toUpperCase()}`, entityId: purchase.id, entityType: "purchase", type: "Purchase request", reference: file?.title ?? "Resource purchase", amountCents: purchase.amount_cents, submittedAt: purchase.payment_submitted_at ?? purchase.created_at, status, tone, detail: purchase.rejection_reason ? `Admin reason: ${purchase.rejection_reason}` : "bKash payment request sent for admin review.", link: `/purchases/${purchase.id}`, estimatedHours: eta("purchase_request") });
   }
 
   requests.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+
+  const grouped = new Map<string, { title: string; body: string | null; created_at: string }[]>();
+  for (const event of activityEvents ?? []) {
+    const key = `${event.entity_type}:${event.entity_id}`;
+    const list = grouped.get(key) ?? [];
+    list.push({ title: event.title, body: event.body, created_at: event.created_at });
+    grouped.set(key, list);
+  }
+  const hydratedRequests: RequestItem[] = requests.map((item) => ({
+    ...item,
+    timeline: item.entityId && item.entityType ? grouped.get(`${item.entityType}:${item.entityId}`) ?? [] : [],
+  }));
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -80,7 +93,7 @@ export default async function MyRequestsPage() {
           <p className="mt-1 text-sm leading-6 text-muted-foreground">Every seller verification, resource approval, payout and purchase request that belongs to this account is shown here with its latest status.</p>
         </div>
 
-        <MyRequestsList requests={requests} />
+        <MyRequestsList requests={hydratedRequests} />
       </main>
       <Footer />
     </div>

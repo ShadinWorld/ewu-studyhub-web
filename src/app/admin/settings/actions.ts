@@ -2,7 +2,7 @@
 import { redirect } from "next/navigation";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient, createClient } from "@/lib/supabase/server";
 
 export async function updateMarketplaceSettings(formData: FormData) {
   const supabase = createClient();
@@ -51,7 +51,7 @@ export async function saveHomepageAdminControls(formData: FormData) {
   if (!user) throw new Error("Not authenticated");
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
   if (!profile || !["admin", "super_admin"].includes(profile.role)) throw new Error("Not authorized");
-  const admin = supabase as any;
+  const admin = createAdminClient();
   const titles = Array.from({ length: 9 }, (_, i) => String(formData.get(`title_${i + 1}`) ?? "").trim());
   const hrefs = Array.from({ length: 9 }, (_, i) => String(formData.get(`href_${i + 1}`) ?? "").trim());
   const enabled = Array.from({ length: 9 }, (_, i) => formData.get(`enabled_${i + 1}`) === "on");
@@ -62,6 +62,7 @@ export async function saveHomepageAdminControls(formData: FormData) {
     if (!row) continue;
     await admin.from("homepage_quick_actions").update({ title: titles[i] || `Action ${i + 1}`, href: hrefs[i] || "/admin", icon: icons[i] || "LayoutDashboard", is_enabled: enabled[i], display_order: i + 1, updated_at: new Date().toISOString() }).eq("id", row.id);
   }
+  await supabase.from("audit_logs").insert({ actor_id: user.id, action: "settings.homepage_quick_actions_update", target_table: "homepage_quick_actions", metadata: { slots: 9 } });
   revalidatePath("/");
   revalidatePath("/admin/settings");
   redirect("/admin/settings?saved=Homepage%20quick%20actions%20saved");
@@ -73,12 +74,13 @@ export async function saveResponseTimeSettings(formData: FormData) {
   if (!user) throw new Error("Not authenticated");
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
   if (!profile || !["admin", "super_admin"].includes(profile.role)) throw new Error("Not authorized");
-  const admin = supabase as any;
+  const admin = createAdminClient();
   const categories = ["default", "seller_verification", "resource_approval", "payout_request", "purchase_request", "report", "support", "payment"];
   for (const category of categories) {
     const hours = Math.max(1, Math.min(168, Number(formData.get(`hours_${category}`) ?? 6)));
     await admin.from("platform_response_time_settings").upsert({ category, estimated_hours: Number.isFinite(hours) ? hours : 6, updated_at: new Date().toISOString() });
   }
+  await supabase.from("audit_logs").insert({ actor_id: user.id, action: "settings.response_time_update", target_table: "platform_response_time_settings", metadata: { categories: categories.length } });
   revalidatePath("/admin/settings");
   revalidatePath("/requests");
   redirect("/admin/settings?saved=Response%20time%20settings%20saved");
@@ -89,7 +91,7 @@ export async function saveQuickAttentionControls(formData: FormData) {
   if (!user) throw new Error("Not authenticated");
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
   if (!profile || !["admin", "super_admin"].includes(profile.role)) throw new Error("Not authorized");
-  const admin = supabase as any;
+  const admin = createAdminClient();
   const titles = Array.from({ length: 8 }, (_, i) => String(formData.get(`attention_title_${i + 1}`) ?? "").trim());
   const hrefs = Array.from({ length: 8 }, (_, i) => String(formData.get(`attention_href_${i + 1}`) ?? "/admin/pending").trim());
   const icons = Array.from({ length: 8 }, (_, i) => String(formData.get(`attention_icon_${i + 1}`) ?? "BellRing").trim());
@@ -100,6 +102,7 @@ export async function saveQuickAttentionControls(formData: FormData) {
     if (!row) continue;
     await admin.from("homepage_quick_attention").update({ title: titles[i] || `Attention ${i + 1}`, href: hrefs[i] || "/admin/pending", icon: icons[i] || "BellRing", is_enabled: enabled[i], display_order: i + 1, updated_at: new Date().toISOString() }).eq("id", row.id);
   }
+  await supabase.from("audit_logs").insert({ actor_id: user.id, action: "settings.quick_attention_update", target_table: "homepage_quick_attention", metadata: { slots: 8 } });
   revalidatePath("/");
   revalidatePath("/admin/settings");
   redirect("/admin/settings?saved=Quick%20attention%20saved");

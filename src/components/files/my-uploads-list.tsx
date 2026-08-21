@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Eye, FileText } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatBDT } from "@/lib/utils";
 
@@ -15,7 +15,7 @@ type MyFile = {
   downloads_count: number;
 };
 
-const STATUS_LABEL: Record<string, { label: string; variant: any }> = {
+const STATUS_LABEL: Record<string, { label: string; variant: NonNullable<BadgeProps["variant"]> }> = {
   draft: { label: "Pending review", variant: "secondary" },
   published: { label: "Live", variant: "success" },
   rejected: { label: "Rejected", variant: "destructive" },

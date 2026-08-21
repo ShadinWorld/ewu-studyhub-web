@@ -46,11 +46,11 @@ export function ReportReviewCard({ report }: { report: any }) {
           </div>
           {report.details && <p className="text-sm text-muted-foreground">{report.details}</p>}
           <p className="mt-1 break-words text-xs text-muted-foreground">
-            Reported by {report.reporter?.full_name} ()
+            Reported by {report.reporter?.full_name ?? "User"}
           </p>
         </div>
 
-        <div className="flex shrink-0 gap-2">
+        <div className="flex shrink-0 flex-wrap gap-2">
           <Button
             size="sm"
             variant="destructive"

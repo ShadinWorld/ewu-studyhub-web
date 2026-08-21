@@ -17,6 +17,9 @@ export default async function AdminPendingPage({ searchParams }: { searchParams?
   if (!profile || !["admin", "super_admin"].includes(profile.role)) redirect("/dashboard");
 
   const admin = createAdminClient();
+  const { data: responseSettings } = await admin.from("platform_response_time_settings").select("category,estimated_hours");
+  const responseHours = new Map<string, number>((responseSettings ?? []).map(row => [row.category, Number(row.estimated_hours)]));
+  const defaultEta = Number(responseHours.get("default") ?? 6) || 6;
   const requestedType = searchParams?.type ?? "all";
   const type = filters.includes(requestedType as any) ? requestedType : "all";
   const [{ data: resources }, { data: sellers }, { data: payouts }, { data: purchases }, { data: resourceRequests }, { data: reports }, { data: support }] = await Promise.all([
@@ -39,10 +42,15 @@ export default async function AdminPendingPage({ searchParams }: { searchParams?
     ...(resourceRequests ?? []).map((r: any) => ({ key: `rr-${r.id}`, type: "Resource request", title: r.title, who: names.get(r.user_id) ?? "Student", created: r.created_at, href: "/admin/academic-tools" })),
     ...(reports ?? []).map((r: any) => ({ key: `rep-${r.id}`, type: "Report", title: r.files?.title ?? String(r.reason).replaceAll("_", " "), who: names.get(r.reporter_id) ?? "User", created: r.created_at, href: "/admin/reports" })),
     ...(support ?? []).map((r: any) => ({ key: `sup-${r.id}`, type: "Support", title: r.subject || `${String(r.category).replaceAll("_", " ")} request`, who: names.get(r.user_id) ?? "User", created: r.created_at, href: "/admin/support" })),
-  ].sort((a, b) => new Date(a.created).getTime() - new Date(b.created).getTime());
+  ].map((row) => {
+    const category = row.type === "Resource approval" ? "resource_approval" : row.type === "Seller verification" ? "seller_verification" : row.type === "Payout request" ? "payout_request" : row.type === "Purchase request" ? "purchase_request" : row.type === "Resource request" ? "resource_request" : row.type === "Report" ? "report" : "support";
+    const eta = Number(responseHours.get(category) ?? defaultEta) || defaultEta;
+    const ageHours = Math.max(0, (Date.now() - new Date(row.created).getTime()) / 3600000);
+    return { ...row, category, eta, ageHours, overdue: ageHours > eta };
+  }).sort((a, b) => new Date(a.created).getTime() - new Date(b.created).getTime());
 
   return <div className="flex min-h-screen flex-col"><Navbar /><main className="container max-w-5xl flex-1 py-6 sm:py-10"><div className="flex items-start gap-3"><Button asChild variant="outline" size="icon"><Link href="/admin" aria-label="Back"><ArrowLeft className="h-4 w-4" /></Link></Button><div><p className="text-sm font-semibold text-primary">Admin work queue</p><h1 className="text-2xl font-bold sm:text-3xl">Pending Work</h1><p className="mt-1 text-sm text-muted-foreground">Everything currently waiting for an admin decision, ordered by oldest waiting item first.</p></div></div>
     <div className="mt-5 flex flex-wrap gap-2">{filters.map((f) => <Button key={f} asChild size="sm" variant={type === f ? "default" : "outline"}><Link href={f === "all" ? "/admin/pending" : `/admin/pending?type=${f}`}>{f[0].toUpperCase() + f.slice(1)}</Link></Button>)}</div>
-    <Card className="mt-5"><CardHeader><CardTitle>{rows.length} pending item{rows.length === 1 ? "" : "s"}</CardTitle></CardHeader><CardContent className="space-y-2">{rows.length ? rows.map((r) => <div key={r.key} className="flex flex-col gap-3 rounded-xl border p-4 sm:flex-row sm:items-center sm:justify-between"><div><div className="flex flex-wrap items-center gap-2"><span className="rounded-full bg-amber-500/10 px-2 py-1 text-[11px] font-semibold text-amber-700">{r.type}</span><span className="text-xs text-muted-foreground">Waiting since {new Date(r.created).toLocaleString()}</span></div><p className="mt-2 font-semibold">{r.title}</p><p className="mt-1 text-xs text-muted-foreground">Requester: {r.who}</p></div><Button asChild size="sm"><Link href={r.href}>Review</Link></Button></div>) : <p className="py-8 text-center text-sm text-muted-foreground">No pending work in this filter.</p>}</CardContent></Card>
+    <Card className="mt-5"><CardHeader><CardTitle>{rows.length} pending item{rows.length === 1 ? "" : "s"}</CardTitle></CardHeader><CardContent className="space-y-2">{rows.length ? rows.map((r) => <div key={r.key} className="flex flex-col gap-3 rounded-xl border p-4 sm:flex-row sm:items-center sm:justify-between"><div><div className="flex flex-wrap items-center gap-2"><span className={`rounded-full px-2 py-1 text-[11px] font-semibold ${r.overdue ? "bg-red-500/10 text-red-700" : "bg-amber-500/10 text-amber-700"}`}>{r.type}</span><span className="text-xs text-muted-foreground">Waiting since {new Date(r.created).toLocaleString()} · {r.overdue ? "Overdue" : `ETA ${r.eta}h`}</span></div><p className="mt-2 font-semibold">{r.title}</p><p className="mt-1 text-xs text-muted-foreground">Requester: {r.who}</p></div><Button asChild size="sm"><Link href={r.href}>Review</Link></Button></div>) : <p className="py-8 text-center text-sm text-muted-foreground">No pending work in this filter.</p>}</CardContent></Card>
   </main><Footer /></div>;
 }

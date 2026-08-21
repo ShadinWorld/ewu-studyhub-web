@@ -37,6 +37,7 @@ import { SupportFormCard } from "@/components/support/support-form";
 import { HomepageBannerCarousel, type HomepageBanner } from "@/components/homepage/homepage-banner-carousel";
 import { AdminHomeActions, UserRecentActivity } from "@/components/homepage/admin-home-actions";
 import { MinimizableSection } from "@/components/homepage/minimizable-section";
+import { ResetHomepageLayoutButton } from "@/components/homepage/reset-layout-button";
 
 /* -------------------------------------------------------------------------- */
 /* Trending Resources                                                         */
@@ -485,6 +486,8 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+
+        <div className="container flex justify-end pt-2 sm:pt-3"><ResetHomepageLayoutButton /></div>
 
         <UserRecentActivity />
 

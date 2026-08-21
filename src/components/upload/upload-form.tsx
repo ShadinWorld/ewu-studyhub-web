@@ -133,8 +133,9 @@ export function UploadForm({
       if (!res.ok) throw new Error(json.error ?? "Upload failed");
       toast.success("Uploaded! Your file is pending review before it goes live.");
       router.push(`/notifications`);
-    } catch (err: any) {
-      toast.error(err.message ?? "Something went wrong");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Something went wrong";
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }

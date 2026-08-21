@@ -7,7 +7,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
   const supabase = createClient();
   const { data: file } = await supabase
     .from("files")
-    .select("id, storage_path, pricing_type, visibility")
+    .select("id, seller_id, storage_path, pricing_type, visibility")
     .eq("id", params.id)
     .single();
 
@@ -17,7 +17,9 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (file.pricing_type === "paid") {
+  const isOwner = Boolean(user && file.seller_id === user.id);
+
+  if (file.pricing_type === "paid" && !isOwner) {
     if (!user) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("next", `/files/${params.id}`);

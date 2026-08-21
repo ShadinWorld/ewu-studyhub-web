@@ -2,13 +2,14 @@ import Link from "next/link";
 import {
   Activity, ArrowRight, BellRing, ClipboardList, CreditCard, Flag, LifeBuoy,
   LayoutDashboard, Settings, Upload, Users, WalletCards, UserCheck, Clock3,
+  type LucideIcon,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MinimizableSection } from "@/components/homepage/minimizable-section";
 
-const iconMap: Record<string, any> = { Upload, Users, WalletCards, CreditCard, Flag, ClipboardList, LifeBuoy, Settings, LayoutDashboard, UserCheck };
+const iconMap: Record<string, LucideIcon> = { Upload, Users, WalletCards, CreditCard, Flag, ClipboardList, LifeBuoy, Settings, LayoutDashboard, UserCheck };
 
 type AttentionItem = {
   id?: string | null;
@@ -28,7 +29,7 @@ export async function AdminHomeActions() {
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
   if (!profile || !["admin", "super_admin"].includes(profile.role)) return null;
 
-  const admin = supabase as any;
+  const admin = createAdminClient();
   const [{ data: actions }, { data: attentionSettings }, pending] = await Promise.all([
     admin.from("homepage_quick_actions").select("id,title,icon,href,display_order,is_enabled").eq("audience", "admin").eq("is_enabled", true).order("display_order", { ascending: true }).limit(9),
     admin.from("homepage_quick_attention").select("id,title,icon,href,display_order,is_enabled").eq("audience", "admin").eq("is_enabled", true).order("display_order", { ascending: true }).limit(8),
@@ -45,13 +46,13 @@ export async function AdminHomeActions() {
     "/admin/pending?type=support": { count: pending.support, tone: "bg-cyan-500", href: "/admin/pending?type=support" },
     "/admin/pending": { count: pending.total, tone: pending.total ? "bg-primary" : "bg-emerald-500", href: "/admin/pending" },
   };
-  const needs: AttentionItem[] = (attentionSettings ?? []).map((item: any) => ({
+  const needs: AttentionItem[] = (attentionSettings ?? []).map((item) => ({
     ...item,
     ...(attentionLookup[item.href] ?? { count: 0, tone: "bg-muted-foreground", href: item.href }),
   }));
   const quickAttention = needs.filter((item) => item.count > 0).slice(0, 8);
   const visibleNeeds = quickAttention.length ? quickAttention : needs.slice(0, 4);
-  const overdue = needs.filter((item) => item.count > 0).length;
+  const overdue = pending.overdueQueues;
 
   return (
     <div className="container space-y-5 pt-6 sm:pt-8">
@@ -65,7 +66,7 @@ export async function AdminHomeActions() {
           {visibleNeeds.map((item) => <Link key={item.id ?? item.href} href={item.href} className="rounded-2xl border bg-background p-3 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-sm sm:p-4"><div className="flex items-center justify-between gap-2"><span className={`h-2.5 w-2.5 rounded-full ${item.tone}`} /><span className="text-xl font-bold">{item.count}</span></div><p className="mt-2 text-xs font-semibold leading-4 sm:text-sm">{item.title}</p><p className="mt-1 text-[11px] text-muted-foreground">{item.count ? "Needs review" : "Clear"}</p></Link>)}
           <Link href="/admin/pending" className="rounded-2xl border border-dashed bg-primary/5 p-3 transition hover:border-primary/50 sm:p-4"><ArrowRight className="h-5 w-5 text-primary"/><p className="mt-2 text-xs font-semibold leading-4 sm:text-sm">Pending Work</p><p className="mt-1 text-[11px] text-muted-foreground">Open the full queue</p></Link>
         </div>
-        {overdue > 0 ? <p className="mt-3 flex items-center gap-2 text-xs text-muted-foreground"><Clock3 className="h-3.5 w-3.5" />Items are tracked against your configured response-time target (default 6 hours).</p> : null}
+        {overdue > 0 ? <p className="mt-3 flex items-center gap-2 text-xs text-muted-foreground"><Clock3 className="h-3.5 w-3.5" />{overdue} queue{overdue === 1 ? " is" : "s are"} beyond the configured response-time target.</p> : <p className="mt-3 flex items-center gap-2 text-xs text-muted-foreground"><Clock3 className="h-3.5 w-3.5" />All active queues are within the configured response-time target.</p>}
       </section>
       </MinimizableSection>
 
@@ -88,7 +89,7 @@ export async function AdminHomeActions() {
           <Button asChild size="sm" variant="outline"><Link href="/admin/settings">Customize</Link></Button>
         </div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
-          {(actions ?? []).map((action: any) => { const Icon = iconMap[action.icon] ?? LayoutDashboard; return <Link key={action.id} href={action.href} className="group rounded-2xl border bg-background p-3 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-sm sm:p-4"><Icon className="h-5 w-5 text-primary"/><p className="mt-3 line-clamp-2 text-sm font-semibold leading-5">{action.title}</p><p className="mt-1 text-[11px] text-muted-foreground">Open</p></Link>; })}
+          {(actions ?? []).map((action) => { const Icon = iconMap[action.icon] ?? LayoutDashboard; return <Link key={action.id} href={action.href} className="group rounded-2xl border bg-background p-3 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-sm sm:p-4"><Icon className="h-5 w-5 text-primary"/><p className="mt-3 line-clamp-2 text-sm font-semibold leading-5">{action.title}</p><p className="mt-1 text-[11px] text-muted-foreground">Open</p></Link>; })}
           <Link href="/admin/settings" className="group rounded-2xl border border-dashed bg-primary/5 p-3 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-sm sm:p-4"><Settings className="h-5 w-5 text-primary"/><p className="mt-3 text-sm font-semibold leading-5">＋ Add / customize</p><p className="mt-1 text-[11px] text-muted-foreground">Choose your shortcuts</p></Link>
         </div>
       </section>
@@ -97,17 +98,40 @@ export async function AdminHomeActions() {
   );
 }
 
-async function getPendingSummary(admin: any) {
-  const [{ count: uploads }, { count: sellers }, { count: payouts }, { count: purchases }, { count: resourceRequests }, { count: reports }, { count: support }] = await Promise.all([
-    admin.from("files").select("id", { count: "exact", head: true }).eq("visibility", "draft"),
-    admin.from("profiles").select("id", { count: "exact", head: true }).eq("student_id_verification_status", "pending"),
-    admin.from("payouts").select("id", { count: "exact", head: true }).eq("status", "pending"),
-    admin.from("purchases").select("id", { count: "exact", head: true }).eq("status", "pending"),
-    admin.from("resource_requests").select("id", { count: "exact", head: true }).eq("status", "open"),
-    admin.from("reports").select("id", { count: "exact", head: true }).eq("status", "open"),
-    admin.from("support_tickets").select("id", { count: "exact", head: true }).in("status", ["new", "in_review"]),
+type PendingSummary = {
+  uploads: number; sellers: number; payouts: number; purchases: number; resourceRequests: number; reports: number; support: number; total: number; overdueQueues: number;
+};
+
+async function getPendingSummary(admin: ReturnType<typeof createAdminClient>): Promise<PendingSummary> {
+  const [uploads, sellers, payouts, purchases, resourceRequests, reports, support, settings] = await Promise.all([
+    admin.from("files").select("id,created_at", { count: "exact" }).eq("visibility", "draft").order("created_at", { ascending: true }).limit(1),
+    admin.from("profiles").select("id,created_at", { count: "exact" }).eq("student_id_verification_status", "pending").order("created_at", { ascending: true }).limit(1),
+    admin.from("payouts").select("id,created_at", { count: "exact" }).eq("status", "pending").order("created_at", { ascending: true }).limit(1),
+    admin.from("purchases").select("id,created_at", { count: "exact" }).eq("status", "pending").order("created_at", { ascending: true }).limit(1),
+    admin.from("resource_requests").select("id,created_at", { count: "exact" }).eq("status", "open").order("created_at", { ascending: true }).limit(1),
+    admin.from("reports").select("id,created_at", { count: "exact" }).eq("status", "open").order("created_at", { ascending: true }).limit(1),
+    admin.from("support_tickets").select("id,created_at", { count: "exact" }).in("status", ["new", "in_review"]).order("created_at", { ascending: true }).limit(1),
+    admin.from("platform_response_time_settings").select("category,estimated_hours"),
   ]);
-  return { uploads: uploads ?? 0, sellers: sellers ?? 0, payouts: payouts ?? 0, purchases: purchases ?? 0, resourceRequests: resourceRequests ?? 0, reports: reports ?? 0, support: support ?? 0, total: (uploads ?? 0) + (sellers ?? 0) + (payouts ?? 0) + (purchases ?? 0) + (resourceRequests ?? 0) + (reports ?? 0) + (support ?? 0) };
+  const counts = { uploads: uploads.count ?? 0, sellers: sellers.count ?? 0, payouts: payouts.count ?? 0, purchases: purchases.count ?? 0, resourceRequests: resourceRequests.count ?? 0, reports: reports.count ?? 0, support: support.count ?? 0 };
+  const hours = new Map<string, number>((settings.data ?? []).map(row => [row.category, Number(row.estimated_hours)]));
+  const defaultHours = Number(hours.get("default") ?? 6) || 6;
+  const now = Date.now();
+  const queues: Array<[string, number, string | undefined]> = [
+    ["resource_approval", counts.uploads, uploads.data?.[0]?.created_at],
+    ["seller_verification", counts.sellers, sellers.data?.[0]?.created_at],
+    ["payout_request", counts.payouts, payouts.data?.[0]?.created_at],
+    ["purchase_request", counts.purchases, purchases.data?.[0]?.created_at],
+    ["resource_request", counts.resourceRequests, resourceRequests.data?.[0]?.created_at],
+    ["report", counts.reports, reports.data?.[0]?.created_at],
+    ["support", counts.support, support.data?.[0]?.created_at],
+  ];
+  const overdueQueues = queues.filter(([category, count, oldest]) => {
+    if (!count || !oldest) return false;
+    const threshold = (Number(hours.get(category) ?? defaultHours) || defaultHours) * 60 * 60 * 1000;
+    return now - new Date(oldest).getTime() > threshold;
+  }).length;
+  return { ...counts, total: Object.values(counts).reduce((sum, value) => sum + value, 0), overdueQueues };
 }
 
 export async function UserRecentActivity() {

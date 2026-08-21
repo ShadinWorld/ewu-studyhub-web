@@ -190,6 +190,13 @@ export interface BundleFile {
   file_id: string;
 }
 
+
+export interface PlatformResponseTimeSetting { category: string; estimated_hours: number; created_at: string; updated_at: string; }
+export interface HomepageQuickAction { id: string; audience: string; title: string; icon: string; href: string; display_order: number; is_enabled: boolean; created_at: string; updated_at: string; }
+export interface HomepageQuickAttention { id: string; audience: string; title: string; icon: string; href: string; display_order: number; is_enabled: boolean; created_at: string; updated_at: string; }
+export interface HomepageSectionSetting { id: string; audience: string; section_key: string; display_order: number; is_enabled: boolean; created_at: string; updated_at: string; }
+export interface ActivityEvent { id: string; profile_id: string; entity_type: string; entity_id: string; event_type: string; title: string; body: string | null; actor_id: string | null; metadata: Record<string, unknown>; created_at: string; }
+
 export interface Purchase {
   id: string;
   buyer_id: string;
@@ -509,6 +516,11 @@ export interface Database {
       badges: Table<Badge>;
       profile_badges: Table<ProfileBadge>;
       audit_logs: Table<AuditLog>;
+      platform_response_time_settings: Table<PlatformResponseTimeSetting>;
+      homepage_quick_actions: Table<HomepageQuickAction>;
+      homepage_quick_attention: Table<HomepageQuickAttention>;
+      homepage_section_settings: Table<HomepageSectionSetting>;
+      activity_events: Table<ActivityEvent>;
       wishlists: Table<Wishlist>;
       recently_viewed: Table<RecentlyViewed>;
       notifications: Table<Notification>;

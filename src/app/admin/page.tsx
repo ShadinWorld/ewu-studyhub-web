@@ -55,10 +55,16 @@ export default async function AdminOverviewPage() {
     supabase.from("support_tickets").select("id", { count: "exact", head: true }).in("status", ["new", "in_review"]),
     supabase.from("profiles").select("id", { count: "exact", head: true }).eq("is_seller", true),
     supabase.from("purchases").select("amount_cents, commission_cents, created_at").eq("status", "completed"),
-    supabase.from("audit_logs").select("id, action, target_table, target_id, metadata, created_at, actor:profiles!audit_logs_actor_id_fkey(full_name)").order("created_at", { ascending: false }).limit(8),
+    supabase.from("audit_logs").select("id, action, target_table, target_id, metadata, actor_id, created_at").order("created_at", { ascending: false }).limit(8),
     supabase.from("platform_daily_stats").select("date,new_users,active_users,total_sales,total_revenue_cents,total_commission_cents").order("date", { ascending: false }).limit(14),
     supabase.rpc("admin_storage_usage"),
   ]);
+
+  const actorIds = Array.from(new Set((recentLogs ?? []).map((log) => log.actor_id).filter((id): id is string => Boolean(id))));
+  const { data: actorProfiles } = actorIds.length
+    ? await supabase.from("profiles").select("id, full_name").in("id", actorIds)
+    : { data: [] as { id: string; full_name: string | null }[] };
+  const actorNames = new Map((actorProfiles ?? []).map((profile) => [profile.id, profile.full_name]));
 
   const totalRevenue = (purchases ?? []).reduce((sum, row) => sum + Number(row.amount_cents ?? 0), 0);
   const totalCommission = (purchases ?? []).reduce((sum, row) => sum + Number(row.commission_cents ?? 0), 0);
@@ -144,7 +150,7 @@ export default async function AdminOverviewPage() {
         <Card>
           <CardHeader><CardTitle className="flex items-center gap-2"><Activity className="h-5 w-5 text-primary" />Recent activity</CardTitle></CardHeader>
           <CardContent className="space-y-3">
-            {recentLogs?.length ? recentLogs.map((log: any) => <div key={log.id} className="rounded-xl border p-3"><p className="text-sm font-semibold">{String(log.action).replaceAll(".", " ")}</p><p className="mt-1 text-xs text-muted-foreground">{log.actor?.full_name ?? "System"} · {new Date(log.created_at).toLocaleString()}</p></div>) : <p className="text-sm text-muted-foreground">No admin activity has been logged yet.</p>}
+            {recentLogs?.length ? recentLogs.map((log) => <div key={log.id} className="rounded-xl border p-3"><p className="text-sm font-semibold">{String(log.action).replaceAll(".", " ")}</p><p className="mt-1 text-xs text-muted-foreground">{actorNames.get(log.actor_id ?? "") ?? "System"} · {new Date(log.created_at).toLocaleString()}</p></div>) : <p className="text-sm text-muted-foreground">No admin activity has been logged yet.</p>}
           </CardContent>
         </Card>
       </section>

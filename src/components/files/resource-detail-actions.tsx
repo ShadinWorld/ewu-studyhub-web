@@ -8,6 +8,7 @@ export function ResourceDetailActions({
   fileId,
   isFree,
   alreadyPurchased,
+  isOwner = false,
   paymentPending,
   paymentRejected,
   hasPreview,
@@ -16,13 +17,14 @@ export function ResourceDetailActions({
   fileId: string;
   isFree: boolean;
   alreadyPurchased: boolean;
+  isOwner?: boolean;
   paymentPending: boolean;
   paymentRejected: boolean;
   hasPreview?: boolean;
   compact?: boolean;
 }) {
   const [downloading, setDownloading] = useState(false);
-  const owned = isFree || alreadyPurchased;
+  const owned = isFree || alreadyPurchased || isOwner;
   const marginClass = compact ? "mt-3" : "mt-5";
 
   if (owned) {
