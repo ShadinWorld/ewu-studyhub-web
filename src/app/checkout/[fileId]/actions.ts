@@ -4,7 +4,16 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 
-export async function submitBkashPayment(formData: FormData): Promise<void> {
+export type CheckoutFormState = {
+  error?: string;
+  message?: string;
+  success?: boolean;
+};
+
+export async function submitBkashPayment(
+  _prevState: CheckoutFormState | undefined,
+  formData: FormData
+): Promise<CheckoutFormState> {
   const supabase = createClient();
 
   const {
@@ -21,7 +30,7 @@ export async function submitBkashPayment(formData: FormData): Promise<void> {
   const transactionId = transactionIdRaw || null;
 
   if (!fileId) {
-    throw new Error("Resource not found.");
+    return { error: "Resource not found." };
   }
 
   if (!user) {
@@ -29,11 +38,11 @@ export async function submitBkashPayment(formData: FormData): Promise<void> {
   }
 
   if (!/^01\d{9}$/.test(senderNumber)) {
-    throw new Error("Enter a valid 11-digit bKash number.");
+    return { error: "bKash number must be exactly 11 digits and start with 01." };
   }
 
   if (transactionId && transactionId.length > 100) {
-    throw new Error("Transaction ID is too long.");
+    return { error: "Transaction ID must be 100 characters or less." };
   }
 
   const { data: file } = await supabase
@@ -44,11 +53,11 @@ export async function submitBkashPayment(formData: FormData): Promise<void> {
     .single();
 
   if (!file || file.pricing_type !== "paid") {
-    throw new Error("Resource is not available for purchase.");
+    return { error: "Resource is not available for purchase." };
   }
 
   if (file.seller_id === user.id) {
-    throw new Error("You cannot purchase your own resource.");
+    return { error: "You cannot purchase your own resource." };
   }
 
   const { data: existing } = await supabase
@@ -59,8 +68,11 @@ export async function submitBkashPayment(formData: FormData): Promise<void> {
     .in("status", ["pending", "completed"])
     .maybeSingle();
 
-  if (existing?.status === "completed" || existing?.status === "pending") {
-    redirect(`/checkout/${fileId}`);
+  if (existing?.status === "completed") {
+    return { error: "You have already purchased this resource." };
+  }
+  if (existing?.status === "pending") {
+    return { error: "Payment is already pending for this resource." };
   }
 
   const invoice = `EWU-${new Date()
@@ -87,7 +99,7 @@ export async function submitBkashPayment(formData: FormData): Promise<void> {
 
   if (error) {
     console.error("bKash payment submission error:", error);
-    throw new Error("Unable to submit payment. Please try again.");
+    return { error: "Unable to submit payment. Please try again." };
   }
 
   const admin = createAdminClient();

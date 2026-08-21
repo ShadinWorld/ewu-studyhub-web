@@ -399,7 +399,7 @@ async function SellerResourcesHome() {
   const { data: profile } = await supabase.from("profiles").select("is_seller, role").eq("id", user.id).maybeSingle();
   const isSeller = Boolean(profile?.is_seller || profile?.role === "seller");
   if (!isSeller) return null;
-  const { data: files } = await supabase.from("files").select("id,title,thumbnail_url,file_kind,pricing_type,price_cents,average_rating,reviews_count,downloads_count,views_count,category,course_id,seller_id").eq("seller_id", user.id).neq("visibility", "rejected").order("created_at", { ascending: false }).limit(6);
+  const { data: files } = await supabase.from("files").select("id,title,thumbnail_url,file_kind,pricing_type,price_cents,average_rating,reviews_count,downloads_count,views_count,category,course_id,seller_id,visibility").eq("seller_id", user.id).neq("visibility", "rejected").order("created_at", { ascending: false }).limit(6);
   if (!files?.length) return null;
   const courseIds = Array.from(new Set(files.map(f => f.course_id).filter((x): x is string => Boolean(x))));
   const { data: courses } = courseIds.length ? await supabase.from("courses").select("id,course_code").in("id", courseIds) : { data: [] as {id:string;course_code:string}[] };

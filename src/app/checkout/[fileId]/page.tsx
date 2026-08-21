@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/server";
 import { formatBDT } from "@/lib/utils";
-import { submitBkashPayment } from "./actions";
+import { BkashPaymentForm } from "@/components/checkout/bkash-payment-form";
 
 export default async function CheckoutPage({ params }: { params: { fileId: string } }) {
   const supabase = createClient();
@@ -65,19 +65,7 @@ export default async function CheckoutPage({ params }: { params: { fileId: strin
               <p className="mt-2 text-xs text-muted-foreground">Use Send Money from your bKash account, then submit the payment details below.</p>
             </div>
 
-            <form action={submitBkashPayment} className="mt-6 space-y-4">
-              <input type="hidden" name="fileId" value={file.id} />
-              <div className="space-y-2">
-                <Label htmlFor="buyer_bkash_number">Your bKash number</Label>
-                <Input id="buyer_bkash_number" name="buyer_bkash_number" inputMode="numeric" placeholder="01XXXXXXXXX" required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="payment_reference">bKash Transaction ID <span className="text-muted-foreground">(optional — you can leave this blank)</span></Label>
-                <Input id="payment_reference" name="payment_reference" placeholder="Optional: e.g. 8A7B6C5D4E" />
-              </div>
-              <p className="text-xs text-muted-foreground">Your payment will remain pending until an admin checks the transaction. Access is granted only after approval.</p>
-              <Button type="submit" className="w-full" size="lg">Submit payment for verification</Button>
-            </form>
+            <BkashPaymentForm fileId={file.id} />
           </CardContent>
         </Card>
       </main>

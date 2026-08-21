@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, Clock3, FileCheck2, ShoppingBag, WalletCards } from "lucide-react";
+import { CheckCircle2, Clock3, FileCheck2, FileQuestion, ShoppingBag, WalletCards } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { formatBDT } from "@/lib/utils";
 
 export type RequestItem = {
   id: string;
-  type: "Seller verification" | "Resource approval" | "Purchase request" | "Payout request";
+  type: "Seller verification" | "Resource approval" | "Purchase request" | "Payout request" | "Resource request";
   reference: string;
   amountCents?: number | null;
   submittedAt: string;
@@ -30,6 +30,7 @@ function icon(type: RequestItem["type"]) {
   if (type === "Purchase request") return <ShoppingBag className="h-5 w-5" />;
   if (type === "Payout request") return <WalletCards className="h-5 w-5" />;
   if (type === "Resource approval") return <FileCheck2 className="h-5 w-5" />;
+  if (type === "Resource request") return <FileQuestion className="h-5 w-5" />;
   return <CheckCircle2 className="h-5 w-5" />;
 }
 
