@@ -43,9 +43,10 @@ export async function GET(request: Request, { params }: { params: { id: string }
   // a file the buyer doesn't directly own in storage, but only after the
   // purchase check above has already gated access.
   const admin = createAdminClient();
+  const safeFilename = (file.title || "studyhub-resource").replace(/[\\/:*?"<>|]+/g, "-").trim() || "studyhub-resource";
   const { data: signed, error } = await admin.storage
     .from("files-private")
-    .createSignedUrl(file.storage_path, SIGNED_URL_TTL_SECONDS);
+    .createSignedUrl(file.storage_path, SIGNED_URL_TTL_SECONDS, { download: safeFilename });
 
   if (error || !signed) {
     return NextResponse.json({ error: "Could not generate download link." }, { status: 500 });
