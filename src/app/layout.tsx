@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/shared/theme-provider";
 import { Toaster } from "sonner";
@@ -9,7 +8,6 @@ import { RealtimeSyncProvider } from "@/components/shared/realtime-sync-provider
 import { PullToRefresh } from "@/components/shared/pull-to-refresh";
 import { ServiceWorkerRegister } from "@/components/shared/service-worker-register";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
   title: {
@@ -26,7 +24,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className="font-sans antialiased">
         <ServiceWorkerRegister />
         <PullToRefresh />
         <ThemeProvider attribute="class" defaultTheme="ewu-blue" themes={["ewu-blue", "pink", "dark"]} disableTransitionOnChange>

@@ -142,7 +142,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Button asChild className="h-12"><Link href="/dashboard/upload"><Upload className="mr-2 h-4 w-4" />Upload</Link></Button>
+        <Button asChild className="h-12 bg-emerald-600 text-white hover:bg-emerald-700"><Link href="/dashboard/upload"><Upload className="mr-2 h-4 w-4" />Upload</Link></Button>
         <Button asChild variant="outline" className="h-12"><Link href="/dashboard/sales">Sales & earnings</Link></Button>
         <Button asChild variant="outline" className="h-12"><Link href="/dashboard/payment-settings">Payment settings</Link></Button>
         <Button asChild variant="outline" className="h-12"><Link href="/purchases">Purchases</Link></Button>

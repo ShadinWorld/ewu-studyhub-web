@@ -37,6 +37,7 @@ export function UploadForm({
   const [semester, setSemester] = useState<string>("Spring");
   const [submitting, setSubmitting] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
+  const [uploadStatuses, setUploadStatuses] = useState<Array<{ name: string; status: "queued" | "uploading" | "success" | "error"; message?: string }>>([]);
 
   const [departmentId, setDepartmentId] = useState("");
   const [courseId, setCourseId] = useState("");
@@ -122,10 +123,12 @@ export function UploadForm({
     }
 
     setSubmitting(true);
+    setUploadStatuses(files.map((f) => ({ name: f.name, status: "queued" as const })));
     try {
       const baseForm = new FormData(e.currentTarget);
       let completed = 0;
-      for (const selectedFile of files) {
+      for (const [index, selectedFile] of files.entries()) {
+        setUploadStatuses((current) => current.map((item, i) => i === index ? { ...item, status: "uploading" } : item));
         const formData = new FormData();
         for (const [key, value] of baseForm.entries()) formData.append(key, value);
         formData.set("file", selectedFile);
@@ -137,8 +140,13 @@ export function UploadForm({
         formData.set("adminUpload", allowAdmin ? "true" : "false");
         const res = await fetch("/api/files/upload", { method: "POST", body: formData });
         const json = await res.json();
-        if (!res.ok) throw new Error(`${selectedFile.name}: ${json.error ?? "Upload failed"}`);
+        if (!res.ok) {
+          const message = `${selectedFile.name}: ${json.error ?? "Upload failed"}`;
+          setUploadStatuses((current) => current.map((item, i) => i === index ? { ...item, status: "error", message } : item));
+          throw new Error(message);
+        }
         completed++;
+        setUploadStatuses((current) => current.map((item, i) => i === index ? { ...item, status: "success", message: "Uploaded" } : item));
       }
       toast.success(`${completed} resource${completed === 1 ? "" : "s"} uploaded and waiting for review.`);
       router.push(`/notifications`);
@@ -393,7 +401,7 @@ export function UploadForm({
       </div>
 
       <Button type="submit" size="lg" className="w-full" disabled={submitting}>
-        {submitting ? "Uploading…" : "Submit for review"}
+        {submitting ? `Uploading ${uploadStatuses.filter((x) => x.status === "success").length}/${files.length}…` : "Submit for review"}
       </Button>
     </form>
   );

@@ -9,7 +9,10 @@
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "verify": "node scripts/verify-project.mjs",
-    "production-audit": "node scripts/production-audit.mjs"
+    "production-audit": "node scripts/production-audit.mjs",
+    "qa": "node scripts/qa.mjs",
+    "qa:install-browser-tests": "node scripts/qa/install-browser-tests.mjs",
+    "qa:e2e": "playwright test"
   },
   "dependencies": {
     "next": "14.2.5",

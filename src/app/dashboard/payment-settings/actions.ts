@@ -22,23 +22,25 @@ export async function saveBkashNumber(formData: FormData) {
     throw new Error("Enter a valid 11-digit bKash number.");
   }
 
-  // This RPC already exists in the database, but it is not included
-  // in the currently generated Supabase TypeScript definitions.
-  const rpc = supabase.rpc as unknown as (
-    functionName: "save_seller_bkash_number",
-    args: { p_bkash_number: string }
-  ) => Promise<{ error: { message: string } | null }>;
+  const { data: profile } = await supabase.from("profiles").select("id, role, is_seller").eq("id", user.id).single();
+  if (!profile?.is_seller && profile?.role !== "seller") {
+    redirect("/dashboard/payment-settings?error=Seller%20account%20not%20found");
+  }
 
-  const { error } = await rpc("save_seller_bkash_number", {
-    p_bkash_number: number,
-  });
+  const admin = (await import("@/lib/supabase/server")).createAdminClient();
+  const { error } = await admin.from("seller_payment_settings").upsert({
+    seller_id: user.id,
+    bkash_number: number,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: "seller_id" });
 
   if (error) {
-    throw new Error(error.message);
+    redirect(`/dashboard/payment-settings?error=${encodeURIComponent(error.message)}`);
   }
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/payment-settings");
+  redirect("/dashboard/payment-settings?saved=bKash%20number%20saved");
 }
 
 export async function requestPayout() { throw new Error("Manual payout requests are disabled. Payouts are created automatically after approved sales."); }

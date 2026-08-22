@@ -8,7 +8,7 @@ import { formatBDT } from "@/lib/utils";
 import { saveBkashNumber } from "./actions";
 import { CopyButton } from "@/components/shared/copy-button";
 
-export default async function PaymentSettingsPage() {
+export default async function PaymentSettingsPage({ searchParams }: { searchParams?: { saved?: string; error?: string } }) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/dashboard/payment-settings");
@@ -29,7 +29,7 @@ export default async function PaymentSettingsPage() {
   const availableBalance = Math.max(0, totalEarned - completedPaid - pendingPayouts);
 
   return <div className="container max-w-3xl py-10 space-y-6">
-    <div><h1 className="text-2xl font-bold">Payment Settings</h1><p className="text-muted-foreground">Manage where you receive seller payouts.</p></div>
+    <div><h1 className="text-2xl font-bold">Payment Settings</h1><p className="text-muted-foreground">Manage where you receive seller payouts.</p>{searchParams?.saved ? <p className="mt-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-2 text-sm text-emerald-700">{searchParams.saved}</p> : null}{searchParams?.error ? <p className="mt-2 rounded-lg border border-destructive/30 bg-destructive/10 p-2 text-sm text-destructive">{searchParams.error}</p> : null}</div>
     <Card><CardHeader><CardTitle>Seller bKash number</CardTitle><CardDescription>This number is used by admins when paying your approved earnings.</CardDescription></CardHeader><CardContent><form action={saveBkashNumber} className="flex gap-3"><div className="flex-1 space-y-2"><Label htmlFor="bkash_number">bKash number</Label><Input id="bkash_number" name="bkash_number" defaultValue={settings?.bkash_number ?? ""} placeholder="01XXXXXXXXX" required /></div><Button type="submit" className="mt-8">Save</Button></form></CardContent></Card>
     <Card className="border-primary/20 bg-primary/5"><CardContent className="p-5"><p className="font-semibold">Automatic payouts</p><p className="mt-1 text-sm text-muted-foreground">You do not need to request payouts manually. When a buyer payment is approved, your seller earnings automatically create a payout for admin review and payment.</p><p className="mt-3 text-sm font-medium">Total earned: {formatBDT(totalEarned)} · Available balance: {formatBDT(availableBalance)} · Automatic payout pending: {formatBDT(pendingPayouts)}</p></CardContent></Card>
     <Card><CardHeader><CardTitle>Automatic payout history</CardTitle></CardHeader><CardContent>{payouts?.length ? <div className="divide-y">{payouts.map(p => <div key={p.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-medium">{formatBDT(p.amount_cents)}</p><div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground"><span>bKash • {p.payment_account_number ?? "Not saved yet"}</span>{p.payment_account_number && <CopyButton value={p.payment_account_number} label="Copy number" />}</div></div><span className="text-sm capitalize">{p.status}</span></div>)}</div> : <p className="text-sm text-muted-foreground">No automatic payouts yet.</p>}</CardContent></Card>

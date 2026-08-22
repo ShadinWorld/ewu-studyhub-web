@@ -223,6 +223,7 @@ export interface WalletTransaction {
   type: TransactionType;
   amount_cents: number;
   related_purchase_id: string | null;
+  related_payout_id: string | null;
   description: string | null;
   created_at: string;
 }
@@ -235,6 +236,7 @@ export interface Payout {
   payment_method: string | null;
   payment_account_number: string | null;
   processed_at: string | null;
+  related_purchase_id: string | null;
   created_at: string;
 }
 
