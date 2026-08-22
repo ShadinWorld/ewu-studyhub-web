@@ -37,6 +37,7 @@ export function UploadForm({
   const [semester, setSemester] = useState<string>("Spring");
   const [submitting, setSubmitting] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
+  const MAX_BATCH_FILES = 5;
   const [uploadStatuses, setUploadStatuses] = useState<Array<{ name: string; status: "queued" | "uploading" | "success" | "error"; message?: string }>>([]);
 
   const [departmentId, setDepartmentId] = useState("");
@@ -112,6 +113,10 @@ export function UploadForm({
     e.preventDefault();
     if (!files.length) {
       toast.error("Please select at least one file to upload.");
+      return;
+    }
+    if (files.length > MAX_BATCH_FILES) {
+      toast.error(`You can upload a maximum of ${MAX_BATCH_FILES} files at once.`);
       return;
     }
     if (pricingType === "paid") {
@@ -388,7 +393,7 @@ export function UploadForm({
         >
           <UploadCloud className="mb-2 h-8 w-8 text-muted-foreground" />
           <span className="text-sm font-medium">{files.length ? `${files.length} file${files.length === 1 ? "" : "s"} selected` : "Click to select PDF, PPT, DOCX, ZIP, or image"}</span>
-          <span className="text-xs text-muted-foreground">Up to 10 files • 100MB each</span>
+          <span className="text-xs text-muted-foreground">Up to 5 files per batch • 100MB each</span>
         </label>
         <input
           id="file"
@@ -396,7 +401,16 @@ export function UploadForm({
           className="hidden"
           accept=".pdf,.ppt,.pptx,.doc,.docx,.zip,.png,.jpg,.jpeg"
           multiple
-          onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
+          onChange={(e) => {
+            const next = Array.from(e.target.files ?? []);
+            if (next.length > MAX_BATCH_FILES) {
+              toast.error(`You can upload a maximum of ${MAX_BATCH_FILES} files at once.`);
+              e.currentTarget.value = "";
+              setFiles([]);
+              return;
+            }
+            setFiles(next);
+          }}
         />
       </div>
 

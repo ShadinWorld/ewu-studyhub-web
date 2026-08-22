@@ -54,17 +54,6 @@ export async function POST(request: Request) {
     );
   }
 
-  // ---- Basic rate limiting: max 10 uploads per rolling hour per user ----
-  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-  const { count } = await supabase
-    .from("files")
-    .select("id", { count: "exact", head: true })
-    .eq("seller_id", user.id)
-    .gte("created_at", oneHourAgo);
-  if (!isAdminUploader && (count ?? 0) >= 10) {
-    return NextResponse.json({ error: "Upload limit reached. Please try again later." }, { status: 429 });
-  }
-
   const formData = await request.formData();
   const file = formData.get("file");
   if (!(file instanceof File)) {
