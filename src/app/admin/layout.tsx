@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { MobileAdminMenu } from "@/components/admin/mobile-admin-menu";
+import { StudentToolsTree } from "@/components/admin/student-tools-tree";
 import { AdminActionToast } from "@/components/admin/admin-action-toast";
 import { BackButton } from "@/components/navigation/back-button";
 
@@ -12,7 +13,7 @@ const links = [
   ["/admin", "Overview"], ["/admin/uploads", "Pending Uploads"], ["/admin/sellers", "Seller Requests"],
   ["/admin/payments", "Payments"], ["/admin/payouts", "Payouts"], ["/admin/reports", "Reports"],
   ["/admin/support", "Feedback & Support"], ["/admin/faqs", "FAQs"], ["/admin/users", "Users"],
-  ["/admin/resources", "Resources"], ["/admin/academic-tools", "Academic Tools"], ["/admin/storage", "Storage"], ["/admin/commission", "Commission"], ["/admin/settings", "Settings"],
+  ["/admin/resources", "Resources"], ["/admin/storage", "Storage"], ["/admin/commission", "Platform Fees"], ["/admin/settings", "Settings"], ["/admin/history", "History"],
 ] as const;
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -37,7 +38,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <Link href="/" className="mb-6 flex items-center gap-2 font-bold"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary"><ShieldCheck className="h-5 w-5" /></span>EWU StudyHub</Link>
         <p className="mb-4 rounded-xl border bg-card p-3 text-xs text-muted-foreground">Signed in as <span className="font-semibold text-foreground">{profile.full_name || "Admin"}</span></p>
         <nav className="flex max-h-[calc(100vh-145px)] flex-col gap-1 overflow-y-auto text-sm">
-          {links.map(([href, label]) => <Link key={href} href={href} className="rounded-xl px-3 py-2.5 font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">{label}</Link>)}
+          {links.map(([href, label]) => <Link key={href} href={href} className="rounded-xl px-3 py-2.5 font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">{label}</Link>)}<StudentToolsTree />
         </nav>
       </aside>
       <div className="min-w-0 lg:pl-64">

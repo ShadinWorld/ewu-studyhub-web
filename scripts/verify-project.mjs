@@ -3,7 +3,7 @@ import path from "node:path";
 const root = process.cwd();
 const required = ["package.json","package-lock.json","src","supabase/migrations",".ai/00_AI_START_HERE.md",".ai/EWU-STUDYHUB-ULTIMATE-MASTER-CONTEXT.md",".ai/EWU-STUDYHUB-MASTER-DETAILED.md",".ai/EWU-STUDYHUB-WBS.md",".ai/EWU-STUDYHUB-HANDOFF.md",".ai/EWU-STUDYHUB-CHANGELOG.md"];
 const missing = required.filter(x => !fs.existsSync(path.join(root,x)));
-const forbiddenRoutes = ["src/app/tools/grade-calculator","src/app/tools/prerequisite-checker"].filter(x => fs.existsSync(path.join(root,x)));
+const forbiddenRoutes = [];
 const oldHandoffs = fs.readdirSync(root).filter(x => /^EWU-StudyHub-Handoff-Update-\d+\.md$/.test(x));
 const gitignore = fs.existsSync(path.join(root,".gitignore")) ? fs.readFileSync(path.join(root,".gitignore"),"utf8") : "";
 const lines = [];

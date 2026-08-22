@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/server";
 import { formatBDT } from "@/lib/utils";
 import { BkashPaymentForm } from "@/components/checkout/bkash-payment-form";
+import { CopyButton } from "@/components/shared/copy-button";
+import { getBuyerPriceCents } from "@/lib/platform-pricing";
 
 export default async function CheckoutPage({ params }: { params: { fileId: string } }) {
   const supabase = createClient();
@@ -46,6 +48,8 @@ export default async function CheckoutPage({ params }: { params: { fileId: strin
     .select("bkash_number")
     .eq("id", true)
     .single();
+  const buyerPriceCents = await getBuyerPriceCents(supabase as any, file.id, file.price_cents);
+  const platformFeeCents = buyerPriceCents - file.price_cents;
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -59,9 +63,10 @@ export default async function CheckoutPage({ params }: { params: { fileId: strin
           <CardContent>
             <div className="rounded-lg border bg-accent/40 p-4">
               <p className="text-sm text-muted-foreground">Amount to pay</p>
-              <p className="text-3xl font-bold">{formatBDT(file.price_cents)}</p>
+              <p className="text-3xl font-bold">{formatBDT(buyerPriceCents)}</p>
+              <div className="mt-3 grid gap-1 text-sm text-muted-foreground"><span>Seller price: {formatBDT(file.price_cents)}</span><span>Platform fee: {formatBDT(platformFeeCents)}</span></div>
               <p className="mt-4 text-sm">Send the exact amount to this bKash number:</p>
-              <p className="mt-1 text-2xl font-bold tracking-wide">{paymentSettings?.bkash_number ?? "01716529460"}</p>
+              <div className="mt-1 flex flex-wrap items-center gap-2"><p className="text-2xl font-bold tracking-wide">{paymentSettings?.bkash_number ?? "01716529460"}</p><CopyButton value={paymentSettings?.bkash_number ?? "01716529460"} label="Copy number" /></div>
               <p className="mt-2 text-xs text-muted-foreground">Use Send Money from your bKash account, then submit the payment details below.</p>
             </div>
 

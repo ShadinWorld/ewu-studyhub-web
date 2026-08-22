@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { InstallAppButton } from "@/components/shared/install-app";
 import {
   ArrowRight,
   BookOpen,
@@ -50,7 +51,7 @@ async function TrendingFiles() {
   const { data: files } = await supabase
     .from("files")
     .select(
-      "id, title, thumbnail_url, file_kind, pricing_type, price_cents, average_rating, reviews_count, downloads_count, views_count, category, course_id, seller_id"
+      "id, title, thumbnail_url, file_kind, pricing_type, price_cents, average_rating, reviews_count, downloads_count, views_count, category, course_id, seller_id, visibility"
     )
     .eq("visibility", "published")
     .order("downloads_count", { ascending: false })
@@ -140,6 +141,7 @@ async function TrendingFiles() {
     seller_name: sellerNames.get(file.seller_id) ?? null,
     purchaseStatus: purchaseStatusByFileId.get(file.id) ?? null,
     isOwner: Boolean(user && file.seller_id === user.id),
+    resourceVisibility: file.visibility,
   }));
 
   return <ResourceCardGrid files={resources} />;
@@ -404,7 +406,7 @@ async function SellerResourcesHome() {
   const courseIds = Array.from(new Set(files.map(f => f.course_id).filter((x): x is string => Boolean(x))));
   const { data: courses } = courseIds.length ? await supabase.from("courses").select("id,course_code").in("id", courseIds) : { data: [] as {id:string;course_code:string}[] };
   const courseMap = new Map((courses ?? []).map(c => [c.id, c.course_code]));
-  const resources: ResourceCardData[] = files.map(f => ({ ...f, course_code: f.course_id ? courseMap.get(f.course_id) ?? null : null, seller_name: "You", purchaseStatus: null, isOwner: true }));
+  const resources: ResourceCardData[] = files.map(f => ({ ...f, course_code: f.course_id ? courseMap.get(f.course_id) ?? null : null, seller_name: "You", purchaseStatus: null, isOwner: true, resourceVisibility: f.visibility }));
   return <section className="container pt-8 sm:pt-10"><div className="mb-4 flex items-end justify-between gap-3"><div><p className="text-sm font-semibold text-primary">Your resources</p><h2 className="mt-1 text-xl font-bold sm:text-2xl">Your latest uploads</h2><p className="mt-1 text-sm text-muted-foreground">Your resources appear here first. You are the owner, so no purchase is needed.</p></div><Button asChild variant="outline"><Link href="/dashboard/upload"><Upload className="h-4 w-4"/>Upload</Link></Button></div><ResourceCardGrid files={resources} /></section>;
 }
 
@@ -412,8 +414,11 @@ async function SellerCongratulations() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-  const { data: note } = await supabase.from("notifications").select("id,title,body").eq("profile_id", user.id).eq("type", "seller_approved").eq("is_read", false).order("created_at", { ascending: false }).limit(1).maybeSingle();
-  if (!note) return null;
+  const [{ data: note }, { count: uploadCount }] = await Promise.all([
+    supabase.from("notifications").select("id,title,body").eq("profile_id", user.id).eq("type", "seller_approved").eq("is_read", false).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+    supabase.from("files").select("id", { count: "exact", head: true }).eq("seller_id", user.id)
+  ]);
+  if (!note || (uploadCount ?? 0) > 0) return null;
   return <div className="container pt-6"><div className="rounded-3xl border border-primary/20 bg-primary/5 p-5 shadow-sm"><div><p className="text-xs font-bold uppercase tracking-wide text-primary">Congratulations 🎉</p><h2 className="mt-1 text-xl font-bold">You are now an EWU StudyHub Seller!</h2><p className="mt-2 text-sm text-muted-foreground">{note.body || "You can now upload and sell your academic resources."}</p></div><div className="mt-4 flex flex-wrap gap-2"><Button asChild><Link href="/dashboard/upload"><Upload className="h-4 w-4"/>Upload your first resource</Link></Button><Button asChild variant="outline"><Link href="/dashboard">Seller dashboard</Link></Button></div></div></div>;
 }
 
@@ -440,6 +445,7 @@ async function PersonalizedShortcuts() {
             <Button asChild variant="outline" className="h-10"><Link href="/purchases"><ShoppingBag className="h-4 w-4" />Purchases</Link></Button>
             <Button asChild variant="outline" className="h-10"><Link href="/saved"><Bookmark className="h-4 w-4" />Saved</Link></Button>
             <Button asChild variant="outline" className="h-10"><Link href="/notifications"><Bell className="h-4 w-4" />Notifications</Link></Button>
+            <InstallAppButton />
             <Button asChild className="h-10"><Link href={isAdmin ? "/admin" : "/dashboard"}><LayoutDashboard className="h-4 w-4" />{isAdmin ? "Admin" : "Dashboard"}</Link></Button>
             {!isSeller && !isAdmin && <Button asChild variant="outline" className="h-10"><Link href="/dashboard/become-seller"><Store className="h-4 w-4" />Become a seller</Link></Button>}
             {isSeller && <Button asChild variant="outline" className="h-10"><Link href="/dashboard/upload"><Upload className="h-4 w-4" />Upload</Link></Button>}

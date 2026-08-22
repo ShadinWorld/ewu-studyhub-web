@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { searchQuerySchema } from "@/lib/validations";
+import { RecentSearches } from "@/components/search/recent-searches";
 
 const PAGE_SIZE = 24;
 export const metadata = { title: "Search Resources | EWU StudyHub", description: "Search EWU courses and academic resources in one place." };
@@ -99,6 +100,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Recor
           <div className="relative min-w-0 flex-1"><SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input name="q" defaultValue={q} placeholder="Try CSE303, Database Systems, notes…" className="h-11 border-0 pl-9 shadow-none focus-visible:ring-0" /></div>
           <Button type="submit" size="lg" className="h-11"><SearchIcon className="h-4 w-4" />Search</Button>
         </form>
+        <RecentSearches />
 
         {exactCourseWithDepartment && (
           <section className="mt-8 rounded-3xl border bg-gradient-to-br from-primary/10 via-background to-background p-4 sm:p-6" aria-labelledby="exact-course-match">

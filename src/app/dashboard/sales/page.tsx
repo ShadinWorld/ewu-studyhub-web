@@ -9,38 +9,45 @@ import { formatBDT } from "@/lib/utils";
 
 export default async function SellerSalesPage() {
   const supabase = createClient();
+  const admin = (await import("@/lib/supabase/server")).createAdminClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/dashboard/sales");
 
   const { data: profile } = await supabase.from("profiles").select("is_seller, role").eq("id", user.id).single();
   if (!profile?.is_seller && profile?.role !== "seller") redirect("/dashboard");
 
-  const { data: sales } = await supabase
+  const { data: sellerFiles } = await admin.from("files").select("id").eq("seller_id", user.id);
+  const sellerFileIds = (sellerFiles ?? []).map((f) => f.id);
+  const { data: sales } = await admin
     .from("purchases")
     .select("id, file_id, buyer_id, amount_cents, seller_earning_cents, commission_cents, status, payment_method, payment_reference, created_at, payment_submitted_at, approved_at, files(title), profiles!purchases_buyer_id_fkey(full_name)")
-    .in("file_id", (await supabase.from("files").select("id").eq("seller_id", user.id)).data?.map(f => f.id) ?? [])
+    .in("file_id", sellerFileIds.length ? sellerFileIds : ["00000000-0000-0000-0000-000000000000"])
     .order("created_at", { ascending: false })
-    .limit(100);
+    .limit(200);
 
   const rows = sales ?? [];
   const completed = rows.filter(r => r.status === "completed");
   const pending = rows.filter(r => r.status === "pending");
   const totalSales = completed.reduce((sum, r) => sum + r.amount_cents, 0);
   const totalEarnings = completed.reduce((sum, r) => sum + r.seller_earning_cents, 0);
+  const { data: payoutRows } = await admin.from("payouts").select("amount_cents,status").eq("seller_id", user.id);
+  const completedPayouts = (payoutRows ?? []).filter((p) => p.status === "completed").reduce((sum,p) => sum + Number(p.amount_cents ?? 0), 0);
+  const availableBalance = Math.max(0, totalEarnings - completedPayouts);
 
   return (
     <div className="container max-w-5xl py-8 sm:py-10">
       <div className="rounded-2xl border bg-gradient-to-br from-emerald-500/10 via-background to-background p-5 shadow-sm sm:p-7">
         <p className="text-sm font-semibold text-primary">Seller workspace</p>
         <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">Sales & Earnings</h1>
-        <p className="mt-2 text-sm text-muted-foreground">See every sale, your 80% earning, payment status, and buyer transaction reference in one place.</p>
+        <p className="mt-2 text-sm text-muted-foreground">See every sale, your full seller earnings, payment status, and automatic payout state in one place.</p>
       </div>
 
       <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Completed sales" value={String(completed.length)} />
         <Stat label="Pending payments" value={String(pending.length)} />
-        <Stat label="Gross sales" value={formatBDT(totalSales)} />
+        <Stat label="Buyer paid" value={formatBDT(totalSales)} />
         <Stat label="Your earnings" value={formatBDT(totalEarnings)} />
+        <Stat label="Available balance" value={formatBDT(availableBalance)} />
       </div>
 
       <div className="mt-6 flex flex-wrap gap-2">
@@ -69,9 +76,10 @@ export default async function SellerSalesPage() {
                     </div>
                     <div className="mt-2 grid gap-1 text-sm text-muted-foreground sm:grid-cols-2">
                       <span>Student: {buyerName}</span>
-                      <span>Gross: {formatBDT(sale.amount_cents)}</span>
+                      <span>Buyer paid: {formatBDT(sale.amount_cents)}</span>
+                      <span>Seller price: {formatBDT(sale.seller_earning_cents)}</span>
+                      <span>Platform fee: {formatBDT(sale.commission_cents)}</span>
                       <span>Your earning: {formatBDT(sale.seller_earning_cents)}</span>
-                      <span>Commission: {formatBDT(sale.commission_cents)}</span>
                       <span>Method: {String(sale.payment_method ?? "—")}</span>
                       <span>Transaction: {String(sale.payment_reference ?? "—")}</span>
                     </div>

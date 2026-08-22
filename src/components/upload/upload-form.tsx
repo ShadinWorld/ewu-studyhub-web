@@ -23,9 +23,11 @@ type UploadCourse = Pick<Course, "id" | "course_code" | "course_name" | "departm
 export function UploadForm({
   departments,
   courses,
+  allowAdmin = false,
 }: {
   departments: UploadDepartment[];
   courses: UploadCourse[];
+  allowAdmin?: boolean;
 }) {
   const router = useRouter();
   const [pricingType, setPricingType] = useState<"free" | "paid">("free");
@@ -34,7 +36,7 @@ export function UploadForm({
   const [year, setYear] = useState<string>(String(new Date().getFullYear()));
   const [semester, setSemester] = useState<string>("Spring");
   const [submitting, setSubmitting] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
 
   const [departmentId, setDepartmentId] = useState("");
   const [courseId, setCourseId] = useState("");
@@ -107,8 +109,8 @@ export function UploadForm({
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!file) {
-      toast.error("Please select a file to upload.");
+    if (!files.length) {
+      toast.error("Please select at least one file to upload.");
       return;
     }
     if (pricingType === "paid") {
@@ -120,18 +122,25 @@ export function UploadForm({
     }
 
     setSubmitting(true);
-    const formData = new FormData(e.currentTarget);
-    formData.set("file", file);
-    formData.set("pricingType", pricingType);
-    formData.set("priceCents", pricingType === "paid" ? String(Math.round(Number(priceTaka) * 100)) : "0");
-    formData.set("semester", semester);
-    formData.set("year", year);
-
     try {
-      const res = await fetch("/api/files/upload", { method: "POST", body: formData });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "Upload failed");
-      toast.success("Uploaded! Your file is pending review before it goes live.");
+      const baseForm = new FormData(e.currentTarget);
+      let completed = 0;
+      for (const selectedFile of files) {
+        const formData = new FormData();
+        for (const [key, value] of baseForm.entries()) formData.append(key, value);
+        formData.set("file", selectedFile);
+        formData.set("title", files.length > 1 ? `${String(baseForm.get("title") || "Resource").trim()} — ${selectedFile.name.replace(/\.[^.]+$/, "")}`.slice(0,150) : String(baseForm.get("title") || "").trim());
+        formData.set("pricingType", pricingType);
+        formData.set("priceCents", pricingType === "paid" ? String(Math.round(Number(priceTaka) * 100)) : "0");
+        formData.set("semester", semester);
+        formData.set("year", year);
+        formData.set("adminUpload", allowAdmin ? "true" : "false");
+        const res = await fetch("/api/files/upload", { method: "POST", body: formData });
+        const json = await res.json();
+        if (!res.ok) throw new Error(`${selectedFile.name}: ${json.error ?? "Upload failed"}`);
+        completed++;
+      }
+      toast.success(`${completed} resource${completed === 1 ? "" : "s"} uploaded and waiting for review.`);
       router.push(`/notifications`);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Something went wrong";
@@ -357,7 +366,7 @@ export function UploadForm({
             )}
 
             <p className="text-xs text-muted-foreground">
-              You'll receive 80% of each sale (min ৳{MIN_PRICE}, max ৳{MAX_PRICE}). EWU StudyHub takes a 20% platform commission.
+              You set the seller price. EWU StudyHub adds a separate platform fee on top for the buyer; your seller price is not reduced.
             </p>
           </div>
         )}
@@ -370,15 +379,16 @@ export function UploadForm({
           className="flex cursor-pointer flex-col items-center justify-center rounded-md border border-dashed py-10 text-center hover:bg-accent/50"
         >
           <UploadCloud className="mb-2 h-8 w-8 text-muted-foreground" />
-          <span className="text-sm font-medium">{file ? file.name : "Click to select PDF, PPT, DOCX, ZIP, or image"}</span>
-          <span className="text-xs text-muted-foreground">Max 100MB</span>
+          <span className="text-sm font-medium">{files.length ? `${files.length} file${files.length === 1 ? "" : "s"} selected` : "Click to select PDF, PPT, DOCX, ZIP, or image"}</span>
+          <span className="text-xs text-muted-foreground">Up to 10 files • 100MB each</span>
         </label>
         <input
           id="file"
           type="file"
           className="hidden"
           accept=".pdf,.ppt,.pptx,.doc,.docx,.zip,.png,.jpg,.jpeg"
-          onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+          multiple
+          onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
         />
       </div>
 

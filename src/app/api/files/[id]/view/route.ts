@@ -11,15 +11,13 @@ export async function GET(request: Request, { params }: { params: { id: string }
     .eq("id", params.id)
     .single();
 
-  if (!file || file.visibility !== "published") {
-    return NextResponse.json({ error: "File not found." }, { status: 404 });
-  }
-
+  if (!file) return NextResponse.json({ error: "File not found." }, { status: 404 });
   const { data: { user } } = await supabase.auth.getUser();
-
   const isOwner = Boolean(user && file.seller_id === user.id);
+  if (file.visibility === "archived" && !isOwner && !user) return NextResponse.json({ error: "File not found." }, { status: 404 });
+  if (file.visibility !== "published" && file.visibility !== "archived") return NextResponse.json({ error: "File not found." }, { status: 404 });
 
-  if (file.pricing_type === "paid" && !isOwner) {
+  if ((file.pricing_type === "paid" || file.visibility === "archived") && !isOwner) {
     if (!user) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("next", `/files/${params.id}`);

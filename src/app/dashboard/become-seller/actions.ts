@@ -27,6 +27,8 @@ export async function requestSellerVerification(_prev: SellerFormState, formData
   if (error) { await admin.storage.from("student-id-docs").remove([path]); return { error: error.message }; }
 
 
+  await supabase.rpc("record_user_activity", { p_actor_id: user.id, p_action: "seller_verification.submitted", p_entity_type: "profile", p_entity_id: user.id, p_description: "Submitted seller verification request", p_metadata: { university_email: parsed.data.universityEmail } });
+
   await admin.from("notifications").insert({
     profile_id: user.id,
     type: "seller_verification_pending",

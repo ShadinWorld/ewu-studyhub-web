@@ -46,7 +46,8 @@ export async function POST(request: Request) {
   // Admin-approved sellers (is_seller=true or role=seller) may upload directly.
   // We intentionally do NOT require university_email/student-ID verification here;
   // an admin can manually grant seller status.
-  if (!profile?.is_seller && profile?.role !== "seller") {
+  const isAdminUploader = profile?.role === "admin" || profile?.role === "super_admin";
+  if (!profile?.is_seller && profile?.role !== "seller" && !isAdminUploader) {
     return NextResponse.json(
       { error: "You need to become a seller before uploading. Go to Dashboard → Become a Seller." },
       { status: 403 }
@@ -60,7 +61,7 @@ export async function POST(request: Request) {
     .select("id", { count: "exact", head: true })
     .eq("seller_id", user.id)
     .gte("created_at", oneHourAgo);
-  if ((count ?? 0) >= 10) {
+  if (!isAdminUploader && (count ?? 0) >= 10) {
     return NextResponse.json({ error: "Upload limit reached. Please try again later." }, { status: 429 });
   }
 

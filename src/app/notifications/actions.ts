@@ -39,3 +39,14 @@ export async function markAllNotificationsRead() {
   if (error) throw new Error(error.message);
   revalidatePath("/notifications");
 }
+
+export async function markNotificationReadById(notificationId: string) {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+  const { error } = await supabase.from("notifications").update({ is_read: true }).eq("id", notificationId).eq("profile_id", user.id);
+  if (error) throw new Error(error.message);
+  await supabase.rpc("record_user_activity", { p_actor_id: user.id, p_action: "notification.open", p_entity_type: "notification", p_entity_id: notificationId, p_description: "Opened notification", p_metadata: {} });
+  revalidatePath("/notifications");
+  return { ok: true };
+}

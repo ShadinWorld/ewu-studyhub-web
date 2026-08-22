@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { formatBDT } from "@/lib/utils";
-import { completePayout, rejectPayout } from "./actions";
+import { CopyButton } from "@/components/shared/copy-button";
+import { completePayout, rejectPayout, reconcileSellerFinances } from "./actions";
 
 export default async function AdminPayoutsPage() {
   const supabase = createClient();
@@ -21,7 +22,7 @@ export default async function AdminPayoutsPage() {
   return <div className="space-y-6">
     <div>
       <h2 className="text-2xl font-bold">Seller Payouts</h2>
-      <p className="text-muted-foreground">Payouts are created automatically after an approved sale. Verify the seller, bKash number and amount, then approve the manual payment.</p>
+      <p className="text-muted-foreground">Payouts are created automatically after an approved sale. Verify the seller, bKash number and amount, then complete the manual bKash payment.</p><form action={reconcileSellerFinances} className="mt-3"><Button type="submit" variant="outline">Reconcile historical seller finances</Button></form>
     </div>
     <div className="grid grid-cols-3 gap-3">
       <Mini label="Pending" value={String(pending.length)} />
@@ -42,7 +43,7 @@ export default async function AdminPayoutsPage() {
               <div className="mt-2 grid gap-1 text-sm text-muted-foreground sm:grid-cols-2 lg:grid-cols-4">
                 <span>Amount: <strong className="text-foreground">{formatBDT(p.amount_cents)}</strong></span>
                 <span>Method: {p.payment_method ?? "—"}</span>
-                <span>bKash: {p.payment_account_number ?? "—"}</span>
+                <span className="flex items-center gap-2">bKash: {p.payment_account_number ?? "—"}{p.payment_account_number && <CopyButton value={p.payment_account_number} label="Copy" />}</span>
                 <span>Requested: {new Date(p.created_at).toLocaleString()}</span>
               </div>
             </div>

@@ -41,42 +41,4 @@ export async function saveBkashNumber(formData: FormData) {
   revalidatePath("/dashboard/payment-settings");
 }
 
-export async function requestPayout(formData: FormData) {
-  const supabase = createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    throw new Error("Not authenticated");
-  }
-
-  const amount = Number(formData.get("amount_bdt"));
-
-  if (!Number.isFinite(amount) || amount < 20) {
-    throw new Error("Minimum payout is BDT 20.");
-  }
-
-  const { error } = await supabase.rpc("request_seller_payout", {
-    p_amount_cents: Math.round(amount * 100),
-  });
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  const admin = (await import("@/lib/supabase/server")).createAdminClient();
-  await admin.from("notifications").insert({
-    profile_id: user.id,
-    type: "payout_pending",
-    title: "Payout request submitted",
-    body: `Your payout request for BDT ${amount.toFixed(2)} is waiting for admin payment.`,
-    link: "/notifications",
-  });
-
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/payment-settings");
-  revalidatePath("/notifications");
-  redirect("/notifications");
-}
+export async function requestPayout() { throw new Error("Manual payout requests are disabled. Payouts are created automatically after approved sales."); }

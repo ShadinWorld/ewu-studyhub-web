@@ -19,10 +19,11 @@ export default async function ResourceViewerPage({ params, searchParams }: { par
     .eq("id", params.id)
     .single();
 
-  if (!file || file.visibility !== "published") notFound();
+  if (!file) notFound();
 
   const { data: { user } } = await supabase.auth.getUser();
   const isOwner = Boolean(user && file.seller_id === user.id);
+  if (file.visibility === "archived" && !isOwner) { if (!user) redirect(`/login?next=/files/${file.id}`); const { data: paidAccess } = await supabase.from("purchases").select("id").eq("file_id", file.id).eq("buyer_id", user.id).eq("status", "completed").maybeSingle(); if (!paidAccess) notFound(); }
   const previewOnly = searchParams?.preview === "1" && !isOwner;
   const isPaid = file.pricing_type === "paid";
   const isPdf = file.file_kind === "pdf";

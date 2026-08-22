@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
+import { getBuyerPriceCents } from "@/lib/platform-pricing";
 
 export type CheckoutFormState = {
   error?: string;
@@ -75,6 +76,9 @@ export async function submitBkashPayment(
     return { error: "Payment is already pending for this resource." };
   }
 
+  const buyerAmountCents = await getBuyerPriceCents(supabase as any, file.id, file.price_cents);
+  const platformFeeCents = Math.max(0, buyerAmountCents - file.price_cents);
+
   const invoice = `EWU-${new Date()
     .toISOString()
     .slice(0, 10)
@@ -86,9 +90,9 @@ export async function submitBkashPayment(
   const { error } = await supabase.from("purchases").insert({
     buyer_id: user.id,
     file_id: file.id,
-    amount_cents: file.price_cents,
-    commission_cents: 0,
-    seller_earning_cents: 0,
+    amount_cents: buyerAmountCents,
+    commission_cents: platformFeeCents,
+    seller_earning_cents: file.price_cents,
     status: "pending",
     payment_method: "bkash",
     payment_reference: transactionId,

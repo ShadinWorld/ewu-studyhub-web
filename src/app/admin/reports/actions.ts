@@ -26,7 +26,7 @@ export async function resolveReport(reportId: string, removeFile: boolean) {
   if (error) return { error: error.message };
 
   if (removeFile && report?.file_id) {
-    await supabase.from("files").update({ visibility: "rejected", rejection_reason: "Removed after a content report." }).eq("id", report.file_id);
+    await supabase.from("files").update({ visibility: "archived", rejection_reason: "Removed after a content report." }).eq("id", report.file_id);
   }
 
   await supabase.from("audit_logs").insert({

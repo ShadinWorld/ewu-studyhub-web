@@ -1,5 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { UploadReviewCard } from "@/components/admin/upload-review-card";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Upload } from "lucide-react";
 
 export default async function PendingUploadsPage() {
   const supabase = createClient();
@@ -28,6 +31,7 @@ export default async function PendingUploadsPage() {
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-sm text-muted-foreground">{files.length} file(s) waiting for review</p></div><Button asChild><Link href="/admin/resources/upload"><Upload className="mr-2 h-4 w-4" />Upload multiple</Link></Button></div>
       <p className="text-sm text-muted-foreground">{files.length} file(s) waiting for review</p>
       {files.map((file) => (
         <UploadReviewCard key={file.id} file={{ ...file, seller: { full_name: sellerNames.get(file.seller_id) ?? "Seller" } }} />

@@ -54,7 +54,7 @@ export default async function AdminOverviewPage() {
     supabase.from("payouts").select("id", { count: "exact", head: true }).eq("status", "pending").eq("payment_method", "bkash"),
     supabase.from("support_tickets").select("id", { count: "exact", head: true }).in("status", ["new", "in_review"]),
     supabase.from("profiles").select("id", { count: "exact", head: true }).eq("is_seller", true),
-    supabase.from("purchases").select("amount_cents, commission_cents, created_at").eq("status", "completed"),
+    supabase.from("purchases").select("amount_cents, commission_cents, seller_earning_cents, created_at").eq("status", "completed"),
     supabase.from("audit_logs").select("id, action, target_table, target_id, metadata, actor_id, created_at").order("created_at", { ascending: false }).limit(8),
     supabase.from("platform_daily_stats").select("date,new_users,active_users,total_sales,total_revenue_cents,total_commission_cents").order("date", { ascending: false }).limit(14),
     supabase.rpc("admin_storage_usage"),
@@ -66,11 +66,18 @@ export default async function AdminOverviewPage() {
     : { data: [] as { id: string; full_name: string | null }[] };
   const actorNames = new Map((actorProfiles ?? []).map((profile) => [profile.id, profile.full_name]));
 
-  const totalRevenue = (purchases ?? []).reduce((sum, row) => sum + Number(row.amount_cents ?? 0), 0);
-  const totalCommission = (purchases ?? []).reduce((sum, row) => sum + Number(row.commission_cents ?? 0), 0);
+  const completedPurchases = (purchases ?? []).filter((row) => true);
+  const totalRevenue = completedPurchases.reduce((sum, row) => sum + Number(row.amount_cents ?? 0), 0);
+  const totalCommission = completedPurchases.reduce((sum, row) => sum + Number(row.commission_cents ?? 0), 0);
+  const totalSellerEarnings = completedPurchases.reduce((sum, row) => sum + Number((row as any).seller_earning_cents ?? 0), 0);
   const totalStorage = (storageUsage ?? []).reduce((sum, row) => sum + Number(row.total_bytes ?? 0), 0);
   const formatStorage = (bytes: number) => { if (!bytes) return "0 B"; const u=["B","KB","MB","GB","TB"]; const i=Math.min(Math.floor(Math.log(bytes)/Math.log(1024)),u.length-1); return `${(bytes/1024**i).toFixed(i===0?0:1)} ${u[i]}`; };
   const totalPending = (pendingUploads ?? 0) + (sellerRequests ?? 0) + (paymentRequests ?? 0) + (payoutRequests ?? 0) + (reportCount ?? 0) + (supportCount ?? 0);
+  const todayKey = new Date().toISOString().slice(0,10);
+  const todayCompleted = completedPurchases.filter((p) => dayKey(new Date(p.created_at)) === todayKey);
+  const todaySales = todayCompleted.reduce((sum, p) => sum + Number(p.amount_cents ?? 0), 0);
+  const pendingPayoutTotal = (await supabase.from("payouts").select("amount_cents").eq("status", "pending")).data?.reduce((sum: number, p: any) => sum + Number(p.amount_cents ?? 0), 0) ?? 0;
+  const completedPayoutTotal = (await supabase.from("payouts").select("amount_cents").eq("status", "completed")).data?.reduce((sum: number, p: any) => sum + Number(p.amount_cents ?? 0), 0) ?? 0;
 
   const computedDays = Array.from({ length: 7 }, (_, index) => {
     const date = new Date();
@@ -121,7 +128,8 @@ export default async function AdminOverviewPage() {
 
       <section>
         <div className="mb-4 flex items-end justify-between gap-3"><div><h3 className="text-lg font-bold">Needs your attention</h3><p className="text-sm text-muted-foreground">Open the right queue and resolve it without hunting through menus.</p></div><span className="rounded-full border px-3 py-1 text-xs font-semibold">{totalPending} open</span></div>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4"><MiniMetric label="Today sales" value={formatBDT(todaySales)} /><MiniMetric label="Platform revenue" value={formatBDT(totalCommission)} /><MiniMetric label="Seller earnings" value={formatBDT(totalSellerEarnings)} /><MiniMetric label="Pending payout" value={formatBDT(pendingPayoutTotal)} /><MiniMetric label="Completed payout" value={formatBDT(completedPayoutTotal)} /></div>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {actions.map(({ href, label, count, icon: Icon, tone }) => (
             <Link key={href} href={href} className="group rounded-2xl border bg-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg">
               <div className={`flex h-11 w-11 items-center justify-center rounded-xl border ${tone}`}><Icon className="h-5 w-5" /></div>

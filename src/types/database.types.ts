@@ -461,6 +461,36 @@ export interface PlatformDailyStat {
   total_commission_cents: number;
 }
 
+export interface PlatformPricingSettings {
+  id: boolean;
+  default_fee_cents: number;
+  updated_at: string;
+}
+
+export interface ResourcePlatformFeeSettings {
+  file_id: string;
+  fee_cents: number;
+  updated_at: string;
+}
+
+export interface UserActivityHistory {
+  id: string;
+  actor_id: string | null;
+  actor_role: "student" | "seller" | "admin" | "super_admin";
+  action: string;
+  entity_type: string | null;
+  entity_id: string | null;
+  description: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface RecentSearch {
+  profile_id: string;
+  query: string;
+  searched_at: string;
+}
+
 // ----------------------------------------------------------------------------
 // Helper: builds a Supabase Table entry (Row/Insert/Update/Relationships)
 // from a Row type. Insert/Update are modeled as Partial<Row>, matching how
@@ -535,6 +565,10 @@ export interface Database {
       announcements: Table<Announcement>;
       homepage_banner_settings: Table<HomepageBannerSetting>;
       announcement_daily_stats: Table<AnnouncementDailyStat>;
+      platform_pricing_settings: Table<PlatformPricingSettings>;
+      resource_platform_fee_settings: Table<ResourcePlatformFeeSettings>;
+      user_activity_history: Table<UserActivityHistory>;
+      recent_searches: Table<RecentSearch>;
     };
     Views: Record<string, never>;
     Functions: {
@@ -591,6 +625,22 @@ export interface Database {
       };
       request_seller_verification: {
         Args: { p_university_email: string; p_bkash_number: string; p_student_id_document_path: string } & Record<string, unknown>;
+        Returns: void;
+      };
+      set_default_platform_fee: {
+        Args: { p_fee_cents: number } & Record<string, unknown>;
+        Returns: void;
+      };
+      set_resource_platform_fee: {
+        Args: { p_file_id: string; p_fee_cents: number } & Record<string, unknown>;
+        Returns: void;
+      };
+      reconcile_seller_financials: {
+        Args: Record<string, unknown>;
+        Returns: number;
+      };
+      record_user_activity: {
+        Args: { p_actor_id: string; p_action: string; p_entity_type: string; p_entity_id: string; p_description: string; p_metadata?: Record<string, unknown> } & Record<string, unknown>;
         Returns: void;
       };
     };

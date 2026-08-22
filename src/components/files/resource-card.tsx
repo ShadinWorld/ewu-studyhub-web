@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatBDT } from "@/lib/utils";
 import { RESOURCE_CATEGORY_LABELS } from "@/lib/constants";
 import { SaveResourceButton } from "@/components/files/save-resource-button";
+import { getPlatformPricing, getResourceFeeMap } from "@/lib/platform-pricing";
 import { createClient } from "@/lib/supabase/server";
 import type { ResourceCategory, FilePricingType, PurchaseStatus } from "@/types/database.types";
 
@@ -27,24 +28,31 @@ export interface ResourceCardData {
   rejectionReason?: string | null;
   isOwner?: boolean;
   seller_id?: string | null;
+  displayPriceCents?: number;
+  resourceVisibility?: string | null;
 }
 
 function StatusBadge({ file }: { file: ResourceCardData }) {
+  if (file.isOwner && file.resourceVisibility === "draft") return <Badge className="rounded-full bg-amber-500 px-2.5 text-white shadow-sm hover:bg-amber-500"><Clock3 className="mr-1 h-3.5 w-3.5" />PENDING REVIEW</Badge>;
+  if (file.isOwner && file.resourceVisibility === "rejected") return <Badge variant="destructive" className="rounded-full">REJECTED</Badge>;
+  if (file.isOwner && file.resourceVisibility === "archived") return <Badge variant="secondary" className="rounded-full">REMOVED</Badge>;
   if (file.isOwner) return <Badge className="rounded-full bg-primary px-2.5 text-primary-foreground shadow-sm">YOUR RESOURCE</Badge>;
   if (file.pricing_type === "free") return <Badge variant="success" className="rounded-full px-2.5 shadow-sm">FREE</Badge>;
   if (file.purchaseStatus === "completed") return <Badge className="rounded-full bg-emerald-600 px-2.5 text-white shadow-sm hover:bg-emerald-600"><CheckCircle2 className="mr-1 h-3.5 w-3.5" />PURCHASED</Badge>;
   if (file.purchaseStatus === "pending") return <Badge className="rounded-full bg-amber-500 px-2.5 text-white shadow-sm hover:bg-amber-500"><Clock3 className="mr-1 h-3.5 w-3.5" />PAYMENT PENDING</Badge>;
   if (file.purchaseStatus === "failed") return <Badge variant="destructive" className="rounded-full px-2.5 shadow-sm"><XCircle className="mr-1 h-3.5 w-3.5" />PAYMENT REJECTED</Badge>;
   if (file.purchaseStatus === "refunded") return <Badge variant="secondary" className="rounded-full px-2.5 shadow-sm">REFUNDED</Badge>;
-  return <Badge variant="default" className="rounded-full px-2.5 shadow-sm">{formatBDT(file.price_cents)}</Badge>;
+  return <Badge variant="default" className="rounded-full px-2.5 shadow-sm">{formatBDT(file.displayPriceCents ?? file.price_cents)}</Badge>;
 }
 
 function ActionArea({ file }: { file: ResourceCardData }) {
+  if (file.isOwner && file.resourceVisibility === "draft") return <div className="flex h-9 flex-1 items-center justify-center rounded-lg bg-amber-500/10 px-3 text-xs font-semibold text-amber-700 dark:text-amber-300">Waiting for admin approval</div>;
+  if (file.isOwner && file.resourceVisibility === "rejected") return <div className="flex h-9 flex-1 items-center justify-center rounded-lg bg-destructive/10 px-3 text-xs font-semibold text-destructive">Rejected by admin</div>;
   if (file.isOwner) return <><Link href={`/files/${file.id}`} className="inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-1 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"><Eye className="h-3.5 w-3.5" />View</Link><a href={`/api/files/${file.id}/download`} className="inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-1 rounded-lg border bg-background px-2 text-[11px] font-semibold hover:bg-accent sm:px-3 sm:text-xs"><Download className="h-3.5 w-3.5" />Download</a></>;
   if (file.purchaseStatus === "pending") return <div className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-amber-500/10 px-3 text-xs font-semibold text-amber-700 dark:text-amber-300"><Clock3 className="h-3.5 w-3.5" /> Waiting for approval </div>;
   if (file.purchaseStatus === "completed") return <><Link href={`/files/${file.id}/viewer`} className="inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-1 rounded-lg bg-primary px-2 text-[11px] font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 sm:px-3 sm:text-xs"><Eye className="h-3.5 w-3.5 shrink-0" /> View</Link><a href={`/api/files/${file.id}/download`} className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground" aria-label="Download resource"><Download className="h-3.5 w-3.5" /></a></>;
   if (file.pricing_type === "free") return <><Link href={`/files/${file.id}?preview=1`} className="inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-1 rounded-lg bg-primary px-2 text-[11px] font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 sm:px-3 sm:text-xs"><Eye className="h-3.5 w-3.5 shrink-0" /> Preview</Link><a href={`/api/files/${file.id}/download`} className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground" aria-label="Download resource"><Download className="h-3.5 w-3.5" /></a></>;
-  return <div className="flex min-w-0 flex-1 gap-1.5"><Link href={`/files/${file.id}?preview=1`} className="inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-1 rounded-lg border bg-background px-2 text-[11px] font-semibold text-foreground transition-colors hover:bg-accent sm:px-3 sm:text-xs"><Eye className="h-3.5 w-3.5 shrink-0" /> Preview</Link><Link href={`/checkout/${file.id}`} className="inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-1 rounded-lg bg-primary px-2 text-[11px] font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 sm:px-3 sm:text-xs"><ShoppingBag className="h-3.5 w-3.5 shrink-0" /> {file.purchaseStatus === "failed" ? "Buy again" : `Buy ${formatBDT(file.price_cents)}`}</Link></div>;
+  return <div className="flex min-w-0 flex-1 gap-1.5"><Link href={`/files/${file.id}?preview=1`} className="inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-1 rounded-lg border bg-background px-2 text-[11px] font-semibold text-foreground transition-colors hover:bg-accent sm:px-3 sm:text-xs"><Eye className="h-3.5 w-3.5 shrink-0" /> Preview</Link><Link href={`/checkout/${file.id}`} className="inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-1 rounded-lg bg-primary px-2 text-[11px] font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 sm:px-3 sm:text-xs"><ShoppingBag className="h-3.5 w-3.5 shrink-0" /> {file.purchaseStatus === "failed" ? "Buy again" : `Buy ${formatBDT(file.displayPriceCents ?? file.price_cents)}`}</Link></div>;
 }
 
 export function ResourceCard({ file }: { file: ResourceCardData }) {
@@ -75,7 +83,9 @@ export async function ResourceCardGrid({ files, horizontalMobile = false }: { fi
   void horizontalMobile;
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const normalizedFiles = files.map((file) => ({ ...file, isOwner: Boolean(file.isOwner || (user && file.seller_id === user.id)) }));
+  const feeMap = await getResourceFeeMap(supabase as any, files.map((file) => file.id));
+  const defaultFee = feeMap.size === files.length ? 0 : await getPlatformPricing(supabase as any);
+  const normalizedFiles = files.map((file) => ({ ...file, displayPriceCents: file.pricing_type === "paid" ? file.price_cents + (feeMap.get(file.id) ?? defaultFee) : file.price_cents, isOwner: Boolean(file.isOwner || (user && file.seller_id === user.id)) }));
   if (normalizedFiles.length === 0) return <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed bg-muted/20 px-6 py-16 text-center"><FileText className="h-9 w-9 text-muted-foreground"/><p className="mt-3 text-sm font-semibold">No resources found</p><p className="mt-1 max-w-sm text-sm text-muted-foreground">Try a different search or filter, or check back later.</p></div>;
   return <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">{normalizedFiles.map(file => <div key={file.id} className="min-w-0"><ResourceCard file={file}/></div>)}</div>;
 }

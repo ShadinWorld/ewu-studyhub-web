@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 const PUBLIC_TABLES = [
-  "files",
   "courses",
   "departments",
   "announcements",

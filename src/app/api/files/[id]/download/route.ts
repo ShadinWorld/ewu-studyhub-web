@@ -15,20 +15,13 @@ export async function GET(request: Request, { params }: { params: { id: string }
     return NextResponse.redirect(loginUrl);
   }
 
-  const { data: file } = await supabase
-    .from("files")
-    .select("id, storage_path, pricing_type, price_cents, visibility, seller_id, title")
-    .eq("id", params.id)
-    .single();
-
-  if (!file || file.visibility !== "published") {
-    return NextResponse.json({ error: "File not found." }, { status: 404 });
-  }
-
+  const { data: file } = await supabase.from("files").select("id, storage_path, pricing_type, price_cents, visibility, seller_id, title").eq("id", params.id).single();
+  if (!file) return NextResponse.json({ error: "File not found." }, { status: 404 });
   const isOwner = file.seller_id === user.id;
+  if (file.visibility !== "published" && file.visibility !== "archived") return NextResponse.json({ error: "File not found." }, { status: 404 });
   let purchaseId: string | null = null;
 
-  if (file.pricing_type === "paid" && !isOwner) {
+  if ((file.pricing_type === "paid" || file.visibility === "archived") && !isOwner) {
     const { data: purchase } = await supabase
       .from("purchases")
       .select("id")

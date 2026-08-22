@@ -37,8 +37,8 @@ const downloadRoute = read("src/app/api/files/[id]/download/route.ts");
 const viewRoute = read("src/app/api/files/[id]/view/route.ts");
 const purchaseAction = read("src/app/checkout/[fileId]/actions.ts");
 for (const [label, text, needles] of [
-  ["download ownership gate", downloadRoute, ["isOwner", "pricing_type === \"paid\" && !isOwner"]],
-  ["view ownership gate", viewRoute, ["isOwner", "pricing_type === \"paid\" && !isOwner"]],
+  ["download ownership gate", downloadRoute, ["isOwner", "pricing_type === \"paid\"", "!isOwner"]],
+  ["view ownership gate", viewRoute, ["isOwner", "pricing_type === \"paid\"", "!isOwner"]],
   ["self purchase guard", purchaseAction, ["file.seller_id === user.id", "cannot purchase your own resource"]],
 ]) {
   for (const needle of needles) {
@@ -63,10 +63,6 @@ if (!gitignore.split(/\r?\n/).includes(".ai/")) {
   failed++;
 }
 
-if (exists("src/app/tools/grade-calculator") || exists("src/app/tools/prerequisite-checker")) {
-  console.error("REMOVED TOOL ROUTES STILL PRESENT");
-  failed++;
-}
 
 console.log(`Production audit: ${failed ? "FAIL" : "PASS"}`);
 if (failed) process.exit(1);

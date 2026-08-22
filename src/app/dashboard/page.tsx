@@ -61,7 +61,7 @@ export default async function DashboardPage() {
           <Button asChild variant="outline" className="h-12"><Link href="/saved">Saved</Link></Button>
           <Button asChild variant="outline" className="h-12"><Link href="/requests">My Requests</Link></Button>
           <Button asChild variant="outline" className="relative h-12"><Link href="/notifications">Notifications{actionNotifications?.some((n) => !n.is_read) ? <span className="ml-1 rounded-full bg-primary px-1.5 py-0.5 text-[10px] text-primary-foreground">{actionNotifications.filter((n) => !n.is_read).length}</span> : null}</Link></Button>
-          <Button asChild variant="outline" className="h-12"><Link href="/tools">Student Tools</Link></Button>
+          <Button asChild variant="outline" className="h-12"><Link href="/tools">Student Tools</Link></Button><Button asChild variant="outline" className="h-12"><Link href="/history">History</Link></Button>
         </div>
 
         <div className="mt-4 rounded-xl border bg-muted/20 p-4">
@@ -118,7 +118,12 @@ export default async function DashboardPage() {
     supabase.from("notifications").select("id,type,title,body,created_at,is_read,link").eq("profile_id", user.id).in("type", ["upload_pending","upload_approved","upload_rejected","payout_pending","payout_completed","seller_approved","purchase_pending","purchase_completed","report_update"]).order("created_at", { ascending: false }).limit(8),
   ]);
 
-  const totalRevenue = (purchaseAgg ?? []).reduce((sum, p: any) => sum + p.seller_earning_cents, 0);
+  const totalRevenue = (purchaseAgg ?? []).reduce((sum, p: any) => sum + Number(p.seller_earning_cents ?? 0), 0);
+  const adminClient = (await import("@/lib/supabase/server")).createAdminClient();
+  const { data: payoutRows } = await adminClient.from("payouts").select("amount_cents,status").eq("seller_id", user.id);
+  const completedPayouts = (payoutRows ?? []).filter((p:any) => p.status === "completed").reduce((sum:number,p:any) => sum + Number(p.amount_cents ?? 0), 0);
+  const pendingPayouts = (payoutRows ?? []).filter((p:any) => p.status === "pending" || p.status === "processing").reduce((sum:number,p:any) => sum + Number(p.amount_cents ?? 0), 0);
+  const availableBalance = Math.max(0, totalRevenue - completedPayouts - pendingPayouts);
   const totalDownloads = (myFiles ?? []).reduce((sum, f) => sum + f.downloads_count, 0);
 
   return (
@@ -131,7 +136,7 @@ export default async function DashboardPage() {
 
       <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard icon={<DollarSign className="h-5 w-5" />} label="Total revenue" value={formatBDT(totalRevenue)} />
-        <StatCard icon={<Wallet className="h-5 w-5" />} label="Wallet balance" value={formatBDT(profile?.wallet_balance_cents ?? 0)} />
+        <StatCard icon={<Wallet className="h-5 w-5" />} label="Available balance" value={formatBDT(availableBalance)} />
         <StatCard icon={<Download className="h-5 w-5" />} label="Total downloads" value={String(totalDownloads)} />
         <StatCard icon={<Eye className="h-5 w-5" />} label="Followers" value={String(profile?.followers_count ?? 0)} />
       </div>
@@ -143,7 +148,7 @@ export default async function DashboardPage() {
         <Button asChild variant="outline" className="h-12"><Link href="/purchases">Purchases</Link></Button>
         <Button asChild variant="outline" className="h-12"><Link href="/requests">My Requests</Link></Button>
         <Button asChild variant="outline" className="h-12"><Link href="/notifications">Notifications</Link></Button>
-          <Button asChild variant="outline" className="h-12"><Link href="/tools">Student Tools</Link></Button>
+          <Button asChild variant="outline" className="h-12"><Link href="/tools">Student Tools</Link></Button><Button asChild variant="outline" className="h-12"><Link href="/history">History</Link></Button>
       </div>
       {pendingPayoutCount ? <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm font-medium text-amber-800 dark:text-amber-200">{pendingPayoutCount} automatic payout{pendingPayoutCount === 1 ? " is" : "s are"} waiting for admin payment.</div> : null}
       {actionNotifications?.length ? <section className="mt-6 rounded-2xl border bg-card p-5 shadow-sm"><div className="flex items-start justify-between gap-3"><div><p className="text-sm font-semibold text-primary">Action status</p><h2 className="mt-1 text-lg font-bold">Uploads & payouts</h2><p className="mt-1 text-sm text-muted-foreground">See what is waiting for admin review and what has already been resolved.</p></div><Button asChild variant="outline" size="sm"><Link href="/notifications">View all</Link></Button></div><div className="mt-4 space-y-2">{actionNotifications.slice(0,5).map((n) => <div key={n.id} className="flex flex-col gap-2 rounded-xl border p-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-medium">{n.title}</p><p className="mt-1 text-xs text-muted-foreground">{n.body || "Status update"} · {new Date(n.created_at).toLocaleString()}</p></div>{n.link ? <Button asChild size="sm" variant="outline"><Link href={n.link}>Open</Link></Button> : null}</div>)}</div></section> : null}

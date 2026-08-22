@@ -49,3 +49,14 @@ export async function rejectPayout(formData: FormData) {
   revalidatePath("/dashboard/payment-settings");
   redirect("/admin/payouts?saved=Payout%20rejected");
 }
+
+export async function reconcileSellerFinances() {
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.rpc("reconcile_seller_financials");
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/payouts");
+  revalidatePath("/dashboard/sales");
+  revalidatePath("/dashboard/payment-settings");
+  revalidatePath("/dashboard");
+  redirect("/admin/payouts?saved=Historical%20seller%20finances%20reconciled");
+}

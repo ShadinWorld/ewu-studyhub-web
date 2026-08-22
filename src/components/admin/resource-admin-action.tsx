@@ -8,7 +8,7 @@ import { removeResource } from "@/app/admin/resources/actions";
 export function ResourceAdminAction({ id, title }: { id: string; title: string }) {
   const [pending, startTransition] = useTransition();
   const onRemove = () => {
-    if (!window.confirm(`Remove “${title}” from StudyHub? This also removes its stored files.`)) return;
+    if (!window.confirm(`Remove “${title}” from StudyHub? Purchases and history will be preserved for existing buyers.`)) return;
     const fd = new FormData();
     fd.set("id", id);
     startTransition(async () => {
