@@ -32,7 +32,8 @@ export default async function SellerSalesPage() {
   const totalEarnings = completed.reduce((sum, r) => sum + r.seller_earning_cents, 0);
   const { data: payoutRows } = await admin.from("payouts").select("amount_cents,status").eq("seller_id", user.id);
   const completedPayouts = (payoutRows ?? []).filter((p) => p.status === "completed").reduce((sum,p) => sum + Number(p.amount_cents ?? 0), 0);
-  const availableBalance = Math.max(0, totalEarnings - completedPayouts);
+  const pendingPayouts = (payoutRows ?? []).filter((p) => p.status === "pending" || p.status === "processing").reduce((sum,p) => sum + Number(p.amount_cents ?? 0), 0);
+  const availableBalance = Math.max(0, totalEarnings - completedPayouts - pendingPayouts);
 
   return (
     <div className="container max-w-5xl py-8 sm:py-10">
@@ -48,6 +49,8 @@ export default async function SellerSalesPage() {
         <Stat label="Buyer paid" value={formatBDT(totalSales)} />
         <Stat label="Your earnings" value={formatBDT(totalEarnings)} />
         <Stat label="Available balance" value={formatBDT(availableBalance)} />
+        <Stat label="Pending payout" value={formatBDT(pendingPayouts)} />
+        <Stat label="Paid out" value={formatBDT(completedPayouts)} />
       </div>
 
       <div className="mt-6 flex flex-wrap gap-2">

@@ -7,6 +7,7 @@ import { WhatsAppSupportButton } from "@/components/support/whatsapp-support-but
 import { RealtimeSyncProvider } from "@/components/shared/realtime-sync-provider";
 import { PullToRefresh } from "@/components/shared/pull-to-refresh";
 import { ServiceWorkerRegister } from "@/components/shared/service-worker-register";
+import { SwipeBackGesture } from "@/components/navigation/swipe-back";
 
 
 export const metadata: Metadata = {
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-sans antialiased">
         <ServiceWorkerRegister />
         <PullToRefresh />
+        <SwipeBackGesture />
         <ThemeProvider attribute="class" defaultTheme="ewu-blue" themes={["ewu-blue", "pink", "dark"]} disableTransitionOnChange>
           <RealtimeSyncProvider>
             {children}

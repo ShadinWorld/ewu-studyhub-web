@@ -18,7 +18,7 @@ export async function GET(request: Request) {
     matchedCourseIds = (courses ?? []).map((r) => r.id); matchedDepartmentIds = (departments ?? []).map((r) => r.id);
   }
   let query = supabase.from("files").select("id, title, thumbnail_url, file_kind, pricing_type, price_cents, average_rating, reviews_count, downloads_count, category, course_id", { count: "exact" }).eq("visibility", "published").order("published_at", { ascending: false });
-  if (queryText) { const clauses = [`title.ilike.%${queryText}%`]; if (matchedCourseIds.length) clauses.push(`course_id.in.(${matchedCourseIds.join(",")})`); if (matchedDepartmentIds.length) clauses.push(`department_id.in.(${matchedDepartmentIds.join(",")})`); query = query.or(clauses.join(",")); }
+  if (queryText) { const clauses = [`title.ilike.%${queryText}%`, `description.ilike.%${queryText}%`]; if (matchedCourseIds.length) clauses.push(`course_id.in.(${matchedCourseIds.join(",")})`); if (matchedDepartmentIds.length) clauses.push(`department_id.in.(${matchedDepartmentIds.join(",")})`); query = query.or(clauses.join(",")); }
   const from = (page - 1) * PAGE_SIZE;
   const { data, count, error } = await query.range(from, from + PAGE_SIZE - 1);
   if (error) return NextResponse.json({ error: "Search failed." }, { status: 500 });

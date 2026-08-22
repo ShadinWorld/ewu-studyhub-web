@@ -159,6 +159,7 @@ export interface FileResource {
   updated_at: string;
   published_at: string | null;
   table_of_contents: string | null;
+  upload_batch_id: string | null;
 }
 
 export interface FileTag {

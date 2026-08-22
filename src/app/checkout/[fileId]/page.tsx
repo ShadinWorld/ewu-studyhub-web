@@ -19,25 +19,29 @@ export default async function CheckoutPage({ params }: { params: { fileId: strin
 
   const { data: file } = await supabase
     .from("files")
-    .select("id, title, price_cents, pricing_type, seller_id, visibility")
+    .select("id, title, price_cents, pricing_type, seller_id, visibility, upload_batch_id, file_kind")
     .eq("id", params.fileId)
     .eq("visibility", "published")
     .single();
   if (!file || file.pricing_type !== "paid") notFound();
+  const { data: batchFiles } = file.upload_batch_id ? await supabase.from("files").select("id,storage_path,file_kind").eq("upload_batch_id", file.upload_batch_id).order("created_at", { ascending: true }) : { data: [{ id: file.id, storage_path: null, file_kind: file.file_kind ?? null }] };
+  const bundleCount = batchFiles?.length ?? 1;
   if (file.seller_id === user.id) {
     return <StatusPage title="Your resource" message="You uploaded this resource, so a purchase is not needed. You already own it." href={`/files/${file.id}`} label="Open resource" />;
   }
 
-  const { data: existing } = await supabase
+  const purchaseScopeIds = (batchFiles ?? []).map((row) => row.id);
+  const { data: existingRows } = await supabase
     .from("purchases")
-    .select("id, status, payment_reference, rejection_reason")
-    .eq("file_id", file.id)
+    .select("id, file_id, status, payment_reference, rejection_reason, created_at")
     .eq("buyer_id", user.id)
+    .in("file_id", purchaseScopeIds.length ? purchaseScopeIds : [file.id])
     .in("status", ["pending", "completed"])
-    .maybeSingle();
+    .order("created_at", { ascending: false });
+  const existing = (existingRows ?? []).find((row) => row.status === "completed") ?? existingRows?.[0] ?? null;
 
   if (existing?.status === "completed") {
-    return <StatusPage title="Payment approved" message="You already have access to this resource." href={`/files/${file.id}`} label="Open resource" />;
+    return <StatusPage title="Payment approved" message={bundleCount > 1 ? `You already have access to all ${bundleCount} files in this resource.` : "You already have access to this resource."} href={`/files/${file.id}`} label="Open resource" />;
   }
   if (existing?.status === "pending") {
     return <StatusPage title="Payment under review" message={`Your bKash payment is waiting for admin verification. Transaction ID: ${existing.payment_reference ?? "—"}`} href={`/files/${file.id}`} label="Back to resource" />;
@@ -58,7 +62,7 @@ export default async function CheckoutPage({ params }: { params: { fileId: strin
         <Card className="mx-auto max-w-lg">
           <CardHeader>
             <CardTitle>Pay with bKash</CardTitle>
-            <CardDescription>{file.title}</CardDescription>
+            <CardDescription>{file.title}{bundleCount > 1 ? ` · ${bundleCount} files included` : ""}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="rounded-lg border bg-accent/40 p-4">

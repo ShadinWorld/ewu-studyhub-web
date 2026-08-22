@@ -14,7 +14,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
   const supabase = createClient();
   const { data: file } = await supabase
     .from("files")
-    .select("id, storage_path, preview_storage_path, file_kind, pricing_type, visibility")
+    .select("id, storage_path, preview_storage_path, file_kind, pricing_type, visibility, upload_batch_id")
     .eq("id", params.id)
     .single();
 
@@ -38,12 +38,13 @@ export async function GET(request: Request, { params }: { params: { id: string }
       return NextResponse.redirect(loginUrl);
     }
 
+    const { data: siblings } = file.upload_batch_id ? await supabase.from("files").select("id").eq("upload_batch_id", file.upload_batch_id) : { data: [{ id: file.id }] };
     const { data: purchase } = await supabase
       .from("purchases")
       .select("id")
-      .eq("file_id", file.id)
       .eq("buyer_id", user.id)
       .eq("status", "completed")
+      .in("file_id", (siblings ?? []).map((row) => row.id))
       .maybeSingle();
 
     if (purchase) {

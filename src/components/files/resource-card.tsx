@@ -30,6 +30,9 @@ export interface ResourceCardData {
   seller_id?: string | null;
   displayPriceCents?: number;
   resourceVisibility?: string | null;
+  upload_batch_id?: string | null;
+  batchFileCount?: number;
+  batchFileKinds?: string[];
 }
 
 function StatusBadge({ file }: { file: ResourceCardData }) {
@@ -67,7 +70,7 @@ export function ResourceCard({ file }: { file: ResourceCardData }) {
       </div>
       <div className="absolute bottom-2 left-2 right-2 z-10 flex items-end justify-between gap-2">
         {file.course_code ? <Badge variant="secondary" className="max-w-[60%] truncate rounded-full bg-background/90 font-mono text-[11px] shadow-sm backdrop-blur">{file.course_code}</Badge> : <span />}
-        {file.file_kind && <Badge variant="secondary" className="shrink-0 rounded-full bg-background/95 px-2.5 text-[10px] font-bold uppercase tracking-wide text-foreground shadow-sm backdrop-blur">{file.file_kind}</Badge>}
+        {(file.batchFileCount ?? 1) > 1 && <Badge variant="secondary" className="shrink-0 rounded-full bg-background/95 px-2.5 text-[10px] font-bold text-foreground shadow-sm backdrop-blur">{file.batchFileCount} files</Badge>} {file.file_kind && <Badge variant="secondary" className="shrink-0 rounded-full bg-background/95 px-2.5 text-[10px] font-bold uppercase tracking-wide text-foreground shadow-sm backdrop-blur">{file.batchFileKinds?.length ? file.batchFileKinds.slice(0,3).join(" · ") : file.file_kind}</Badge>}
       </div>
     </div>
     <div className="flex min-h-[178px] flex-1 flex-col p-2.5 sm:min-h-[178px] sm:p-4">
@@ -83,9 +86,48 @@ export async function ResourceCardGrid({ files, horizontalMobile = false }: { fi
   void horizontalMobile;
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const feeMap = await getResourceFeeMap(supabase as any, files.map((file) => file.id));
-  const defaultFee = feeMap.size === files.length ? 0 : await getPlatformPricing(supabase as any);
-  const normalizedFiles = files.map((file) => ({ ...file, displayPriceCents: file.pricing_type === "paid" ? file.price_cents + (feeMap.get(file.id) ?? defaultFee) : file.price_cents, isOwner: Boolean(file.isOwner || (user && file.seller_id === user.id)) }));
+  const seedIds = files.map((file) => file.id);
+  const { data: seedMeta } = seedIds.length ? await supabase.from("files").select("id,upload_batch_id").in("id", seedIds) : { data: [] as { id: string; upload_batch_id: string | null }[] };
+  const batchBySeed = new Map((seedMeta ?? []).map((row) => [row.id, row.upload_batch_id]));
+  const batchIds = Array.from(new Set((seedMeta ?? []).map((row) => row.upload_batch_id).filter((id): id is string => Boolean(id))));
+  const { data: batchFiles } = batchIds.length ? await supabase.from("files").select("id,upload_batch_id,file_kind").in("upload_batch_id", batchIds).eq("visibility", "published") : { data: [] as { id: string; upload_batch_id: string | null; file_kind: string | null }[] };
+  const filesByBatch = new Map<string, { id: string; upload_batch_id: string | null; file_kind: string | null }[]>();
+  for (const row of batchFiles ?? []) filesByBatch.set(row.upload_batch_id ?? row.id, [...(filesByBatch.get(row.upload_batch_id ?? row.id) ?? []), row]);
+
+  const representative = new Map<string, ResourceCardData>();
+  for (const file of files) {
+    const key = batchBySeed.get(file.id) ?? file.id;
+    if (representative.has(key)) continue;
+    const members = batchBySeed.get(file.id) ? (filesByBatch.get(key) ?? [{ id: file.id, upload_batch_id: batchBySeed.get(file.id) ?? null, file_kind: file.file_kind ?? null }]) : [{ id: file.id, upload_batch_id: null, file_kind: file.file_kind ?? null }];
+    representative.set(key, { ...file, upload_batch_id: batchBySeed.get(file.id) ?? null, batchFileCount: members.length, batchFileKinds: Array.from(new Set(members.map((m) => String(m.file_kind ?? "file").toUpperCase()))) });
+  }
+
+  const grouped = Array.from(representative.values());
+  const expandedFileIds = Array.from(new Set(grouped.flatMap((file) => file.upload_batch_id ? (filesByBatch.get(file.upload_batch_id)?.map((m) => m.id) ?? [file.id]) : [file.id])));
+  const purchaseStatusByGroup = new Map<string, PurchaseStatus>();
+  if (user && expandedFileIds.length) {
+    const { data: purchases } = await supabase.from("purchases").select("file_id,status,created_at").eq("buyer_id", user.id).in("file_id", expandedFileIds).order("created_at", { ascending: false });
+    for (const purchase of purchases ?? []) {
+      if (!purchase.file_id) continue;
+      const group = grouped.find((file) => file.id === purchase.file_id || (file.upload_batch_id && filesByBatch.get(file.upload_batch_id)?.some((m) => m.id === purchase.file_id)));
+      if (!group) continue;
+      const key = group.upload_batch_id ?? group.id;
+      if (!purchaseStatusByGroup.has(key)) purchaseStatusByGroup.set(key, purchase.status as PurchaseStatus);
+      if (purchase.status === "completed") purchaseStatusByGroup.set(key, "completed");
+    }
+  }
+
+  const feeMap = await getResourceFeeMap(supabase as any, grouped.map((file) => file.id));
+  const defaultFee = feeMap.size === grouped.length ? 0 : await getPlatformPricing(supabase as any);
+  const normalizedFiles = grouped.map((file) => {
+    const key = file.upload_batch_id ?? file.id;
+    return {
+      ...file,
+      purchaseStatus: purchaseStatusByGroup.get(key) ?? file.purchaseStatus ?? null,
+      displayPriceCents: file.pricing_type === "paid" ? file.price_cents + (feeMap.get(file.id) ?? defaultFee) : file.price_cents,
+      isOwner: Boolean(file.isOwner || (user && file.seller_id === user.id)),
+    };
+  });
   if (normalizedFiles.length === 0) return <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed bg-muted/20 px-6 py-16 text-center"><FileText className="h-9 w-9 text-muted-foreground"/><p className="mt-3 text-sm font-semibold">No resources found</p><p className="mt-1 max-w-sm text-sm text-muted-foreground">Try a different search or filter, or check back later.</p></div>;
-  return <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">{normalizedFiles.map(file => <div key={file.id} className="min-w-0"><ResourceCard file={file}/></div>)}</div>;
+  return <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">{normalizedFiles.map(file => <div key={file.upload_batch_id ?? file.id} className="min-w-0"><ResourceCard file={file}/></div>)}</div>;
 }

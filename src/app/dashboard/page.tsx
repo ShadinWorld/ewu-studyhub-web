@@ -103,27 +103,27 @@ export default async function DashboardPage() {
     );
   }
 
-  const [{ data: myFiles }, { data: purchaseAgg }, { count: pendingPayoutCount }, { data: actionNotifications }] = await Promise.all([
-    supabase
-      .from("files")
-      .select("id, title, visibility, pricing_type, price_cents, category, rejection_reason, downloads_count")
-      .eq("seller_id", user.id)
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("purchases")
-      .select("seller_earning_cents, file_id, files!inner(seller_id)")
-      .eq("files.seller_id", user.id)
-      .eq("status", "completed"),
-    supabase.from("payouts").select("id", { count: "exact", head: true }).eq("seller_id", user.id).eq("status", "pending"),
+  const { data: myFiles } = await supabase
+    .from("files")
+    .select("id, title, visibility, pricing_type, price_cents, category, rejection_reason, downloads_count, upload_batch_id")
+    .eq("seller_id", user.id)
+    .order("created_at", { ascending: false });
+
+  const adminClient = (await import("@/lib/supabase/server")).createAdminClient();
+  const fileIds = (myFiles ?? []).map((file) => file.id);
+  const [{ data: saleRows }, { data: payoutRows }, { data: actionNotifications }] = await Promise.all([
+    fileIds.length
+      ? adminClient.from("purchases").select("id, seller_earning_cents, status, file_id, created_at").in("file_id", fileIds).eq("status", "completed")
+      : Promise.resolve({ data: [] as { id: string; seller_earning_cents: number; status: string; file_id: string | null; created_at: string }[] }),
+    adminClient.from("payouts").select("amount_cents, status").eq("seller_id", user.id),
     supabase.from("notifications").select("id,type,title,body,created_at,is_read,link").eq("profile_id", user.id).in("type", ["upload_pending","upload_approved","upload_rejected","payout_pending","payout_completed","seller_approved","purchase_pending","purchase_completed","report_update"]).order("created_at", { ascending: false }).limit(8),
   ]);
 
-  const totalRevenue = (purchaseAgg ?? []).reduce((sum, p: any) => sum + Number(p.seller_earning_cents ?? 0), 0);
-  const adminClient = (await import("@/lib/supabase/server")).createAdminClient();
-  const { data: payoutRows } = await adminClient.from("payouts").select("amount_cents,status").eq("seller_id", user.id);
-  const completedPayouts = (payoutRows ?? []).filter((p:any) => p.status === "completed").reduce((sum:number,p:any) => sum + Number(p.amount_cents ?? 0), 0);
-  const pendingPayouts = (payoutRows ?? []).filter((p:any) => p.status === "pending" || p.status === "processing").reduce((sum:number,p:any) => sum + Number(p.amount_cents ?? 0), 0);
-  const availableBalance = Math.max(0, totalRevenue - completedPayouts - pendingPayouts);
+  const totalEarned = (saleRows ?? []).reduce((sum, sale) => sum + Number(sale.seller_earning_cents ?? 0), 0);
+  const completedPayouts = (payoutRows ?? []).filter((p) => p.status === "completed").reduce((sum, p) => sum + Number(p.amount_cents ?? 0), 0);
+  const pendingPayouts = (payoutRows ?? []).filter((p) => p.status === "pending" || p.status === "processing").reduce((sum, p) => sum + Number(p.amount_cents ?? 0), 0);
+  const pendingPayoutCount = (payoutRows ?? []).filter((p) => p.status === "pending" || p.status === "processing").length;
+  const availableBalance = Math.max(0, totalEarned - completedPayouts - pendingPayouts);
   const totalDownloads = (myFiles ?? []).reduce((sum, f) => sum + f.downloads_count, 0);
 
   return (
@@ -134,9 +134,10 @@ export default async function DashboardPage() {
         <p className="mt-2 text-sm text-muted-foreground">Track sales, earnings, uploads and payouts without hunting through menus.</p>
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard icon={<DollarSign className="h-5 w-5" />} label="Total revenue" value={formatBDT(totalRevenue)} />
+      <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-5">
+        <StatCard icon={<DollarSign className="h-5 w-5" />} label="Total earned" value={formatBDT(totalEarned)} />
         <StatCard icon={<Wallet className="h-5 w-5" />} label="Available balance" value={formatBDT(availableBalance)} />
+        <StatCard icon={<Wallet className="h-5 w-5" />} label="Pending payout" value={formatBDT(pendingPayouts)} />
         <StatCard icon={<Download className="h-5 w-5" />} label="Total downloads" value={String(totalDownloads)} />
         <StatCard icon={<Eye className="h-5 w-5" />} label="Followers" value={String(profile?.followers_count ?? 0)} />
       </div>

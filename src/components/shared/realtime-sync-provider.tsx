@@ -56,6 +56,11 @@ export function RealtimeSyncProvider({ children }: { children: ReactNode }) {
       if (user) {
         channel.on(
           "postgres_changes",
+          { event: "*", schema: "public", table: "files", filter: "visibility=eq.published" },
+          scheduleRefresh,
+        );
+        channel.on(
+          "postgres_changes",
           { event: "*", schema: "public", table: "notifications", filter: `profile_id=eq.${user.id}` },
           scheduleRefresh,
         );
@@ -89,7 +94,7 @@ export function RealtimeSyncProvider({ children }: { children: ReactNode }) {
         }
 
         if (role === "admin" || role === "super_admin") {
-          for (const table of ["notifications", "purchases", "payouts", "resource_requests", "profiles"] as const) {
+          for (const table of ["notifications", "purchases", "payouts", "resource_requests", "profiles", "files"] as const) {
             channel.on(
               "postgres_changes",
               { event: "*", schema: "public", table },

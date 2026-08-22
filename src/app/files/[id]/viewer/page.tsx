@@ -15,7 +15,7 @@ export default async function ResourceViewerPage({ params, searchParams }: { par
   const supabase = createClient();
   const { data: file } = await supabase
     .from("files")
-    .select("id, title, pricing_type, visibility, page_count, file_kind, price_cents, seller_id")
+    .select("id, title, pricing_type, visibility, page_count, file_kind, price_cents, seller_id, upload_batch_id")
     .eq("id", params.id)
     .single();
 
@@ -23,7 +23,9 @@ export default async function ResourceViewerPage({ params, searchParams }: { par
 
   const { data: { user } } = await supabase.auth.getUser();
   const isOwner = Boolean(user && file.seller_id === user.id);
-  if (file.visibility === "archived" && !isOwner) { if (!user) redirect(`/login?next=/files/${file.id}`); const { data: paidAccess } = await supabase.from("purchases").select("id").eq("file_id", file.id).eq("buyer_id", user.id).eq("status", "completed").maybeSingle(); if (!paidAccess) notFound(); }
+  const { data: batchFiles } = file.upload_batch_id ? await supabase.from("files").select("id").eq("upload_batch_id", file.upload_batch_id) : { data: [{ id: file.id }] };
+  const batchFileIds = (batchFiles ?? []).map((row) => row.id);
+  if (file.visibility === "archived" && !isOwner) { if (!user) redirect(`/login?next=/files/${file.id}`); const { data: paidAccess } = await supabase.from("purchases").select("id").eq("buyer_id", user.id).eq("status", "completed").in("file_id", batchFileIds.length ? batchFileIds : [file.id]).maybeSingle(); if (!paidAccess) notFound(); }
   const previewOnly = searchParams?.preview === "1" && !isOwner;
   const isPaid = file.pricing_type === "paid";
   const isPdf = file.file_kind === "pdf";
@@ -37,9 +39,9 @@ export default async function ResourceViewerPage({ params, searchParams }: { par
     const { data: purchase } = await supabase
       .from("purchases")
       .select("id")
-      .eq("file_id", file.id)
       .eq("buyer_id", user.id)
       .eq("status", "completed")
+      .in("file_id", batchFileIds.length ? batchFileIds : [file.id])
       .maybeSingle();
     if (!purchase) redirect(`/checkout/${file.id}`);
   }

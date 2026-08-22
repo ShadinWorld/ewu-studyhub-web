@@ -37,7 +37,7 @@ export function UploadForm({
   const [semester, setSemester] = useState<string>("Spring");
   const [submitting, setSubmitting] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
-  const MAX_BATCH_FILES = 5;
+  const MAX_BATCH_FILES = 3;
   const [uploadStatuses, setUploadStatuses] = useState<Array<{ name: string; status: "queued" | "uploading" | "success" | "error"; message?: string }>>([]);
 
   const [departmentId, setDepartmentId] = useState("");
@@ -109,6 +109,29 @@ export function UploadForm({
     setCourseQuery(course ? course.course_code : "");
   }
 
+  function isUnsupported(file: File) {
+    return /\.(zip|rar|7z)$/i.test(file.name) || /zip|compressed/i.test(file.type);
+  }
+
+  function updateFiles(next: File[]) {
+    const deduped: File[] = [];
+    for (const file of next) {
+      if (!deduped.some((existing) => existing.name === file.name && existing.size === file.size && existing.lastModified === file.lastModified)) {
+        deduped.push(file);
+      }
+    }
+    if (deduped.some(isUnsupported)) {
+      toast.error("ZIP/archive files are not supported. Select PDF, PPT, PPTX, DOC, DOCX or image files.");
+      return;
+    }
+    if (deduped.length > MAX_BATCH_FILES) {
+      toast.error(`You can upload a maximum of ${MAX_BATCH_FILES} files at once.`);
+      return;
+    }
+    setFiles(deduped);
+    setUploadStatuses([]);
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!files.length) {
@@ -131,30 +154,24 @@ export function UploadForm({
     setUploadStatuses(files.map((f) => ({ name: f.name, status: "queued" as const })));
     try {
       const baseForm = new FormData(e.currentTarget);
-      let completed = 0;
-      for (const [index, selectedFile] of files.entries()) {
-        setUploadStatuses((current) => current.map((item, i) => i === index ? { ...item, status: "uploading" } : item));
-        const formData = new FormData();
-        for (const [key, value] of baseForm.entries()) formData.append(key, value);
-        formData.set("file", selectedFile);
-        formData.set("title", files.length > 1 ? `${String(baseForm.get("title") || "Resource").trim()} — ${selectedFile.name.replace(/\.[^.]+$/, "")}`.slice(0,150) : String(baseForm.get("title") || "").trim());
-        formData.set("pricingType", pricingType);
-        formData.set("priceCents", pricingType === "paid" ? String(Math.round(Number(priceTaka) * 100)) : "0");
-        formData.set("semester", semester);
-        formData.set("year", year);
-        formData.set("adminUpload", allowAdmin ? "true" : "false");
-        const res = await fetch("/api/files/upload", { method: "POST", body: formData });
-        const json = await res.json();
-        if (!res.ok) {
-          const message = `${selectedFile.name}: ${json.error ?? "Upload failed"}`;
-          setUploadStatuses((current) => current.map((item, i) => i === index ? { ...item, status: "error", message } : item));
-          throw new Error(message);
-        }
-        completed++;
-        setUploadStatuses((current) => current.map((item, i) => i === index ? { ...item, status: "success", message: "Uploaded" } : item));
+      for (const selectedFile of files) baseForm.append("files", selectedFile);
+      baseForm.delete("file");
+      baseForm.set("pricingType", pricingType);
+      baseForm.set("priceCents", pricingType === "paid" ? String(Math.round(Number(priceTaka) * 100)) : "0");
+      baseForm.set("semester", semester);
+      baseForm.set("year", year);
+      baseForm.set("adminUpload", allowAdmin ? "true" : "false");
+      setUploadStatuses(files.map((f) => ({ name: f.name, status: "uploading" as const })));
+      const res = await fetch("/api/files/upload", { method: "POST", body: baseForm });
+      const json = await res.json();
+      if (!res.ok) {
+        setUploadStatuses(files.map((f) => ({ name: f.name, status: "error" as const, message: json.error ?? "Upload failed" })));
+        throw new Error(json.error ?? "Upload failed");
       }
-      toast.success(`${completed} resource${completed === 1 ? "" : "s"} uploaded and waiting for review.`);
+      setUploadStatuses(files.map((f) => ({ name: f.name, status: "success" as const, message: "Submitted" })));
+      toast.success(files.length > 1 ? `${files.length} files were grouped into one resource and submitted for review.` : "Resource submitted for review.");
       router.push(`/notifications`);
+      router.refresh();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Something went wrong";
       toast.error(message);
@@ -385,31 +402,46 @@ export function UploadForm({
         )}
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="file">File</Label>
-        <label
-          htmlFor="file"
-          className="flex cursor-pointer flex-col items-center justify-center rounded-md border border-dashed py-10 text-center hover:bg-accent/50"
-        >
-          <UploadCloud className="mb-2 h-8 w-8 text-muted-foreground" />
-          <span className="text-sm font-medium">{files.length ? `${files.length} file${files.length === 1 ? "" : "s"} selected` : "Click to select PDF, PPT, DOCX, ZIP, or image"}</span>
-          <span className="text-xs text-muted-foreground">Up to 5 files per batch • 100MB each</span>
-        </label>
+      <div className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <Label htmlFor="file">Files</Label>
+          <span className="text-xs font-semibold text-muted-foreground">{files.length}/{MAX_BATCH_FILES} selected</span>
+        </div>
+        <div className="rounded-2xl border border-dashed p-4 sm:p-5">
+          <div className="flex flex-col items-center justify-center text-center">
+            <UploadCloud className="mb-2 h-8 w-8 text-muted-foreground" />
+            <p className="text-sm font-semibold">{files.length ? "Selected files" : "Select files for one resource"}</p>
+            <p className="mt-1 text-xs text-muted-foreground">Up to {MAX_BATCH_FILES} files • 100MB each • ZIP/archives are not allowed</p>
+            <label htmlFor="file" className="mt-3 inline-flex cursor-pointer items-center rounded-lg border bg-background px-4 py-2 text-sm font-semibold hover:bg-accent">
+              {files.length ? "Add / change files" : "Choose files"}
+            </label>
+          </div>
+          {files.length > 0 && (
+            <div className="mt-4 space-y-2">
+              {files.map((file) => (
+                <div key={`${file.name}-${file.lastModified}`} className="flex items-center gap-3 rounded-xl border bg-card px-3 py-2.5">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{file.name}</p>
+                    <p className="text-[11px] text-muted-foreground">{file.type || "File"} · {(file.size / 1024 / 1024).toFixed(1)} MB</p>
+                  </div>
+                  <button type="button" onClick={() => setFiles((current) => current.filter((item) => item !== file))} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border text-muted-foreground hover:bg-accent hover:text-foreground" aria-label={`Remove ${file.name}`}>
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
         <input
           id="file"
           type="file"
           className="hidden"
-          accept=".pdf,.ppt,.pptx,.doc,.docx,.zip,.png,.jpg,.jpeg"
+          accept=".pdf,.ppt,.pptx,.doc,.docx,.png,.jpg,.jpeg"
           multiple
           onChange={(e) => {
             const next = Array.from(e.target.files ?? []);
-            if (next.length > MAX_BATCH_FILES) {
-              toast.error(`You can upload a maximum of ${MAX_BATCH_FILES} files at once.`);
-              e.currentTarget.value = "";
-              setFiles([]);
-              return;
-            }
-            setFiles(next);
+            updateFiles([...files, ...next]);
+            e.currentTarget.value = "";
           }}
         />
       </div>

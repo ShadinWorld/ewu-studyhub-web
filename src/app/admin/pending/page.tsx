@@ -23,7 +23,7 @@ export default async function AdminPendingPage({ searchParams }: { searchParams?
   const requestedType = searchParams?.type ?? "all";
   const type = filters.includes(requestedType as any) ? requestedType : "all";
   const [{ data: resources }, { data: sellers }, { data: payouts }, { data: purchases }, { data: resourceRequests }, { data: reports }, { data: support }] = await Promise.all([
-    (type === "all" || type === "resources") ? admin.from("files").select("id,title,created_at,seller_id").eq("visibility", "draft").order("created_at", { ascending: true }).limit(100) : Promise.resolve({ data: [] }),
+    (type === "all" || type === "resources") ? admin.from("files").select("id,title,created_at,seller_id,upload_batch_id").eq("visibility", "draft").order("created_at", { ascending: true }).limit(100) : Promise.resolve({ data: [] }),
     (type === "all" || type === "sellers") ? admin.from("profiles").select("id,full_name,university_email,created_at").eq("student_id_verification_status", "pending").order("created_at", { ascending: true }).limit(100) : Promise.resolve({ data: [] }),
     (type === "all" || type === "payouts") ? admin.from("payouts").select("id,amount_cents,status,created_at,seller_id").eq("status", "pending").order("created_at", { ascending: true }).limit(100) : Promise.resolve({ data: [] }),
     (type === "all" || type === "purchases") ? admin.from("purchases").select("id,amount_cents,status,created_at,buyer_id,file_id,files(title)").eq("status", "pending").order("created_at", { ascending: true }).limit(100) : Promise.resolve({ data: [] }),
@@ -34,8 +34,19 @@ export default async function AdminPendingPage({ searchParams }: { searchParams?
   const ids = Array.from(new Set([...(resources ?? []).map((x: any) => x.seller_id), ...(payouts ?? []).map((x: any) => x.seller_id), ...(purchases ?? []).map((x: any) => x.buyer_id)].filter(Boolean)));
   const { data: people } = ids.length ? await admin.from("profiles").select("id,full_name").in("id", ids) : { data: [] };
   const names = new Map((people ?? []).map((p: any) => [p.id, p.full_name]));
+  const resourceGroups = new Map<string, any[]>();
+  for (const r of resources ?? []) {
+    const key = r.upload_batch_id ?? r.id;
+    resourceGroups.set(key, [...(resourceGroups.get(key) ?? []), r]);
+  }
+  const groupedResourceRows = Array.from(resourceGroups.values()).map((group: any[]) => ({
+    ...group[0],
+    title: group.length > 1 ? `${group[0].title} · ${group.length} files` : group[0].title,
+    id: group[0].id,
+  }));
+
   const rows = [
-    ...(resources ?? []).map((r: any) => ({ key: `r-${r.id}`, type: "Resource approval", title: r.title, who: names.get(r.seller_id) ?? "Seller", created: r.created_at, href: "/admin/uploads" })),
+    ...groupedResourceRows.map((r: any) => ({ key: `r-${r.upload_batch_id ?? r.id}`, type: "Resource approval", title: r.title, who: names.get(r.seller_id) ?? "Seller", created: r.created_at, href: "/admin/uploads" })),
     ...(sellers ?? []).map((r: any) => ({ key: `s-${r.id}`, type: "Seller verification", title: r.full_name ?? "Seller request", who: r.university_email ?? "EWU student", created: r.created_at, href: "/admin/sellers" })),
     ...(payouts ?? []).map((r: any) => ({ key: `p-${r.id}`, type: "Payout request", title: `BDT ${(r.amount_cents / 100).toFixed(2)}`, who: names.get(r.seller_id) ?? "Seller", created: r.created_at, href: "/admin/payouts" })),
     ...(purchases ?? []).map((r: any) => ({ key: `b-${r.id}`, type: "Purchase request", title: r.files?.title ?? "Resource purchase", who: names.get(r.buyer_id) ?? "Buyer", created: r.created_at, href: "/admin/payments" })),

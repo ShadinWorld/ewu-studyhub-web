@@ -7,7 +7,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
   const supabase = createClient();
   const { data: file } = await supabase
     .from("files")
-    .select("id, seller_id, storage_path, pricing_type, visibility")
+    .select("id, seller_id, storage_path, pricing_type, visibility, upload_batch_id")
     .eq("id", params.id)
     .single();
 
@@ -24,13 +24,13 @@ export async function GET(request: Request, { params }: { params: { id: string }
       return NextResponse.redirect(loginUrl);
     }
 
+    const { data: siblings } = file.upload_batch_id ? await supabase.from("files").select("id").eq("upload_batch_id", file.upload_batch_id) : { data: [{ id: file.id }] };
     const { data: purchase } = await supabase
       .from("purchases")
       .select("id")
-      .eq("file_id", file.id)
       .eq("buyer_id", user.id)
       .eq("status", "completed")
-      .maybeSingle();
+      .in("file_id", (siblings ?? []).map((row) => row.id));
 
     if (!purchase) {
       return NextResponse.redirect(new URL(`/checkout/${file.id}`, request.url));

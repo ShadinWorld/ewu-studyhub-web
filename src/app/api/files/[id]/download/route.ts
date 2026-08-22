@@ -15,20 +15,28 @@ export async function GET(request: Request, { params }: { params: { id: string }
     return NextResponse.redirect(loginUrl);
   }
 
-  const { data: file } = await supabase.from("files").select("id, storage_path, pricing_type, price_cents, visibility, seller_id, title").eq("id", params.id).single();
+  const { data: file } = await supabase.from("files").select("id, storage_path, pricing_type, price_cents, visibility, seller_id, title, upload_batch_id").eq("id", params.id).single();
   if (!file) return NextResponse.json({ error: "File not found." }, { status: 404 });
   const isOwner = file.seller_id === user.id;
   if (file.visibility !== "published" && file.visibility !== "archived") return NextResponse.json({ error: "File not found." }, { status: 404 });
   let purchaseId: string | null = null;
 
   if ((file.pricing_type === "paid" || file.visibility === "archived") && !isOwner) {
-    const { data: purchase } = await supabase
+    let purchaseQuery = supabase
       .from("purchases")
       .select("id")
-      .eq("file_id", file.id)
       .eq("buyer_id", user.id)
-      .eq("status", "completed")
-      .maybeSingle();
+      .eq("status", "completed");
+
+    if (file.upload_batch_id) {
+      const { data: siblings } = await supabase.from("files").select("id").eq("upload_batch_id", file.upload_batch_id);
+      const ids = (siblings ?? []).map((row) => row.id);
+      purchaseQuery = purchaseQuery.in("file_id", ids.length ? ids : [file.id]);
+    } else {
+      purchaseQuery = purchaseQuery.eq("file_id", file.id);
+    }
+
+    const { data: purchase } = await purchaseQuery.limit(1).maybeSingle();
 
     if (!purchase) {
       // No completed purchase on record — redirect to the checkout flow instead

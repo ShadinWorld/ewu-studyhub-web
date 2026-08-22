@@ -46,7 +46,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Recor
   if (exactCourse) {
     query = query.eq("course_id", exactCourse.id);
   } else if (q) {
-    const clauses = [`title.ilike.%${q}%`];
+    const clauses = [`title.ilike.%${q}%`, `description.ilike.%${q}%`];
     if (matchedCourseIds.length) clauses.push(`course_id.in.(${matchedCourseIds.join(",")})`);
     if (matchedDepartmentIds.length) clauses.push(`department_id.in.(${matchedDepartmentIds.join(",")})`);
     query = query.or(clauses.join(","));
