@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { BookOpen, CheckCircle2, ChevronDown, ExternalLink, Info, Loader2, Search, ShieldCheck, Store, UserRound, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MAX_UPLOAD_BATCH_FILES, MAX_UPLOAD_FILE_SIZE_MB } from "@/lib/constants";
@@ -103,6 +104,7 @@ export function UserGuideButton({ className = "", compact = false }: { className
   const [query, setQuery] = useState("");
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [lockedItem, setLockedItem] = useState<OverviewItem | GuideSection | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   async function openGuide() {
     setOpen(true);
@@ -125,10 +127,19 @@ export function UserGuideButton({ className = "", compact = false }: { className
   }
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
     if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape") setOpen(false); };
     document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
   }, [open]);
 
   const filteredSections = useMemo(() => {
@@ -171,9 +182,9 @@ export function UserGuideButton({ className = "", compact = false }: { className
         <span className={compact ? "hidden sm:inline" : ""}>User Guide</span>
       </Button>
 
-      {open && (
-        <div className="fixed inset-0 z-[130] flex items-end justify-center bg-black/60 p-2 backdrop-blur-sm sm:items-center sm:p-5" role="dialog" aria-modal="true" aria-label="EWU StudyHub User Guide" onMouseDown={(event) => event.target === event.currentTarget && setOpen(false)}>
-          <div className="flex max-h-[96vh] w-full max-w-6xl flex-col overflow-hidden rounded-3xl border bg-background shadow-2xl">
+      {mounted && open && createPortal(
+        <div className="fixed inset-0 z-[200] flex items-end justify-center bg-black/60 p-2 backdrop-blur-sm sm:items-center sm:p-5" role="dialog" aria-modal="true" aria-label="EWU StudyHub User Guide" onMouseDown={(event) => event.target === event.currentTarget && setOpen(false)}>
+          <div className="flex max-h-[96dvh] w-full max-w-6xl flex-col overflow-hidden rounded-3xl border bg-background shadow-2xl">
             <header className="flex items-center justify-between gap-3 border-b px-4 py-3 sm:px-6 sm:py-4">
               <div className="flex min-w-0 items-center gap-3">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary"><BookOpen className="h-5 w-5" /></div>
@@ -226,9 +237,19 @@ export function UserGuideButton({ className = "", compact = false }: { className
               </div>
             </div>
 
-            {lockedItem && <div className="fixed inset-0 z-[140] flex items-end justify-center bg-black/50 p-3 sm:items-center" role="dialog" aria-modal="true" onMouseDown={(event) => event.target === event.currentTarget && setLockedItem(null)}><div className="w-full max-w-md rounded-2xl border bg-background p-5 shadow-2xl"><h3 className="text-lg font-bold">এই action এখনো available নয়</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{!payload?.isAuthenticated ? "এই action ব্যবহার করতে আগে Login করতে হবে। Login করার পর আপনার account Student হিসেবে কাজ করবে; আলাদা Student verification দিয়ে Guide access নেওয়ার প্রয়োজন নেই." : lockedItem.locked_message || "এই feature ব্যবহার করার আগে প্রয়োজনীয় eligibility সম্পূর্ণ করতে হবে."}</p><div className="mt-4 flex flex-wrap gap-2"><Button type="button" variant="outline" onClick={() => setLockedItem(null)}>বন্ধ করুন</Button>{!payload?.isAuthenticated ? <Button asChild><a href="/login">Login করুন</a></Button> : lockedItem.locked_action_href && lockedItem.locked_action_label && <Button asChild><a href={lockedItem.locked_action_href}>{lockedItem.locked_action_label}</a></Button>}</div></div></div>}
+            {mounted && lockedItem && createPortal(
+              <div className="fixed inset-0 z-[220] flex items-end justify-center bg-black/50 p-3 sm:items-center" role="dialog" aria-modal="true" onMouseDown={(event) => event.target === event.currentTarget && setLockedItem(null)}>
+                <div className="w-full max-w-md rounded-2xl border bg-background p-5 shadow-2xl">
+                  <h3 className="text-lg font-bold">এই action এখনো available নয়</h3>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">{!payload?.isAuthenticated ? "এই action ব্যবহার করতে আগে Login করতে হবে। Login করার পর আপনার account Student হিসেবে কাজ করবে; আলাদা Student verification দিয়ে Guide access নেওয়ার প্রয়োজন নেই." : lockedItem.locked_message || "এই feature ব্যবহার করার আগে প্রয়োজনীয় eligibility সম্পূর্ণ করতে হবে."}</p>
+                  <div className="mt-4 flex flex-wrap gap-2"><Button type="button" variant="outline" onClick={() => setLockedItem(null)}>বন্ধ করুন</Button>{!payload?.isAuthenticated ? <Button asChild><a href="/login">Login করুন</a></Button> : lockedItem.locked_action_href && lockedItem.locked_action_label && <Button asChild><a href={lockedItem.locked_action_href}>{lockedItem.locked_action_label}</a></Button>}</div>
+                </div>
+              </div>,
+              document.body
+            )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

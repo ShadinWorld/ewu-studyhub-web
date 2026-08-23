@@ -14,3 +14,9 @@ The database profile trigger already creates Google-authenticated users with `ro
 ## UI
 
 The `User Guide` trigger is available from the navbar for logged-in and logged-out users. On small screens it uses the compact book icon treatment; on larger screens it shows the `User Guide` label.
+
+## Follow-up Fix 0064 — Guest viewport behavior
+- User Guide is rendered through a React portal into `document.body` so the sticky/backdrop-blur Navbar cannot clip or reposition the viewport-level dialog.
+- The dialog uses `96dvh` on mobile and locks background scrolling until closed.
+- The same portal strategy is used for the guest/authentication locked-action dialog.
+
