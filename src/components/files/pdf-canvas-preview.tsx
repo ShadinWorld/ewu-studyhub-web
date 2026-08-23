@@ -140,16 +140,18 @@ function RenderedCanvas({ canvas }: { canvas: HTMLCanvasElement }) {
   return <div ref={holderRef} className="flex justify-center" />;
 }
 
-function CanvasDocument({ url }: { url: string }) {
+function CanvasDocument({ url, maxPages }: { url: string; maxPages?: number }) {
   const frameRef = useRef<HTMLDivElement | null>(null);
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
   const [error, setError] = useState("");
   const [pages, setPages] = useState<Array<{ canvas: HTMLCanvasElement }>>([]);
+  const [totalPages, setTotalPages] = useState(0);
 
   const render = async () => {
     setState("loading");
     setError("");
     setPages([]);
+    setTotalPages(0);
     try {
       const pdfjs = await loadPdfJs();
       const pdf = await pdfjs.getDocument({ url, withCredentials: false }).promise;
@@ -157,8 +159,10 @@ function CanvasDocument({ url }: { url: string }) {
       if (!frame) return;
       const availableWidth = Math.max(280, frame.clientWidth - 16);
       const nextPages: Array<{ canvas: HTMLCanvasElement }> = [];
+      setTotalPages(pdf.numPages);
+      const pageLimit = Math.max(1, Math.min(pdf.numPages, maxPages ?? pdf.numPages));
 
-      for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+      for (let pageNumber = 1; pageNumber <= pageLimit; pageNumber += 1) {
         const page = await pdf.getPage(pageNumber);
         const baseViewport = page.getViewport({ scale: 1 });
         const scale = Math.min(2.2, availableWidth / baseViewport.width);
@@ -193,16 +197,16 @@ function CanvasDocument({ url }: { url: string }) {
 
   return (
     <div ref={frameRef} className="relative min-h-[240px] w-full bg-white p-2 sm:p-4">
-      {state === "ready" && <div className="space-y-4">{pages.map((page, index) => <div key={index} className="overflow-auto rounded-xl border bg-white shadow-sm"><div className="border-b bg-muted/40 px-3 py-2 text-xs font-semibold text-muted-foreground">Preview page {index + 1}</div><div className="p-2 sm:p-4"><RenderedCanvas canvas={page.canvas} /></div></div>)}</div>}
+      {state === "ready" && <div className="space-y-4">{maxPages && totalPages > pages.length && <div className="rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-xs leading-5 text-muted-foreground">Showing the first {pages.length} pages of {totalPages} so you can verify the selected file without loading the entire document at once.</div>}{pages.map((page, index) => <div key={index} className="overflow-auto rounded-xl border bg-white shadow-sm"><div className="border-b bg-muted/40 px-3 py-2 text-xs font-semibold text-muted-foreground">Preview page {index + 1}</div><div className="p-2 sm:p-4"><RenderedCanvas canvas={page.canvas} /></div></div>)}</div>}
       {state === "loading" && <div className="flex flex-col items-center gap-2 px-6 py-16 text-center text-sm text-muted-foreground"><Loader2 className="h-6 w-6 animate-spin text-primary" /><span>Loading preview…</span></div>}
       {state === "error" && <div className="flex max-w-sm flex-col items-center gap-3 px-6 py-12 text-center mx-auto"><p className="text-sm font-semibold">Preview could not load</p><p className="text-xs leading-5 text-muted-foreground">{error || "Please try again."}</p><Button type="button" size="sm" variant="outline" onClick={render}><RefreshCw className="mr-2 h-4 w-4" /> Retry</Button></div>}
     </div>
   );
 }
 
-export function PdfCanvasPreview({ urls, className = "", allPages = false }: { urls: string[]; className?: string; allPages?: boolean }) {
+export function PdfCanvasPreview({ urls, className = "", allPages = false, maxPages }: { urls: string[]; className?: string; allPages?: boolean; maxPages?: number }) {
   if (!urls.length) return null;
-  if (allPages) return <div className={`overflow-hidden rounded-xl ${className}`}><CanvasDocument url={urls[0]} /></div>;
+  if (allPages) return <div className={`overflow-hidden rounded-xl ${className}`}><CanvasDocument url={urls[0]} maxPages={maxPages} /></div>;
 
   return (
     <div className={`space-y-4 ${className}`}>

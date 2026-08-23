@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Search as SearchIcon, ArrowRight, BookOpen } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
+import { InfoButton } from "@/components/ux/info-button";
 import { Footer } from "@/components/layout/footer";
 import { ResourceCardGrid, type ResourceCardData } from "@/components/files/resource-card";
 import { CourseCard } from "@/components/courses/course-card";
@@ -92,7 +93,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Recor
       <main className="container flex-1 py-8 pb-24 md:py-10 md:pb-10">
         <div className="max-w-3xl">
           <div className="flex items-center gap-2 text-sm font-semibold text-primary"><SearchIcon className="h-4 w-4" />Course & resource search</div>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">Find what you need faster.</h1>
+          <div className="flex items-center gap-3"><h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">Find what you need faster.</h1><InfoButton slug="search_resources" title="Search ও Filter" /></div>
           <p className="mt-2 text-muted-foreground">Search one box using a course code, course name, resource title, department, or keyword.</p>
         </div>
 

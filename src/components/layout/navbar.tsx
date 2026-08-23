@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { UserMenu } from "@/components/layout/user-menu";
 import type { UserRole } from "@/types/database.types";
 import { BackButton } from "@/components/navigation/back-button";
+import { UserGuideButton } from "@/components/guides/user-guide-button";
 
 export async function Navbar() {
   const supabase = createClient();
@@ -73,6 +74,7 @@ export async function Navbar() {
             </Button>
           )}
           <ThemeToggle />
+          {user && <UserGuideButton className="hidden lg:inline-flex" />}
           {user ? (
             <>
               {isAdmin && (

@@ -13,7 +13,7 @@ const links = [
   ["/admin", "Overview"], ["/admin/uploads", "Pending Uploads"], ["/admin/sellers", "Seller Requests"],
   ["/admin/payments", "Payments"], ["/admin/payouts", "Payouts"], ["/admin/reports", "Reports"],
   ["/admin/support", "Feedback & Support"], ["/admin/faqs", "FAQs"], ["/admin/users", "Users"],
-  ["/admin/resources", "Resources"], ["/admin/storage", "Storage"], ["/admin/commission", "Platform Fees"], ["/admin/settings", "Settings"], ["/admin/history", "History"],
+  ["/admin/resources", "Resources"], ["/admin/storage", "Storage"], ["/admin/help", "Help & Guide"], ["/admin/commission", "Platform Fees"], ["/admin/settings", "Settings"], ["/admin/history", "History"],
 ] as const;
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {

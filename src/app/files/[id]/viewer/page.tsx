@@ -59,7 +59,7 @@ export default async function ResourceViewerPage({ params, searchParams }: { par
         </div>
         {!previewOnly && <Button asChild variant="outline" size="sm"><a href={fullSource} target="_blank" rel="noreferrer"><ExternalLink className="mr-2 h-4 w-4" />Open</a></Button>}
         {previewOnly ? (
-          <InfoButton title="How preview works">
+          <InfoButton slug="resource_preview" title="Preview কীভাবে কাজ করে">
             <div className="space-y-3">
               <p>This preview shows only the part of the resource that is available before purchase.</p>
               <ul className="space-y-2 pl-5" style={{ listStyleType: "disc" }}>

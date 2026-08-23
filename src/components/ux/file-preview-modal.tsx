@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, CheckCircle2, FileText, Image as ImageIcon, Loader2, Presentation, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { previewOfficeFile, type OfficePreviewResult } from "@/lib/client-office-preview";
+import { PdfCanvasPreview } from "@/components/files/pdf-canvas-preview";
 
 function formatBytes(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
@@ -92,8 +93,10 @@ export function FilePreviewModal({ file, onClose }: { file: File; onClose: () =>
             </div>
           ) : fileKind === "pdf" && url ? (
             <div className="space-y-3">
-              <div className="flex items-center gap-2 rounded-xl border bg-card px-3 py-2 text-xs text-muted-foreground"><CheckCircle2 className="h-4 w-4 text-emerald-500" /> Browser PDF preview — the file is still local and has not been uploaded yet.</div>
-              <iframe title={`Preview ${file.name}`} src={url} className="h-[72vh] min-h-[420px] w-full rounded-2xl border bg-white" />
+              <div className="flex items-start gap-2 rounded-xl border bg-card px-3 py-2 text-xs leading-5 text-muted-foreground"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" /><span>PDFটি এই window-এর মধ্যেই render হচ্ছে। File এখনো local এবং upload হয়নি। Preview verification-এর জন্য প্রথম কয়েকটি page দেখানো হচ্ছে যাতে mobile browser-এ unnecessary memory load না হয়.</span></div>
+              <div className="overflow-hidden rounded-2xl border bg-white">
+                <PdfCanvasPreview urls={[url]} allPages maxPages={3} />
+              </div>
             </div>
           ) : fileKind === "docx" || fileKind === "pptx" ? (
             <div className="space-y-4">

@@ -61,7 +61,7 @@ export default async function AdminStoragePage() {
         <h2 className="text-2xl font-bold">Storage Health</h2>
         <p className="mt-1 max-w-3xl text-sm text-muted-foreground">Track where StudyHub storage is going, how quickly it is growing, and whether preview traffic is becoming expensive or risky.</p>
       </div>
-      <InfoButton title="Understanding storage health">
+      <InfoButton slug="admin_storage" title="Storage Health">
         <div className="space-y-3">
           <p><strong>Storage</strong> is the physical size of files kept in your buckets. Downloads do not create another stored copy of the same file.</p>
           <p><strong>Preview requests</strong> are StudyHub application requests. They are not the same as Supabase provider egress, so use the Supabase dashboard for billing/quota truth.</p>

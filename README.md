@@ -121,3 +121,8 @@ Free local gates: `npm run verify` and `npm run production-audit`.
 - Legacy `.doc`/`.ppt` receive a safe conversion recommendation instead of an external document viewer.
 - Student, Seller and Admin dashboards include large clickable in-page guides.
 - See `docs/V4_SMART_UPLOAD_AND_ROLE_GUIDES.md` for implementation and limitations.
+
+### Help & User Guide
+- Users can open the full `EWU StudyHub User Guide` from Account/Profile and Dashboard.
+- Key workflows expose contextual `ⓘ Help` using Admin-managed content.
+- Admins manage both Help and Guide content from `/admin/help`.

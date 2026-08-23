@@ -3,9 +3,8 @@ import { createHash, randomUUID } from "crypto";
 import { PDFDocument } from "pdf-lib";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { uploadFileSchema } from "@/lib/validations";
+import { MAX_UPLOAD_BATCH_FILES, MAX_UPLOAD_FILE_SIZE_BYTES, MAX_UPLOAD_FILE_SIZE_MB } from "@/lib/constants";
 
-const MAX_BYTES = 100 * 1024 * 1024; // 100MB per file
-const MAX_BATCH_FILES = 3;
 const ALLOWED_MIME = new Set([
   "application/pdf",
   "application/vnd.openxmlformats-officedocument.presentationml.presentation",
@@ -62,11 +61,11 @@ export async function POST(request: Request) {
   const files = rawFiles.length ? rawFiles : singleFile instanceof File ? [singleFile] : [];
 
   if (files.length === 0) return NextResponse.json({ error: "Please select at least one file." }, { status: 400 });
-  if (files.length > MAX_BATCH_FILES) return NextResponse.json({ error: `You can upload a maximum of ${MAX_BATCH_FILES} files at once.` }, { status: 400 });
+  if (files.length > MAX_UPLOAD_BATCH_FILES) return NextResponse.json({ error: `You can upload a maximum of ${MAX_UPLOAD_BATCH_FILES} files at once.` }, { status: 400 });
 
   for (const file of files) {
     if (isZip(file)) return NextResponse.json({ error: `ZIP/archive files are not supported: ${file.name}` }, { status: 400 });
-    if (file.size > MAX_BYTES) return NextResponse.json({ error: `${file.name}: file exceeds the 100MB limit.` }, { status: 400 });
+    if (file.size > MAX_UPLOAD_FILE_SIZE_BYTES) return NextResponse.json({ error: `${file.name}: file exceeds the ${MAX_UPLOAD_FILE_SIZE_MB}MB limit.` }, { status: 400 });
     if (!ALLOWED_MIME.has(file.type)) return NextResponse.json({ error: `${file.name}: unsupported file type.` }, { status: 400 });
   }
 

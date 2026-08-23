@@ -488,6 +488,48 @@ export interface UserActivityHistory {
   created_at: string;
 }
 
+
+export type HelpRoleScope = "general" | "student" | "seller" | "admin";
+export type ManagedContentStatus = "draft" | "published" | "archived";
+export type GuideSectionGroup = "general" | "student" | "seller" | "admin";
+export type GuideAccessRequirement = "none" | "verified_student" | "seller" | "admin";
+
+export interface HelpItem {
+  id: string;
+  slug: string;
+  role_scope: HelpRoleScope;
+  title: string;
+  intro: string;
+  how_to: string | null;
+  benefits: string | null;
+  notes: string | null;
+  status: ManagedContentStatus;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GuideSection {
+  id: string;
+  slug: string;
+  section_group: GuideSectionGroup;
+  title: string;
+  summary: string;
+  what_is: string;
+  how_to: string | null;
+  benefits: string | null;
+  notes: string | null;
+  action_label: string | null;
+  action_href: string | null;
+  required_access: GuideAccessRequirement;
+  locked_message: string | null;
+  locked_action_label: string | null;
+  locked_action_href: string | null;
+  status: ManagedContentStatus;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
 export interface RecentSearch {
   profile_id: string;
   query: string;
@@ -572,6 +614,8 @@ export interface Database {
       resource_platform_fee_settings: Table<ResourcePlatformFeeSettings>;
       user_activity_history: Table<UserActivityHistory>;
       recent_searches: Table<RecentSearch>;
+      help_items: Table<HelpItem>;
+      guide_sections: Table<GuideSection>;
     };
     Views: Record<string, never>;
     Functions: {

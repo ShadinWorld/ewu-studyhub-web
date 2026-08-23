@@ -7,7 +7,7 @@ import { Eye, Search, UploadCloud, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RESOURCE_CATEGORIES, SEMESTERS } from "@/lib/constants";
+import { MAX_UPLOAD_BATCH_FILES, MAX_UPLOAD_FILE_SIZE_MB, RESOURCE_CATEGORIES, SEMESTERS } from "@/lib/constants";
 import type { Department, Course } from "@/types/database.types";
 import { FilePreviewModal } from "@/components/ux/file-preview-modal";
 import { InfoButton } from "@/components/ux/info-button";
@@ -40,7 +40,6 @@ export function UploadForm({
   const [submitting, setSubmitting] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [previewFile, setPreviewFile] = useState<File | null>(null);
-  const MAX_BATCH_FILES = 3;
   const [uploadStatuses, setUploadStatuses] = useState<Array<{ name: string; status: "queued" | "uploading" | "success" | "error"; message?: string }>>([]);
 
   const [departmentId, setDepartmentId] = useState("");
@@ -127,8 +126,8 @@ export function UploadForm({
       toast.error("ZIP/archive files are not supported. Select PDF, PPT, PPTX, DOC, DOCX or image files.");
       return;
     }
-    if (deduped.length > MAX_BATCH_FILES) {
-      toast.error(`You can upload a maximum of ${MAX_BATCH_FILES} files at once.`);
+    if (deduped.length > MAX_UPLOAD_BATCH_FILES) {
+      toast.error(`You can upload a maximum of ${MAX_UPLOAD_BATCH_FILES} files at once.`);
       return;
     }
     setFiles(deduped);
@@ -141,8 +140,8 @@ export function UploadForm({
       toast.error("Please select at least one file to upload.");
       return;
     }
-    if (files.length > MAX_BATCH_FILES) {
-      toast.error(`You can upload a maximum of ${MAX_BATCH_FILES} files at once.`);
+    if (files.length > MAX_UPLOAD_BATCH_FILES) {
+      toast.error(`You can upload a maximum of ${MAX_UPLOAD_BATCH_FILES} files at once.`);
       return;
     }
     if (pricingType === "paid") {
@@ -190,12 +189,12 @@ export function UploadForm({
           <Label htmlFor="title">Title</Label>
           <p className="mt-1 text-xs text-muted-foreground">Use a clear title so students immediately know what this resource contains.</p>
         </div>
-        <InfoButton title="Uploading a resource">
+        <InfoButton slug="seller_upload" title="Resource Upload">
           <div className="space-y-3">
             <p>Choose the correct course, category and pricing before submitting.</p>
             <ul className="space-y-2 pl-5" style={{ listStyleType: "disc" }}>
               <li>Maximum 3 files per resource.</li>
-              <li>Each file can be up to 100MB.</li>
+              <li>Each file can be up to {MAX_UPLOAD_FILE_SIZE_MB}MB.</li>
               <li>ZIP, RAR and 7Z archives are not accepted.</li>
               <li>Tap a selected file to preview it before you submit.</li>
               <li>Paid resources keep the seller price separate from the platform fee.</li>
@@ -425,13 +424,13 @@ export function UploadForm({
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-3">
           <Label htmlFor="file">Files</Label>
-          <span className="text-xs font-semibold text-muted-foreground">{files.length}/{MAX_BATCH_FILES} selected</span>
+          <span className="text-xs font-semibold text-muted-foreground">{files.length}/{MAX_UPLOAD_BATCH_FILES} selected</span>
         </div>
         <div className="rounded-2xl border border-dashed p-4 sm:p-5">
           <div className="flex flex-col items-center justify-center text-center">
             <UploadCloud className="mb-2 h-8 w-8 text-muted-foreground" />
             <p className="text-sm font-semibold">{files.length ? "Selected files" : "Select files for one resource"}</p>
-            <p className="mt-1 text-xs text-muted-foreground">Up to {MAX_BATCH_FILES} files • 100MB each • ZIP/archives are not allowed</p>
+            <p className="mt-1 text-xs text-muted-foreground">Up to {MAX_UPLOAD_BATCH_FILES} files • {MAX_UPLOAD_FILE_SIZE_MB}MB each • ZIP/archives are not allowed</p>
             <label htmlFor="file" className="mt-3 inline-flex cursor-pointer items-center rounded-lg border bg-background px-4 py-2 text-sm font-semibold hover:bg-accent">
               {files.length ? "Add / change files" : "Choose files"}
             </label>

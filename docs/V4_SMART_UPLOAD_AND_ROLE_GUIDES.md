@@ -40,3 +40,33 @@ Each banner opens an in-place modal/reader, not a separate route. Sections are c
 
 ## Important limitation
 A browser-side Quick Preview for legacy `.doc`/`.ppt` is not included because safely and faithfully rendering those binary formats without an external conversion engine would add significant server/runtime complexity. The recommended upload format for modern StudyHub preview is `.docx`/`.pptx`.
+
+## Update 0062 — Managed Help & General User Guide
+
+### PDF upload preview
+- Selected local PDFs are now rendered inside the StudyHub preview modal with the existing PDF.js canvas engine.
+- The upload modal shows the first 3 pages only to keep mobile memory usage bounded.
+- Browser-native `Open` handoff is no longer used for upload-time PDF verification.
+
+### Central Help / Info system
+- `InfoButton` supports database-managed help by slug.
+- Default presentation is a visible `ⓘ Help` pill; compact icon mode remains available.
+- Help content is Bangla-first with English UI/technical terms preserved.
+- Each managed Help item supports intro, how-to, benefits and notes.
+
+### General User Guide
+- Account/Profile and Dashboard expose one general `EWU StudyHub User Guide`.
+- Sections are searchable, collapsible and action-enabled.
+- Student users can discover Seller sections, but Seller-only action buttons remain locked until Seller eligibility is met.
+- Admin-only sections are only returned to Admin accounts and are protected by RLS.
+- Admin manages Guide sections from `/admin/help`.
+
+### Admin management
+- Draft / Published / Archived lifecycle.
+- Edit, add, reorder and archive/restore.
+- Action links accept only safe internal paths.
+- Changes are written to `audit_logs`.
+- Dynamic upload-limit tokens prevent Help/Guide content becoming stale when shared upload constants change.
+
+### Migration
+- `0043_help_info_and_user_guide_management.sql`
