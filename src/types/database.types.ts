@@ -492,7 +492,7 @@ export interface UserActivityHistory {
 export type HelpRoleScope = "general" | "student" | "seller" | "admin";
 export type ManagedContentStatus = "draft" | "published" | "archived";
 export type GuideSectionGroup = "general" | "student" | "seller" | "admin";
-export type GuideAccessRequirement = "none" | "verified_student" | "seller" | "admin";
+export type GuideAccessRequirement = "none" | "authenticated_student" | "verified_student" | "seller" | "admin";
 
 export interface HelpItem {
   id: string;

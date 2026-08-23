@@ -41,3 +41,12 @@ The user may move this project between ChatGPT accounts. The ZIP must be suffici
 - Seller Upload button is green.
 - Admin Resource Request details now open in-place; Student Tools Resource Requests has a dedicated page.
 - Migration 0038 fixes automatic payout completion balance calculation.
+
+
+## Update 0066 — Guide content polish + role-aware access (2026-08-24)
+- Reframed the User Guide into concise A–Z overview + role-aware access + detailed sections.
+- Added a public Guest access summary and changed Student Guide access from legacy verification semantics to authenticated Student semantics.
+- Kept Seller/Admin permissions role-aware and server-authoritative.
+- Added migration `0045_guide_content_polish_and_access.sql` to align DB constraints and refresh Help/Guide copy in natural Bangla with English UI terms.
+- Reduced repeated wording across Overview, Info and Detailed Guide; benefit/notes are now concise and practical.
+- Admin Help/Guide editor now labels the correct `Logged-in Student` access option while retaining legacy `Verified student` for historical records.

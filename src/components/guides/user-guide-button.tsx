@@ -6,7 +6,7 @@ import { BookOpen, CheckCircle2, ChevronDown, ExternalLink, Info, Loader2, Searc
 import { Button } from "@/components/ui/button";
 import { MAX_UPLOAD_BATCH_FILES, MAX_UPLOAD_FILE_SIZE_MB } from "@/lib/constants";
 
-type AccessRequirement = "none" | "verified_student" | "seller" | "admin";
+type AccessRequirement = "none" | "authenticated_student" | "verified_student" | "seller" | "admin";
 type GuideGroup = "general" | "student" | "seller" | "admin";
 type OverviewKind = "intro" | "capability" | "workflow" | "access" | "next_step";
 
@@ -72,8 +72,8 @@ const groupLabels: Record<GuideGroup, string> = {
 };
 
 const roleMeta = {
-  guest: { label: "Guest", icon: UserRound, badge: "Login না করেও আপনি পুরো Guide দেখে system বুঝতে পারবেন" },
-  student: { label: "Student", icon: UserRound, badge: "Google login-এর পর আপনি Student features ব্যবহার করতে পারবেন" },
+  guest: { label: "Guest", icon: UserRound, badge: "Login ছাড়াই Guide-এর overview ও public featureগুলো বুঝতে পারবেন" },
+  student: { label: "Student", icon: UserRound, badge: "Login করা থাকলে Student-level Guide actions available থাকবে" },
   seller: { label: "Seller", icon: Store, badge: "আপনি Student features-এর সাথে Seller features-ও ব্যবহার করতে পারবেন" },
   admin: { label: "Admin", icon: ShieldCheck, badge: "আপনি platform-এর Admin operations দেখতে পারবেন" },
 } as const;
@@ -82,6 +82,7 @@ function allowed(requirement: AccessRequirement, payload: GuidePayload) {
   if (requirement === "none") return true;
   if (requirement === "admin") return payload.role === "admin";
   if (requirement === "seller") return payload.isSeller || payload.role === "admin";
+  if (requirement === "authenticated_student") return payload.studentAccess;
   return payload.studentAccess;
 }
 
@@ -166,7 +167,7 @@ export function UserGuideButton({ className = "", compact = false }: { className
   }, [filteredSections]);
 
   const groupedOverview = useMemo(() => {
-    const capabilities = filteredOverview.filter((item) => item.kind === "capability" || item.kind === "next_step");
+    const capabilities = filteredOverview.filter((item) => item.kind === "capability" || item.kind === "next_step" || item.kind === "access");
     const workflows = filteredOverview.filter((item) => item.kind === "workflow");
     const intro = filteredOverview.filter((item) => item.kind === "intro");
     return { intro, capabilities, workflows };
@@ -212,10 +213,10 @@ export function UserGuideButton({ className = "", compact = false }: { className
                       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div className="min-w-0">
                           <div className="flex items-center gap-2"><RoleIcon className="h-5 w-5 text-primary" /><p className="text-xs font-bold uppercase tracking-[0.14em] text-primary">Your access</p></div>
-                          <h3 className="mt-1 text-xl font-bold">আপনি বর্তমানে {role.label} হিসেবে কী কী করতে পারবেন?</h3>
+                          <h3 className="mt-1 text-xl font-bold">আপনার account অনুযায়ী আপনি কী কী করতে পারবেন?</h3>
                           <p className="mt-1 text-sm leading-6 text-muted-foreground">{role.badge}। নিচের overview-তে available ও locked feature আলাদা করে দেখা যাবে।</p>
                         </div>
-                        <div className="rounded-2xl border bg-background px-4 py-3 text-sm shadow-sm"><div className="flex items-center gap-2 font-semibold"><CheckCircle2 className="h-4 w-4 text-emerald-500" />Role-aware access</div><p className="mt-1 text-xs leading-5 text-muted-foreground">Action button-এ click করলে system আপনার current access অনুযায়ী পরের step দেখাবে.</p></div>
+                        <div className="rounded-2xl border bg-background px-4 py-3 text-sm shadow-sm"><div className="flex items-center gap-2 font-semibold"><CheckCircle2 className="h-4 w-4 text-emerald-500" />আপনার access</div><p className="mt-1 text-xs leading-5 text-muted-foreground">কোনো feature locked থাকলে কারণ ও পরের প্রয়োজনীয় action এখানেই দেখাবে।</p></div>
                       </div>
                     </section>
 
@@ -226,18 +227,18 @@ export function UserGuideButton({ className = "", compact = false }: { className
                       return <article key={item.id} className={`rounded-2xl border p-4 ${canAct ? "bg-card" : "bg-muted/20"}`}><div className="flex items-start justify-between gap-3"><div><p className="font-semibold">{item.title}</p><p className="mt-1 text-sm leading-6 text-muted-foreground">{hydrateText(item.summary)}</p></div>{!canAct && <span className="shrink-0 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-[11px] font-semibold text-amber-700">Locked</span>}</div>{item.benefit && <p className="mt-3 text-xs leading-5 text-muted-foreground"><span className="font-semibold text-foreground">Benefit:</span> {hydrateText(item.benefit)}</p>}{item.action_href && item.action_label && <div className="mt-4">{canAct ? <Button asChild size="sm"><a href={item.action_href}><ExternalLink className="mr-2 h-4 w-4" />{item.action_label}</a></Button> : <Button type="button" size="sm" variant="outline" onClick={() => setLockedItem(item)}>{lockedForAuth(item.required_access, payload) ? "Login করে ব্যবহার করুন" : item.action_label}</Button>}</div>}</article>;
                     })}</div></section>}
 
-                    {groupedOverview.workflows.length > 0 && <section className="rounded-3xl border bg-card p-4 sm:p-6"><div className="flex items-center gap-2"><Info className="h-5 w-5 text-primary" /><h3 className="text-xl font-bold">Main workflows</h3></div><div className="mt-4 grid gap-3 md:grid-cols-3">{groupedOverview.workflows.map((item) => <article key={item.id} className="rounded-2xl border p-4"><p className="font-semibold">{item.title}</p><p className="mt-2 text-sm leading-6 text-muted-foreground">{hydrateText(item.summary)}</p></article>)}</div></section>}
+                    {groupedOverview.workflows.length > 0 && <section className="rounded-3xl border bg-card p-4 sm:p-6"><div className="flex items-center gap-2"><Info className="h-5 w-5 text-primary" /><h3 className="text-xl font-bold">মূল workflow এক নজরে</h3></div><div className="mt-4 grid gap-3 md:grid-cols-3">{groupedOverview.workflows.map((item) => <article key={item.id} className="rounded-2xl border p-4"><p className="font-semibold">{item.title}</p><p className="mt-2 text-sm leading-6 text-muted-foreground">{hydrateText(item.summary)}</p></article>)}</div></section>}
 
                     <section className="sticky top-0 z-10 rounded-2xl border bg-background/95 p-3 shadow-sm backdrop-blur">
                       <div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Guide-এর মধ্যে Search করুন…" className="h-11 w-full rounded-xl border bg-background pl-9 pr-3 text-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring" /></div>
                     </section>
 
                     <section className="space-y-4">
-                      <div><h3 className="text-xl font-bold">Detailed Guide</h3><p className="text-sm text-muted-foreground">শুধু প্রয়োজনীয় section expand করুন। একই ধরনের explanation বারবার না পড়ে feature-specific details দেখুন।</p></div>
+                      <div><h3 className="text-xl font-bold">বিস্তারিত Guide</h3><p className="text-sm text-muted-foreground">যেটা দরকার শুধু সেটাই খুলুন। Overview-তে যা জেনে গেছেন, নিচে তার পুনরাবৃত্তি না করে প্রয়োজনীয় detail দেওয়া আছে।</p></div>
                       {sectionGroups.map(([group, sections]) => <div key={group} className="space-y-2"><p className="px-1 text-xs font-bold uppercase tracking-wide text-primary">{groupLabels[group]}</p>{sections.map((section) => {
                         const isOpen = Boolean(expanded[section.id]);
                         const canAct = allowed(section.required_access, payload);
-                        return <article key={section.id} className="overflow-hidden rounded-2xl border bg-card shadow-sm"><button type="button" onClick={() => setExpanded((prev) => ({ ...prev, [section.id]: !prev[section.id] }))} className="flex w-full items-start justify-between gap-4 px-4 py-4 text-left hover:bg-accent/40 sm:px-5"><span className="min-w-0"><span className="block font-semibold">{section.title}</span><span className="mt-1 block text-xs leading-5 text-muted-foreground">{hydrateText(section.summary)}</span></span><ChevronDown className={`mt-1 h-5 w-5 shrink-0 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`} /></button>{isOpen && <div className="border-t px-4 py-5 sm:px-5"><div className="space-y-4 text-sm leading-6"><div><h4 className="font-semibold">সংক্ষেপে</h4><p className="mt-1 whitespace-pre-wrap text-muted-foreground">{hydrateText(section.what_is)}</p></div>{section.how_to && <div><h4 className="font-semibold">কীভাবে ব্যবহার করবেন</h4><p className="mt-1 whitespace-pre-wrap text-muted-foreground">{hydrateText(section.how_to)}</p></div>}{section.benefits && <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3"><p className="font-semibold">আপনার benefit</p><p className="mt-1 whitespace-pre-wrap text-muted-foreground">{hydrateText(section.benefits)}</p></div>}{section.notes && <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3"><p className="font-semibold">মনে রাখবেন</p><p className="mt-1 whitespace-pre-wrap text-muted-foreground">{hydrateText(section.notes)}</p></div>}{section.action_href && section.action_label && <div className="flex flex-wrap gap-2 pt-1">{canAct ? <Button asChild size="sm"><a href={section.action_href}><ExternalLink className="mr-2 h-4 w-4" />{section.action_label}</a></Button> : <Button type="button" size="sm" variant="outline" onClick={() => setLockedItem(section)}>{lockedForAuth(section.required_access, payload) ? "Login করে ব্যবহার করুন" : section.action_label}</Button>}</div>}</div></div>}</article>;
+                        return <article key={section.id} className="overflow-hidden rounded-2xl border bg-card shadow-sm"><button type="button" onClick={() => setExpanded((prev) => ({ ...prev, [section.id]: !prev[section.id] }))} className="flex w-full items-start justify-between gap-4 px-4 py-4 text-left hover:bg-accent/40 sm:px-5"><span className="min-w-0"><span className="block font-semibold">{section.title}</span><span className="mt-1 block text-xs leading-5 text-muted-foreground">{hydrateText(section.summary)}</span></span><ChevronDown className={`mt-1 h-5 w-5 shrink-0 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`} /></button>{isOpen && <div className="border-t px-4 py-5 sm:px-5"><div className="space-y-4 text-sm leading-6"><div><h4 className="font-semibold">মূল কথা</h4><p className="mt-1 whitespace-pre-wrap text-muted-foreground">{hydrateText(section.what_is)}</p></div>{section.how_to && <div><h4 className="font-semibold">কীভাবে ব্যবহার করবেন</h4><p className="mt-1 whitespace-pre-wrap text-muted-foreground">{hydrateText(section.how_to)}</p></div>}{section.benefits && <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3"><p className="font-semibold">আপনার সুবিধা</p><p className="mt-1 whitespace-pre-wrap text-muted-foreground">{hydrateText(section.benefits)}</p></div>}{section.notes && <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3"><p className="font-semibold">মনে রাখবেন</p><p className="mt-1 whitespace-pre-wrap text-muted-foreground">{hydrateText(section.notes)}</p></div>}{section.action_href && section.action_label && <div className="flex flex-wrap gap-2 pt-1">{canAct ? <Button asChild size="sm"><a href={section.action_href}><ExternalLink className="mr-2 h-4 w-4" />{section.action_label}</a></Button> : <Button type="button" size="sm" variant="outline" onClick={() => setLockedItem(section)}>{lockedForAuth(section.required_access, payload) ? "Login করে ব্যবহার করুন" : section.action_label}</Button>}</div>}</div></div>}</article>;
                       })}</div>)}
                     </section>
                   </>
