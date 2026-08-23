@@ -15,6 +15,13 @@ This is an existing production-oriented project. The latest source code and curr
 ## Continuity rule
 The user may move this project between ChatGPT accounts. The ZIP must be sufficient for the next AI session to continue without requiring the user to repeat these workflow rules manually.
 
+## Update 0065 — Global User Guide header visibility
+- Made the primary User Guide control consistently visible in the global site header for Guest, Student, Seller, and Admin sessions.
+- Mobile header shows a compact but labeled `Guide` button instead of icon-only treatment, while larger screens show `User Guide`.
+- Added a subtle primary tint, stronger typography, rounded shape, and accessible `title` so first-time users can discover the Guide without crowding the header.
+- Reduced header control gap slightly to preserve 360px/390px/412px mobile fit.
+
+
 ## Update 0058 — Final manual-QA fixes (2026-08-22)
 - Removed the Home page `Reset layout` control from the visible homepage UI.
 - Reworked free/paid resource downloads to stream the authorized private file through the download route with `Content-Disposition: attachment`, so Download triggers an actual file download instead of opening the browser PDF viewer.

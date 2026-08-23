@@ -177,9 +177,17 @@ export function UserGuideButton({ className = "", compact = false }: { className
 
   return (
     <>
-      <Button type="button" size={compact ? "sm" : "lg"} variant="outline" onClick={openGuide} className={`gap-2 ${compact ? "shrink-0 max-sm:px-2" : ""} ${className}`} aria-label="Open User Guide">
-        <BookOpen className="h-5 w-5" />
-        <span className={compact ? "hidden sm:inline" : ""}>User Guide</span>
+      <Button
+        type="button"
+        size={compact ? "sm" : "lg"}
+        variant="outline"
+        onClick={openGuide}
+        className={`${compact ? "h-9 shrink-0 rounded-xl border-primary/30 bg-primary/[0.06] px-2.5 font-semibold text-primary hover:bg-primary/[0.12] sm:h-10 sm:px-3" : ""} gap-2 ${className}`}
+        aria-label="Open User Guide"
+        title="EWU StudyHub User Guide"
+      >
+        <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
+        <span>{compact ? <><span className="sm:hidden">Guide</span><span className="hidden sm:inline">User Guide</span></> : "User Guide"}</span>
       </Button>
 
       {mounted && open && createPortal(

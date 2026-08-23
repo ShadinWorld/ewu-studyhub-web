@@ -19,4 +19,6 @@ The `User Guide` trigger is available from the navbar for logged-in and logged-o
 - User Guide is rendered through a React portal into `document.body` so the sticky/backdrop-blur Navbar cannot clip or reposition the viewport-level dialog.
 - The dialog uses `96dvh` on mobile and locks background scrolling until closed.
 - The same portal strategy is used for the guest/authentication locked-action dialog.
+### Header placement update
 
+The primary **User Guide** entry point is available in the global site header for **Guest, Student, Seller, and Admin** sessions. On mobile it stays visible as a compact `Guide` button; on larger screens it expands to `User Guide`. The control is intentionally highlighted with a subtle primary tint so new users can discover it without taking over the header.
