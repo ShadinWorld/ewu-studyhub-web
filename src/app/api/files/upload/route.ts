@@ -102,6 +102,18 @@ export async function POST(request: Request) {
   if (!universityId) return NextResponse.json({ error: "Could not determine the university for this resource. Please select a valid department/course." }, { status: 400 });
 
   const admin = createAdminClient();
+
+  const configuredQuota = Number(process.env.STUDYHUB_STORAGE_QUOTA_BYTES ?? 0);
+  if (Number.isFinite(configuredQuota) && configuredQuota > 0) {
+    const { data: usage } = await admin.rpc("admin_storage_usage");
+    const storedBytes = (usage ?? []).reduce((sum, row) => sum + Number(row.total_bytes ?? 0), 0);
+    const incomingBytes = files.reduce((sum, file) => sum + file.size, 0);
+    const safetyThreshold = configuredQuota * 0.95;
+    if (storedBytes + incomingBytes > safetyThreshold) {
+      return NextResponse.json({ error: "StudyHub storage is close to its configured capacity. Please try again after storage cleanup or quota expansion." }, { status: 507 });
+    }
+  }
+
   const prepared: {
     file: File;
     bytes: Buffer;
@@ -135,24 +147,40 @@ export async function POST(request: Request) {
         try {
           const pdfDoc = await PDFDocument.load(bytes, { ignoreEncryption: true });
           pageCount = pdfDoc.getPageCount();
-          if (data.pricingType === "free" && pageCount > 0) {
+
+          // Only paid resources need a preview artifact. Free resources can use
+          // the protected original through the normal free-access viewer, so
+          // duplicating the full PDF into files-preview only wastes storage.
+          if (data.pricingType === "paid" && pageCount > 0) {
+            const previewPages = Math.min(pageCount, Math.max(1, Math.ceil(pageCount * 0.3)));
             const previewDoc = await PDFDocument.create();
-            const copiedPages = await previewDoc.copyPages(pdfDoc, Array.from({ length: pageCount }, (_, i) => i));
+            const copiedPages = await previewDoc.copyPages(pdfDoc, Array.from({ length: previewPages }, (_, i) => i));
             copiedPages.forEach((p) => previewDoc.addPage(p));
             const previewBytes = await previewDoc.save();
-            previewStoragePath = `${user.id}/${fileHash}-preview.pdf`;
+            previewStoragePath = `${storagePath}.preview.pdf`;
             const { error } = await supabase.storage.from("files-preview").upload(previewStoragePath, previewBytes, { contentType: "application/pdf", upsert: false });
             if (error) previewStoragePath = null;
           }
         } catch {
-          // Keep the original upload; preview is optional metadata.
+          // Keep the original upload; preview can be generated later by the
+          // guest-safe preview endpoint when a legacy/failed artifact is needed.
         }
       } else if (mimeToKind(file.type) === "image") {
         pageCount = 1;
-        if (data.pricingType === "free") {
-          previewStoragePath = `${user.id}/${fileHash}-preview.${ext}`;
-          const { error } = await supabase.storage.from("files-preview").upload(previewStoragePath, bytes, { contentType: file.type, upsert: false });
-          if (error) previewStoragePath = null;
+        if (data.pricingType === "paid") {
+          try {
+            const output = await PDFDocument.create();
+            const image = file.type === "image/png" ? await output.embedPng(bytes) : await output.embedJpg(bytes);
+            const previewHeight = Math.max(1, Math.round(image.height * 0.3));
+            const page = output.addPage([image.width, previewHeight]);
+            page.drawImage(image, { x: 0, y: -(image.height - previewHeight), width: image.width, height: image.height });
+            const previewBytes = await output.save();
+            previewStoragePath = `${storagePath}.preview.pdf`;
+            const { error } = await supabase.storage.from("files-preview").upload(previewStoragePath, previewBytes, { contentType: "application/pdf", upsert: false });
+            if (error) previewStoragePath = null;
+          } catch {
+            // Keep the original upload; a legacy-safe lazy preview can be built later.
+          }
         }
       }
 

@@ -54,3 +54,11 @@ Test at minimum on a phone and desktop browser:
 
 ## 6. Backups
 Before high-risk database changes, keep a schema/migration snapshot and the latest source ZIP. Use `docs/BACKUP_AND_RESTORE.md` for the restore sequence.
+
+## Update 0061 — V3 Storage / Preview rollout
+1. Apply `supabase/migrations/0042_storage_health_and_preview_hardening.sql` in the live Supabase project.
+2. Confirm the production project's real Storage allowance/quota, then set `STUDYHUB_STORAGE_QUOTA_BYTES` in the server environment if upload capacity guardrails should be enabled.
+3. Test a published paid PDF while logged out: resource detail → Preview → preview pages load; no login redirect; original/download still requires authorized access.
+4. Test a published paid image while logged out: Preview shows the 30% sample and does not expose the private original.
+5. Test one legacy paid PDF and one legacy paid image with `preview_storage_path` empty. The first preview may generate the safe artifact once; later previews should reuse it.
+6. Check Admin → Storage Health after the tests. Confirm original/preview sizes and preview-request counts change as expected.

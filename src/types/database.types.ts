@@ -622,6 +622,10 @@ export interface Database {
       update_profile_avatar: { Args: { p_avatar_url: string } & Record<string, unknown>; Returns: void };
       admin_storage_usage: { Args: Record<string, unknown>; Returns: { bucket_id: string; object_count: number; total_bytes: number }[] };
       admin_storage_orphans: { Args: { p_limit?: number } & Record<string, unknown>; Returns: { bucket_id: string; object_name: string; object_size: number }[] };
+      admin_storage_record_snapshot: { Args: Record<string, unknown>; Returns: void };
+      admin_storage_history: { Args: { p_days?: number } & Record<string, unknown>; Returns: { snapshot_date: string; bucket_id: string; object_count: number; total_bytes: number }[] };
+      increment_preview_request: { Args: { p_file_id: string } & Record<string, unknown>; Returns: void };
+      admin_preview_request_summary: { Args: { p_days?: number } & Record<string, unknown>; Returns: { total_requests: number; active_resources: number }[] };
       save_seller_bkash_number: {
         Args: { p_bkash_number: string } & Record<string, unknown>;
         Returns: void;

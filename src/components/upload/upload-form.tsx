@@ -3,12 +3,14 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Search, UploadCloud, X } from "lucide-react";
+import { Eye, Search, UploadCloud, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RESOURCE_CATEGORIES, SEMESTERS } from "@/lib/constants";
 import type { Department, Course } from "@/types/database.types";
+import { FilePreviewModal } from "@/components/ux/file-preview-modal";
+import { InfoButton } from "@/components/ux/info-button";
 
 const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, "");
 
@@ -37,6 +39,7 @@ export function UploadForm({
   const [semester, setSemester] = useState<string>("Spring");
   const [submitting, setSubmitting] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
+  const [previewFile, setPreviewFile] = useState<File | null>(null);
   const MAX_BATCH_FILES = 3;
   const [uploadStatuses, setUploadStatuses] = useState<Array<{ name: string; status: "queued" | "uploading" | "success" | "error"; message?: string }>>([]);
 
@@ -182,8 +185,25 @@ export function UploadForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <Label htmlFor="title">Title</Label>
+          <p className="mt-1 text-xs text-muted-foreground">Use a clear title so students immediately know what this resource contains.</p>
+        </div>
+        <InfoButton title="Uploading a resource">
+          <div className="space-y-3">
+            <p>Choose the correct course, category and pricing before submitting.</p>
+            <ul className="space-y-2 pl-5" style={{ listStyleType: "disc" }}>
+              <li>Maximum 3 files per resource.</li>
+              <li>Each file can be up to 100MB.</li>
+              <li>ZIP, RAR and 7Z archives are not accepted.</li>
+              <li>Tap a selected file to preview it before you submit.</li>
+              <li>Paid resources keep the seller price separate from the platform fee.</li>
+            </ul>
+          </div>
+        </InfoButton>
+      </div>
       <div className="space-y-2">
-        <Label htmlFor="title">Title</Label>
         <Input id="title" name="title" required minLength={5} maxLength={150} placeholder="e.g. CSE303 Final Exam Notes — Complete" />
       </div>
 
@@ -419,12 +439,30 @@ export function UploadForm({
           {files.length > 0 && (
             <div className="mt-4 space-y-2">
               {files.map((file) => (
-                <div key={`${file.name}-${file.lastModified}`} className="flex items-center gap-3 rounded-xl border bg-card px-3 py-2.5">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{file.name}</p>
-                    <p className="text-[11px] text-muted-foreground">{file.type || "File"} · {(file.size / 1024 / 1024).toFixed(1)} MB</p>
-                  </div>
-                  <button type="button" onClick={() => setFiles((current) => current.filter((item) => item !== file))} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border text-muted-foreground hover:bg-accent hover:text-foreground" aria-label={`Remove ${file.name}`}>
+                <div key={`${file.name}-${file.lastModified}`} className="flex items-center gap-2 rounded-xl border bg-card px-2 py-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewFile(file)}
+                    className="flex min-w-0 flex-1 items-center gap-3 rounded-lg px-1.5 py-1 text-left transition hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-label={`Preview ${file.name}`}
+                  >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <Eye className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">{file.name}</p>
+                      <p className="text-[11px] text-muted-foreground">Tap to preview · {file.type || "File"} · {(file.size / 1024 / 1024).toFixed(1)} MB</p>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFiles((current) => current.filter((item) => item !== file));
+                      setPreviewFile((current) => current === file ? null : current);
+                    }}
+                    className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border text-muted-foreground hover:bg-accent hover:text-foreground"
+                    aria-label={`Remove ${file.name}`}
+                  >
                     <X className="h-4 w-4" />
                   </button>
                 </div>
@@ -449,6 +487,7 @@ export function UploadForm({
       <Button type="submit" size="lg" className="w-full" disabled={submitting}>
         {submitting ? `Uploading ${uploadStatuses.filter((x) => x.status === "success").length}/${files.length}…` : "Submit for review"}
       </Button>
+      {previewFile && <FilePreviewModal file={previewFile} onClose={() => setPreviewFile(null)} />}
     </form>
   );
 }

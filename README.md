@@ -110,3 +110,8 @@ The project includes a local verification script (`npm run verify`), production-
 See `docs/MANUAL_EXTERNAL_STEPS.md` for the manual Supabase, Vercel, GitHub, and real-device steps that cannot be performed purely from source code.
 
 Free local gates: `npm run verify` and `npm run production-audit`.
+
+## Storage Health / Preview V3
+- Apply `supabase/migrations/0042_storage_health_and_preview_hardening.sql` before using the new storage-health counters and preview metrics.
+- Optional server variable: `STUDYHUB_STORAGE_QUOTA_BYTES`. Set it to the real Supabase storage allowance to enable upload capacity guardrails and quota percentage reporting.
+- New paid preview artifacts are deliberately small; the app does not intentionally duplicate complete free-resource files into `files-preview`.
