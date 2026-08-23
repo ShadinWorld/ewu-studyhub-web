@@ -509,6 +509,29 @@ export interface HelpItem {
   updated_at: string;
 }
 
+
+export type GuideOverviewKind = "intro" | "capability" | "workflow" | "access" | "next_step";
+
+export interface GuideOverviewItem {
+  id: string;
+  slug: string;
+  role_scope: HelpRoleScope;
+  kind: GuideOverviewKind;
+  title: string;
+  summary: string;
+  benefit: string | null;
+  action_label: string | null;
+  action_href: string | null;
+  required_access: GuideAccessRequirement;
+  locked_message: string | null;
+  locked_action_label: string | null;
+  locked_action_href: string | null;
+  status: ManagedContentStatus;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface GuideSection {
   id: string;
   slug: string;
@@ -616,6 +639,7 @@ export interface Database {
       recent_searches: Table<RecentSearch>;
       help_items: Table<HelpItem>;
       guide_sections: Table<GuideSection>;
+      guide_overview_items: Table<GuideOverviewItem>;
     };
     Views: Record<string, never>;
     Functions: {

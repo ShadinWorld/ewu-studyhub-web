@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
-import type { GuideAccessRequirement, GuideSectionGroup, HelpRoleScope, ManagedContentStatus } from "@/types/database.types";
+import type { GuideAccessRequirement, GuideOverviewKind, GuideSectionGroup, HelpRoleScope, ManagedContentStatus } from "@/types/database.types";
 
 async function requireAdmin() {
   const supabase = createClient();
@@ -114,4 +114,50 @@ export async function archiveGuideSection(formData: FormData) {
   if (error) throw new Error(error.message);
   await admin.from("audit_logs").insert({ actor_id: userId, action: "guide_section.archive", target_table: "guide_sections", target_id: data.id, metadata: { slug: data.slug } });
   redirectSaved("Guide section archived");
+}
+
+
+export async function upsertGuideOverviewItem(formData: FormData) {
+  const { admin, userId } = await requireAdmin();
+  const id = optional(formData, "id");
+  const payload = {
+    slug: text(formData, "slug").toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-|-$/g, ""),
+    role_scope: (text(formData, "role_scope") || "general") as HelpRoleScope,
+    kind: (text(formData, "kind") || "capability") as GuideOverviewKind,
+    title: text(formData, "title"),
+    summary: text(formData, "summary"),
+    benefit: optional(formData, "benefit"),
+    action_label: optional(formData, "action_label"),
+    action_href: safeHref(formData, "action_href"),
+    required_access: (text(formData, "required_access") || "none") as GuideAccessRequirement,
+    locked_message: optional(formData, "locked_message"),
+    locked_action_label: optional(formData, "locked_action_label"),
+    locked_action_href: safeHref(formData, "locked_action_href"),
+    status: (text(formData, "status") || "draft") as ManagedContentStatus,
+    sort_order: Number(formData.get("sort_order") ?? 0),
+  };
+  if (!payload.slug || !payload.title || !payload.summary) throw new Error("Slug, title and summary are required.");
+  const query = id ? admin.from("guide_overview_items").update(payload).eq("id", id) : admin.from("guide_overview_items").insert(payload);
+  const { data, error } = await query.select("id, slug").single();
+  if (error) throw new Error(error.message);
+  await admin.from("audit_logs").insert({ actor_id: userId, action: id ? "guide_overview.update" : "guide_overview.create", target_table: "guide_overview_items", target_id: data.id, metadata: { slug: data.slug } });
+  redirectSaved(id ? "Overview updated" : "Overview created");
+}
+
+export async function archiveGuideOverviewItem(formData: FormData) {
+  const { admin, userId } = await requireAdmin();
+  const id = text(formData, "id");
+  const { data, error } = await admin.from("guide_overview_items").update({ status: "archived" }).eq("id", id).select("id, slug").single();
+  if (error) throw new Error(error.message);
+  await admin.from("audit_logs").insert({ actor_id: userId, action: "guide_overview.archive", target_table: "guide_overview_items", target_id: data.id, metadata: { slug: data.slug } });
+  redirectSaved("Overview item archived");
+}
+
+export async function restoreGuideOverviewItem(formData: FormData) {
+  const { admin, userId } = await requireAdmin();
+  const id = text(formData, "id");
+  const { data, error } = await admin.from("guide_overview_items").update({ status: "draft" }).eq("id", id).select("id, slug").single();
+  if (error) throw new Error(error.message);
+  await admin.from("audit_logs").insert({ actor_id: userId, action: "guide_overview.restore", target_table: "guide_overview_items", target_id: data.id, metadata: { slug: data.slug } });
+  redirectSaved("Overview item restored to draft");
 }
