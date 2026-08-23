@@ -115,3 +115,9 @@ Free local gates: `npm run verify` and `npm run production-audit`.
 - Apply `supabase/migrations/0042_storage_health_and_preview_hardening.sql` before using the new storage-health counters and preview metrics.
 - Optional server variable: `STUDYHUB_STORAGE_QUOTA_BYTES`. Set it to the real Supabase storage allowance to enable upload capacity guardrails and quota percentage reporting.
 - New paid preview artifacts are deliberately small; the app does not intentionally duplicate complete free-resource files into `files-preview`.
+
+## V4 Smart Upload & Guides
+- DOCX and PPTX selected-file Quick Preview now runs browser-side before upload.
+- Legacy `.doc`/`.ppt` receive a safe conversion recommendation instead of an external document viewer.
+- Student, Seller and Admin dashboards include large clickable in-page guides.
+- See `docs/V4_SMART_UPLOAD_AND_ROLE_GUIDES.md` for implementation and limitations.

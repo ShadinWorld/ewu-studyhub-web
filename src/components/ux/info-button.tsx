@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { Info, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -16,6 +16,7 @@ export function InfoButton({
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
+  const titleId = useId();
 
   useEffect(() => {
     if (!open) return;
@@ -42,7 +43,7 @@ export function InfoButton({
           className="fixed inset-0 z-[120] flex items-end justify-center bg-black/60 p-3 backdrop-blur-sm sm:items-center sm:p-6"
           role="dialog"
           aria-modal="true"
-          aria-labelledby="studyhub-info-title"
+          aria-labelledby={titleId}
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) setOpen(false);
           }}
@@ -54,7 +55,7 @@ export function InfoButton({
                   <Info className="h-5 w-5" />
                 </div>
                 <div className="min-w-0">
-                  <h2 id="studyhub-info-title" className="text-lg font-bold sm:text-xl">{title}</h2>
+                  <h2 id={titleId} className="text-lg font-bold sm:text-xl">{title}</h2>
                   <p className="mt-1 text-xs text-muted-foreground">StudyHub guide</p>
                 </div>
               </div>

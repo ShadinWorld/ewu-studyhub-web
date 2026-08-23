@@ -19,6 +19,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatBDT } from "@/lib/utils";
+import { RoleGuideBanner } from "@/components/guides/role-guide-banner";
 
 function dayKey(date: Date) {
   return date.toISOString().slice(0, 10);
@@ -106,6 +107,7 @@ export default async function AdminOverviewPage() {
 
   return (
     <div className="space-y-6 sm:space-y-8">
+      <RoleGuideBanner role="admin" />
       <section className="rounded-3xl border bg-gradient-to-br from-primary/15 via-card to-background p-5 shadow-sm sm:p-7">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
