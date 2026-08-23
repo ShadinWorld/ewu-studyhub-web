@@ -74,7 +74,7 @@ export async function Navbar() {
             </Button>
           )}
           <ThemeToggle />
-          {user && <UserGuideButton className="hidden lg:inline-flex" />}
+          <UserGuideButton compact />
           {user ? (
             <>
               {isAdmin && (
