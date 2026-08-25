@@ -6,7 +6,6 @@ import { createClient } from "@/lib/supabase/server";
 import { UserMenu } from "@/components/layout/user-menu";
 import type { UserRole } from "@/types/database.types";
 import { BackButton } from "@/components/navigation/back-button";
-import { UserGuideButton } from "@/components/guides/user-guide-button";
 
 export async function Navbar() {
   const supabase = createClient();
@@ -57,7 +56,7 @@ export async function Navbar() {
           <Link href="/tools" className="text-muted-foreground transition-colors hover:text-foreground">Tools</Link>
         </nav>
 
-        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           <Button variant="ghost" size="icon" asChild aria-label="Search" className="h-9 w-9 sm:h-10 sm:w-10">
             <Link href="/search"><Search className="h-5 w-5" /></Link>
           </Button>
@@ -74,7 +73,6 @@ export async function Navbar() {
             </Button>
           )}
           <ThemeToggle />
-          <UserGuideButton compact />
           {user ? (
             <>
               {isAdmin && (

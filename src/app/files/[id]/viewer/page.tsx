@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import { formatBDT } from "@/lib/utils";
 import { PdfCanvasPreview } from "@/components/files/pdf-canvas-preview";
-import { InfoButton } from "@/components/ux/info-button";
 
 function previewCount(pageCount: number | null) {
   if (!pageCount || pageCount <= 0) return 0;
@@ -53,32 +52,28 @@ export default async function ResourceViewerPage({ params, searchParams }: { par
     <div className="min-h-screen bg-muted/20">
       <header className="sticky top-0 z-40 flex min-h-14 items-center justify-between gap-2 border-b bg-background/95 px-3 py-2 shadow-sm backdrop-blur sm:px-5">
         <Button asChild variant="ghost" size="sm"><Link href={`/files/${file.id}`}><ArrowLeft className="mr-2 h-4 w-4" />Back</Link></Button>
-        <div className="min-w-0 flex-1 text-center">
-          <p className="mx-auto max-w-[50vw] truncate text-sm font-semibold">{file.title}</p>
+        <div className="min-w-0 text-center">
+          <p className="max-w-[50vw] truncate text-sm font-semibold">{file.title}</p>
           {previewOnly && isPaid && isPdf && <p className="text-[11px] text-muted-foreground">Preview: {freePages} of {totalPages} pages open</p>}
         </div>
         {!previewOnly && <Button asChild variant="outline" size="sm"><a href={fullSource} target="_blank" rel="noreferrer"><ExternalLink className="mr-2 h-4 w-4" />Open</a></Button>}
-        {previewOnly ? (
-          <InfoButton slug="resource_preview" title="Preview কীভাবে কাজ করে">
-            <div className="space-y-3">
-              <p>This preview shows only the part of the resource that is available before purchase.</p>
-              <ul className="space-y-2 pl-5" style={{ listStyleType: "disc" }}>
-                <li>Paid PDF previews show the first allowed pages.</li>
-                <li>Paid image previews show only the visible sample area.</li>
-                <li>The original file stays protected until access is granted.</li>
-              </ul>
-            </div>
-          </InfoButton>
-        ) : <span className="w-10" />}
+        {previewOnly && <span className="w-10" />}
       </header>
 
       <main className="container flex-1 py-4 sm:py-6">
         <div className="mx-auto max-w-4xl space-y-5">
           {previewOnly && isPaid && isPdf ? (
             <>
-              <section aria-label="Readable preview pages" className="overflow-hidden rounded-2xl border bg-white shadow-sm">
-                <div className="border-b bg-muted/40 px-4 py-2 text-xs font-semibold text-muted-foreground">{freePages} preview {freePages === 1 ? "page" : "pages"} available</div>
-                <PdfCanvasPreview urls={[`/api/files/${file.id}/preview`]} allPages />
+              <section aria-label="Readable preview pages" className="space-y-5">
+                {Array.from({ length: freePages }, (_, index) => {
+                  const pageNumber = index + 1;
+                  return (
+                    <article key={pageNumber} className="overflow-hidden rounded-2xl border bg-white shadow-sm">
+                      <div className="border-b bg-muted/40 px-4 py-2 text-xs font-semibold text-muted-foreground">Page {pageNumber}</div>
+                      <PdfCanvasPreview urls={[`/api/files/${file.id}/preview/page/${pageNumber}`]} />
+                    </article>
+                  );
+                })}
               </section>
 
               {lockedPages > 0 && (

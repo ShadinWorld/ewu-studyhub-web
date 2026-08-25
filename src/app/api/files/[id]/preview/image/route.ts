@@ -1,16 +1,20 @@
 import { NextResponse } from "next/server";
-import { createClient, createAdminClient } from "@/lib/supabase/server";
-import { ensureImagePreview } from "@/lib/resource-previews";
+import { PDFDocument } from "pdf-lib";
+import { createAdminClient, createClient } from "@/lib/supabase/server";
 
 /**
- * Guest-safe partial preview for paid image resources. Only the small preview
- * artifact is ever returned. The private original remains purchase-gated.
+ * Serve a safe partial preview for paid image resources.
+ *
+ * Paid image originals stay in the private bucket. During upload the app
+ * stores a public preview PDF containing only the top 40% of the image.
+ * This endpoint crops that preview further to expose ~30% of the original
+ * image while keeping the remaining 70% unavailable.
  */
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   const supabase = createClient();
   const { data: file } = await supabase
     .from("files")
-    .select("id, storage_path, preview_storage_path, file_kind, pricing_type, visibility")
+    .select("id, storage_path, preview_storage_path, file_kind, pricing_type, visibility, upload_batch_id")
     .eq("id", params.id)
     .single();
 
@@ -26,29 +30,129 @@ export async function GET(request: Request, { params }: { params: { id: string }
     return NextResponse.redirect(new URL(`/files/${file.id}/viewer`, request.url));
   }
 
+  const { data: { user } } = await supabase.auth.getUser();
+  {
+    if (!user) {
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("next", `/files/${params.id}`);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    const { data: siblings } = file.upload_batch_id ? await supabase.from("files").select("id").eq("upload_batch_id", file.upload_batch_id) : { data: [{ id: file.id }] };
+    const { data: purchase } = await supabase
+      .from("purchases")
+      .select("id")
+      .eq("buyer_id", user.id)
+      .eq("status", "completed")
+      .in("file_id", (siblings ?? []).map((row) => row.id))
+      .maybeSingle();
+
+    if (purchase) {
+      return NextResponse.redirect(new URL(`/files/${file.id}/viewer`, request.url));
+    }
+  }
+
+  const admin = createAdminClient();
+
   try {
-    const previewPath = await ensureImagePreview({
-      fileId: file.id,
-      storagePath: file.storage_path,
-      previewStoragePath: file.preview_storage_path,
-    });
-    const admin = createAdminClient();
-    const { data: preview, error } = await admin.storage.from("files-preview").download(previewPath);
-    if (error || !preview) {
+    // Prefer the pre-generated preview when available. This is the normal
+    // path for newly uploaded paid images.
+    if (file.preview_storage_path) {
+      const { data: previewSource, error: previewError } = await admin.storage
+        .from("files-preview")
+        .download(file.preview_storage_path);
+
+      if (previewError || !previewSource) {
+        return NextResponse.json({ error: "Could not open this image preview." }, { status: 500 });
+      }
+
+      const previewBytes = new Uint8Array(await previewSource.arrayBuffer());
+      const sourcePdf = await PDFDocument.load(previewBytes, { ignoreEncryption: true });
+      const sourcePage = sourcePdf.getPage(0);
+      const { width, height } = sourcePage.getSize();
+
+      // Stored paid-image previews contain the top 40% of the original.
+      // Cropping that preview by another 25% leaves the top 30% overall.
+      const cropBottom = height * 0.25;
+      const previewHeight = height - cropBottom;
+
+      const output = await PDFDocument.create();
+      const embeddedPage = await output.embedPage(sourcePage, {
+        left: 0,
+        bottom: cropBottom,
+        right: width,
+        top: height,
+      });
+
+      const page = output.addPage([width, previewHeight]);
+      page.drawPage(embeddedPage, {
+        x: 0,
+        y: 0,
+        width,
+        height: previewHeight,
+      });
+
+      const bytes = await output.save();
+      const responseBody = new ArrayBuffer(bytes.byteLength);
+      new Uint8Array(responseBody).set(bytes);
+
+      return new NextResponse(responseBody, {
+        status: 200,
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `inline; filename="image-preview-${file.id}.pdf"`,
+          "Cache-Control": "private, max-age=300",
+        },
+      });
+    }
+
+    // Legacy compatibility: older paid image resources may have a null
+    // preview_storage_path. In that case, read the original from the private
+    // bucket and generate a safe top-30% PDF preview on demand. The original
+    // image is never exposed to the browser.
+    const { data: original, error: originalError } = await admin.storage
+      .from("files-private")
+      .download(file.storage_path ?? "");
+
+    if (originalError || !original) {
       return NextResponse.json({ error: "Could not open this image preview." }, { status: 500 });
     }
 
-    const bytes = await preview.arrayBuffer();
-    await admin.rpc("increment_preview_request", { p_file_id: file.id });
-    return new NextResponse(bytes, {
+    const originalBytes = new Uint8Array(await original.arrayBuffer());
+    const contentType = original.type?.toLowerCase() ?? "";
+    const storagePath = file.storage_path ?? "";
+    const extension = storagePath.split(".").pop()?.toLowerCase();
+
+    const output = await PDFDocument.create();
+    const image = contentType.includes("png") || extension === "png"
+      ? await output.embedPng(originalBytes)
+      : await output.embedJpg(originalBytes);
+    const width = image.width;
+    const fullHeight = image.height;
+    const previewHeight = Math.max(1, Math.round(fullHeight * 0.3));
+    const page = output.addPage([width, previewHeight]);
+
+    // Keep only the top 30% of the original image.
+    page.drawImage(image, {
+      x: 0,
+      y: -(fullHeight - previewHeight),
+      width,
+      height: fullHeight,
+    });
+
+    const bytes = await output.save();
+    const responseBody = new ArrayBuffer(bytes.byteLength);
+    new Uint8Array(responseBody).set(bytes);
+
+    return new NextResponse(responseBody, {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `inline; filename="image-preview-${file.id}.pdf"`,
-        "Cache-Control": "public, max-age=300, stale-while-revalidate=600",
+        "Cache-Control": "private, max-age=300",
       },
     });
   } catch {
-    return NextResponse.json({ error: "This image preview is not available right now. Please try again later." }, { status: 503 });
+    return NextResponse.json({ error: "This image preview could not be rendered." }, { status: 500 });
   }
 }

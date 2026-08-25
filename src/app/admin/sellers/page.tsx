@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 export default async function AdminSellersPage() {
   const admin = createAdminClient();
   const [{ data: requests }, { count: verifiedCount }, { count: rejectedCount }] = await Promise.all([
-    admin.from("profiles").select("id, full_name, university_email, student_id, student_id_document_url, seller_bkash_number, created_at").eq("student_id_verification_status", "pending").order("created_at", { ascending: true }),
+    admin.from("profiles").select("id, full_name, university_email, student_id, student_id_document_url, seller_bkash_number, ai_seller_verification_status, ai_seller_verification_email, ai_seller_verification_confidence, created_at").eq("student_id_verification_status", "pending").order("created_at", { ascending: true }),
     admin.from("profiles").select("id", { count: "exact", head: true }).eq("student_id_verification_status", "verified").eq("is_seller", true),
     admin.from("profiles").select("id", { count: "exact", head: true }).eq("student_id_verification_status", "rejected"),
   ]);

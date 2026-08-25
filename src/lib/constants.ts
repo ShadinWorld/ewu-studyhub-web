@@ -18,7 +18,5 @@ export const RESOURCE_CATEGORY_LABELS: Record<ResourceCategory, string> = Object
 
 export const SEMESTERS = ["Spring", "Summer", "Fall"] as const;
 
-/** Upload guardrails shared by client UI, server validation, and Admin/User Guide content. */
 export const MAX_UPLOAD_BATCH_FILES = 3;
-export const MAX_UPLOAD_FILE_SIZE_BYTES = 100 * 1024 * 1024;
-export const MAX_UPLOAD_FILE_SIZE_MB = MAX_UPLOAD_FILE_SIZE_BYTES / (1024 * 1024);
+export const MAX_UPLOAD_FILE_SIZE_MB = 100;

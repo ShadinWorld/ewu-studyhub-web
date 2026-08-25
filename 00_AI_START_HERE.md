@@ -15,13 +15,6 @@ This is an existing production-oriented project. The latest source code and curr
 ## Continuity rule
 The user may move this project between ChatGPT accounts. The ZIP must be sufficient for the next AI session to continue without requiring the user to repeat these workflow rules manually.
 
-## Update 0065 — Global User Guide header visibility
-- Made the primary User Guide control consistently visible in the global site header for Guest, Student, Seller, and Admin sessions.
-- Mobile header shows a compact but labeled `Guide` button instead of icon-only treatment, while larger screens show `User Guide`.
-- Added a subtle primary tint, stronger typography, rounded shape, and accessible `title` so first-time users can discover the Guide without crowding the header.
-- Reduced header control gap slightly to preserve 360px/390px/412px mobile fit.
-
-
 ## Update 0058 — Final manual-QA fixes (2026-08-22)
 - Removed the Home page `Reset layout` control from the visible homepage UI.
 - Reworked free/paid resource downloads to stream the authorized private file through the download route with `Content-Disposition: attachment`, so Download triggers an actual file download instead of opening the browser PDF viewer.
@@ -42,11 +35,9 @@ The user may move this project between ChatGPT accounts. The ZIP must be suffici
 - Admin Resource Request details now open in-place; Student Tools Resource Requests has a dedicated page.
 - Migration 0038 fixes automatic payout completion balance calculation.
 
-
-## Update 0066 — Guide content polish + role-aware access (2026-08-24)
-- Reframed the User Guide into concise A–Z overview + role-aware access + detailed sections.
-- Added a public Guest access summary and changed Student Guide access from legacy verification semantics to authenticated Student semantics.
-- Kept Seller/Admin permissions role-aware and server-authoritative.
-- Added migration `0045_guide_content_polish_and_access.sql` to align DB constraints and refresh Help/Guide copy in natural Bangla with English UI terms.
-- Reduced repeated wording across Overview, Info and Detailed Guide; benefit/notes are now concise and practical.
-- Admin Help/Guide editor now labels the correct `Logged-in Student` access option while retaining legacy `Verified student` for historical records.
+## AI V3.2 Resilience Update (2026-08-25)
+- Seller Auto-fill uses `GEMINI_SELLER_MODEL` (default `gemini-3.5-flash-lite`) with minimal thinking for lower latency and free-tier pressure.
+- Added bounded retry/backoff for transient Gemini 429/5xx errors.
+- Added per-seller, per-file-set AI result cache via migration `0047_ai_free_tier_resilience.sql`.
+- Added frontend retry countdown to prevent immediate repeat calls after transient errors.
+- Original files are not stored in the AI cache; only structured AI output is cached.

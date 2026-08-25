@@ -101,6 +101,10 @@ export interface Profile {
   is_seller: boolean;
   seller_bio: string | null;
   seller_bkash_number: string | null;
+  ai_seller_verification_status: "not_checked" | "match" | "mismatch" | "review";
+  ai_seller_verification_email: string | null;
+  ai_seller_verification_confidence: number | null;
+  ai_seller_verification_checked_at: string | null;
   phone_number: string | null; // normalized Bangladesh number: +8801XXXXXXXXX
   account_status: "active" | "restricted" | "suspended" | "banned";
   name_changed_at: string | null;
@@ -160,6 +164,57 @@ export interface FileResource {
   published_at: string | null;
   table_of_contents: string | null;
   upload_batch_id: string | null;
+}
+
+
+
+export type GuideAccessRequirement = string;
+export type GuideOverviewKind = string;
+export type GuideSectionGroup = string;
+export type HelpRoleScope = string;
+export type ManagedContentStatus = "draft" | "published" | "archived";
+
+export interface HelpItem {
+  id: string; slug: string; role_scope: HelpRoleScope; title: string; intro: string; how_to: string | null; benefits: string | null; notes: string | null;
+  status: ManagedContentStatus; sort_order: number; created_at: string; updated_at: string;
+}
+export interface GuideSection {
+  id: string; slug: string; section_group: GuideSectionGroup; title: string; summary: string; what_is: string; how_to: string | null; benefits: string | null; notes: string | null;
+  action_label: string | null; action_href: string | null; required_access: GuideAccessRequirement; locked_message: string | null; locked_action_label: string | null; locked_action_href: string | null;
+  status: ManagedContentStatus; sort_order: number; created_at: string; updated_at: string;
+}
+export interface GuideOverviewItem {
+  id: string; slug: string; role_scope: HelpRoleScope; kind: GuideOverviewKind; title: string; summary: string; benefit: string | null;
+  action_label: string | null; action_href: string | null; required_access: GuideAccessRequirement; locked_message: string | null; locked_action_label: string | null; locked_action_href: string | null;
+  status: ManagedContentStatus; sort_order: number; created_at: string; updated_at: string;
+}
+
+
+export interface AIGenerationCache {
+  id: string;
+  owner_id: string;
+  feature: string;
+  request_hash: string;
+  analysis_version: string;
+  model: string;
+  status: "processing" | "completed" | "failed";
+  result: Record<string, unknown> | null;
+  error_message: string | null;
+  expires_at: string | null;
+  last_used_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AIResourceAnalysis {
+  id: string; file_id: string; seller_id: string; status: "pending" | "completed" | "failed"; model: string | null;
+  ai_title: string | null; ai_description: string | null; ai_course_code: string | null; ai_course_name: string | null; ai_department_name: string | null;
+  ai_category: string | null; ai_semester: string | null; ai_year: number | null; ai_tags: string[] | null; ai_topics: string[] | null;
+  ai_summary: string | null; ai_content_index: string | null; ai_search_document: string | null; ai_embedding: number[] | null; ai_embedding_model: string | null; ai_embedding_updated_at: string | null; ai_difficulty: string | null; ai_reading_time_minutes: number | null; ai_confidence: number | null;
+  moderation_flags: unknown[]; moderation_risk_score: number; source_consent: boolean; seller_edited_at: string | null; seller_final_snapshot: Record<string, unknown> | null; processed_at: string | null;
+  ai_group_type: "single" | "related_bundle" | "mixed_bundle"; ai_file_breakdown: unknown[]; ai_group_conflicts: unknown[]; ai_raw_analysis: Record<string, unknown> | null;
+  moderation_summary: string | null; moderation_evidence: unknown[]; moderation_reviewed_at: string | null; moderation_model: string | null; ai_analysis_version: string | null;
+  created_at: string; updated_at: string;
 }
 
 export interface FileTag {
@@ -453,6 +508,7 @@ export interface FileDailyStat {
   downloads: number;
   sales: number;
   revenue_cents: number;
+  preview_requests: number;
 }
 
 export interface PlatformDailyStat {
@@ -488,71 +544,6 @@ export interface UserActivityHistory {
   created_at: string;
 }
 
-
-export type HelpRoleScope = "general" | "student" | "seller" | "admin";
-export type ManagedContentStatus = "draft" | "published" | "archived";
-export type GuideSectionGroup = "general" | "student" | "seller" | "admin";
-export type GuideAccessRequirement = "none" | "authenticated_student" | "verified_student" | "seller" | "admin";
-
-export interface HelpItem {
-  id: string;
-  slug: string;
-  role_scope: HelpRoleScope;
-  title: string;
-  intro: string;
-  how_to: string | null;
-  benefits: string | null;
-  notes: string | null;
-  status: ManagedContentStatus;
-  sort_order: number;
-  created_at: string;
-  updated_at: string;
-}
-
-
-export type GuideOverviewKind = "intro" | "capability" | "workflow" | "access" | "next_step";
-
-export interface GuideOverviewItem {
-  id: string;
-  slug: string;
-  role_scope: HelpRoleScope;
-  kind: GuideOverviewKind;
-  title: string;
-  summary: string;
-  benefit: string | null;
-  action_label: string | null;
-  action_href: string | null;
-  required_access: GuideAccessRequirement;
-  locked_message: string | null;
-  locked_action_label: string | null;
-  locked_action_href: string | null;
-  status: ManagedContentStatus;
-  sort_order: number;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface GuideSection {
-  id: string;
-  slug: string;
-  section_group: GuideSectionGroup;
-  title: string;
-  summary: string;
-  what_is: string;
-  how_to: string | null;
-  benefits: string | null;
-  notes: string | null;
-  action_label: string | null;
-  action_href: string | null;
-  required_access: GuideAccessRequirement;
-  locked_message: string | null;
-  locked_action_label: string | null;
-  locked_action_href: string | null;
-  status: ManagedContentStatus;
-  sort_order: number;
-  created_at: string;
-  updated_at: string;
-}
 export interface RecentSearch {
   profile_id: string;
   query: string;
@@ -596,6 +587,11 @@ export interface Database {
       followers: Table<Follower>;
       tags: Table<Tag>;
       files: Table<FileResource>;
+      ai_resource_analyses: Table<AIResourceAnalysis>;
+      ai_generation_cache: Table<AIGenerationCache>;
+      help_items: Table<HelpItem>;
+      guide_sections: Table<GuideSection>;
+      guide_overview_items: Table<GuideOverviewItem>;
       file_tags: Table<FileTag>;
       file_images: Table<FileImage>;
       bundles: Table<Bundle>;
@@ -637,9 +633,6 @@ export interface Database {
       resource_platform_fee_settings: Table<ResourcePlatformFeeSettings>;
       user_activity_history: Table<UserActivityHistory>;
       recent_searches: Table<RecentSearch>;
-      help_items: Table<HelpItem>;
-      guide_sections: Table<GuideSection>;
-      guide_overview_items: Table<GuideOverviewItem>;
     };
     Views: Record<string, never>;
     Functions: {
@@ -690,10 +683,6 @@ export interface Database {
       update_profile_avatar: { Args: { p_avatar_url: string } & Record<string, unknown>; Returns: void };
       admin_storage_usage: { Args: Record<string, unknown>; Returns: { bucket_id: string; object_count: number; total_bytes: number }[] };
       admin_storage_orphans: { Args: { p_limit?: number } & Record<string, unknown>; Returns: { bucket_id: string; object_name: string; object_size: number }[] };
-      admin_storage_record_snapshot: { Args: Record<string, unknown>; Returns: void };
-      admin_storage_history: { Args: { p_days?: number } & Record<string, unknown>; Returns: { snapshot_date: string; bucket_id: string; object_count: number; total_bytes: number }[] };
-      increment_preview_request: { Args: { p_file_id: string } & Record<string, unknown>; Returns: void };
-      admin_preview_request_summary: { Args: { p_days?: number } & Record<string, unknown>; Returns: { total_requests: number; active_resources: number }[] };
       save_seller_bkash_number: {
         Args: { p_bkash_number: string } & Record<string, unknown>;
         Returns: void;
@@ -713,6 +702,22 @@ export interface Database {
       reconcile_seller_financials: {
         Args: Record<string, unknown>;
         Returns: number;
+      };
+      search_ai_resource_embeddings: {
+        Args: { p_query_embedding: number[]; p_limit?: number; p_course_id?: string | null; p_department_id?: string | null } & Record<string, unknown>;
+        Returns: { file_id: string; similarity: number }[];
+      };
+      search_ai_course_topic_matches: {
+        Args: { p_terms: string[]; p_limit?: number } & Record<string, unknown>;
+        Returns: { course_id: string; course_code: string; course_name: string; matching_resources: number }[];
+      };
+      search_admin_ai_similar_resources: {
+        Args: { p_file_id: string; p_query_embedding: number[]; p_limit?: number } & Record<string, unknown>;
+        Returns: { file_id: string; title: string | null; seller_id: string; similarity: number; visibility: string }[];
+      };
+      increment_preview_request: {
+        Args: { p_file_id: string } & Record<string, unknown>;
+        Returns: void;
       };
       record_user_activity: {
         Args: { p_actor_id: string; p_action: string; p_entity_type: string; p_entity_id: string; p_description: string; p_metadata?: Record<string, unknown> } & Record<string, unknown>;

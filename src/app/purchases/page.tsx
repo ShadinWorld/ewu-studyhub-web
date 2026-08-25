@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { formatBDT } from "@/lib/utils";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
-import { InfoButton } from "@/components/ux/info-button";
 
 export default async function PurchasesPage() {
   const supabase = createClient();
@@ -27,7 +26,7 @@ export default async function PurchasesPage() {
       <main className="container max-w-4xl flex-1 py-8 sm:py-10">
       <div className="rounded-2xl border bg-gradient-to-br from-primary/10 via-background to-background p-5 shadow-sm sm:p-7">
         <p className="text-sm font-semibold text-primary">Your library</p>
-        <div className="flex items-center justify-between gap-3"><h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">My Purchases</h1><InfoButton slug="download_resource" title="Download ও Purchases" /></div>
+        <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">My Purchases</h1>
         <p className="mt-2 text-sm text-muted-foreground">Every payment and approved resource stays here. Pending items cannot be purchased twice.</p>
       </div>
 

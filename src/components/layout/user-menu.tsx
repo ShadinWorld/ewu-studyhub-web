@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, BookOpen, CircleDollarSign, LayoutDashboard, LogOut, ShieldCheck, Store, User as UserIcon, Settings2 } from "lucide-react";
+import { Bell, CircleDollarSign, LayoutDashboard, LogOut, ShieldCheck, Store, User as UserIcon, Settings2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -100,7 +100,6 @@ export function UserMenu({ fullName, email, avatarUrl, role, isSeller }: UserMen
           </DropdownMenuItem>
         )}
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild><Link href="/account#guide" className="cursor-pointer"><BookOpen className="mr-2 h-4 w-4" />User Guide</Link></DropdownMenuItem>
         <DropdownMenuItem asChild><Link href="/account" className="cursor-pointer"><Settings2 className="mr-2 h-4 w-4" />Account</Link></DropdownMenuItem>
         <DropdownMenuItem asChild className="cursor-pointer text-destructive focus:text-destructive">
           <form action={logoutAction} className="w-full">

@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MyUploadsList } from "@/components/files/my-uploads-list";
 import { formatBDT } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { UserGuideButton } from "@/components/guides/user-guide-button";
 
 export default async function DashboardPage() {
   const supabase = createClient();
@@ -48,8 +47,6 @@ export default async function DashboardPage() {
           <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">Welcome back, {profile?.full_name || "Student"} 👋</h1>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">Everything important is one tap away: purchases, saved resources, notifications and your seller journey.</p>
         </div>
-
-        <div className="mt-6 flex justify-end"><UserGuideButton /></div>
 
         <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
           <StatCard icon={<ShoppingBag className="h-5 w-5" />} label="Recent purchases" value={String(purchases?.length ?? 0)} />
@@ -136,8 +133,6 @@ export default async function DashboardPage() {
         <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">Welcome back, {profile?.full_name || "Seller"} 💰</h1>
         <p className="mt-2 text-sm text-muted-foreground">Track sales, earnings, uploads and payouts without hunting through menus.</p>
       </div>
-
-      <div className="mt-6 flex justify-end"><UserGuideButton /></div>
 
       <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-5">
         <StatCard icon={<DollarSign className="h-5 w-5" />} label="Total earned" value={formatBDT(totalEarned)} />

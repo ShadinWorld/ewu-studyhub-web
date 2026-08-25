@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { PDFDocument } from "pdf-lib";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
-import { ensurePdfPreview, getPreviewPageCount } from "@/lib/resource-previews";
 
 export async function GET(request: Request, { params }: { params: { id: string; pageNumber: string } }) {
   const supabase = createClient();
@@ -13,7 +12,7 @@ export async function GET(request: Request, { params }: { params: { id: string; 
 
   const { data: file } = await supabase
     .from("files")
-    .select("id, title, storage_path, preview_storage_path, file_kind, pricing_type, visibility, page_count")
+    .select("id, title, storage_path, file_kind, pricing_type, visibility, page_count")
     .eq("id", params.id)
     .single();
 
@@ -26,26 +25,21 @@ export async function GET(request: Request, { params }: { params: { id: string; 
   }
 
   const totalPages = Number(file.page_count ?? 0);
-  const previewPages = getPreviewPageCount(totalPages);
+  const previewPages = Math.max(1, Math.ceil(totalPages * 0.3));
   if (pageNumber > previewPages || pageNumber > totalPages) {
     return NextResponse.json({ error: "This preview page is locked." }, { status: 403 });
   }
 
-  try {
-    // The preview artifact contains only the first allowed pages. A legacy
-    // resource without an artifact is generated once and then reused.
-    const previewPath = await ensurePdfPreview({
-      fileId: file.id,
-      storagePath: file.storage_path,
-      previewStoragePath: file.preview_storage_path,
-      pageCount: file.page_count,
-    });
-    const admin = createAdminClient();
-    const { data: source, error: sourceError } = await admin.storage.from("files-preview").download(previewPath);
-    if (sourceError || !source) {
-      return NextResponse.json({ error: "Could not open this resource preview." }, { status: 500 });
-    }
+  const admin = createAdminClient();
+  const { data: source, error: sourceError } = await admin.storage
+    .from("files-private")
+    .download(file.storage_path);
 
+  if (sourceError || !source) {
+    return NextResponse.json({ error: "Could not open this resource preview." }, { status: 500 });
+  }
+
+  try {
     const sourceBytes = new Uint8Array(await source.arrayBuffer());
     const sourcePdf = await PDFDocument.load(sourceBytes, { ignoreEncryption: true });
     const index = pageNumber - 1;

@@ -111,18 +111,21 @@ See `docs/MANUAL_EXTERNAL_STEPS.md` for the manual Supabase, Vercel, GitHub, and
 
 Free local gates: `npm run verify` and `npm run production-audit`.
 
-## Storage Health / Preview V3
-- Apply `supabase/migrations/0042_storage_health_and_preview_hardening.sql` before using the new storage-health counters and preview metrics.
-- Optional server variable: `STUDYHUB_STORAGE_QUOTA_BYTES`. Set it to the real Supabase storage allowance to enable upload capacity guardrails and quota percentage reporting.
-- New paid preview artifacts are deliberately small; the app does not intentionally duplicate complete free-resource files into `files-preview`.
+## AI V1
+EWU StudyHub includes an optional server-side Gemini AI layer for seller upload auto-fill, conversational resource discovery, admin moderation/anomaly signals, and seller verification email matching. Configure `GEMINI_API_KEY` server-side. Apply Supabase migration `0042_ai_resource_intelligence.sql` before using these features.
 
-## V4 Smart Upload & Guides
-- DOCX and PPTX selected-file Quick Preview now runs browser-side before upload.
-- Legacy `.doc`/`.ppt` receive a safe conversion recommendation instead of an external document viewer.
-- Student, Seller and Admin dashboards include large clickable in-page guides.
-- See `docs/V4_SMART_UPLOAD_AND_ROLE_GUIDES.md` for implementation and limitations.
 
-### Help & User Guide
-- Users can open the full `EWU StudyHub User Guide` from Account/Profile and Dashboard.
-- Key workflows expose contextual `ⓘ Help` using Admin-managed content.
-- Admins manage both Help and Guide content from `/admin/help`.
+### AI V2 note
+EWU StudyHub now includes a conversational AI search layer. Seller AI metadata is persisted separately from seller-final data, while student AI search uses server-side filters plus semantic embeddings. The AI search index is stored in Supabase pgvector and must be backfilled after migration `0043_ai_conversational_search_v2.sql`.
+
+
+### Latest AI V2 repair note
+After AI V2, run `supabase/migrations/0044_type_and_help_schema_alignment.sql` to align the Help/Guide schema/types and preview analytics RPC.
+
+## AI V3.3 Seller Fast Input Path
+- Seller AI defaults to `gemini-3.5-flash-lite` with minimal thinking.
+- Small transient 1–3 file requests use Gemini inline-data input to avoid File API upload/ACTIVE polling latency; larger inputs fall back to the File API.
+- Large multi-file fallback uploads/processes concurrently.
+- Seller interactive requests fail fast on transient 429/503 so the UI can present its retry countdown rather than waiting through long automatic backoff.
+- Seller AI results remain cached per authenticated seller + file-set hash for 30 days.
+- Configure `GEMINI_SELLER_MODEL` to override the seller model; configure `GEMINI_SELLER_FAST_INLINE_MB` to tune the conservative inline threshold.

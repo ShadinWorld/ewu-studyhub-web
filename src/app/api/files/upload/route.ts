@@ -2,9 +2,11 @@ import { NextResponse } from "next/server";
 import { createHash, randomUUID } from "crypto";
 import { PDFDocument } from "pdf-lib";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
+import { embedText, GEMINI_EMBED_MODEL } from "@/lib/ai/gemini";
 import { uploadFileSchema } from "@/lib/validations";
-import { MAX_UPLOAD_BATCH_FILES, MAX_UPLOAD_FILE_SIZE_BYTES, MAX_UPLOAD_FILE_SIZE_MB } from "@/lib/constants";
 
+const MAX_BYTES = 100 * 1024 * 1024; // 100MB per file
+const MAX_BATCH_FILES = 3;
 const ALLOWED_MIME = new Set([
   "application/pdf",
   "application/vnd.openxmlformats-officedocument.presentationml.presentation",
@@ -61,13 +63,36 @@ export async function POST(request: Request) {
   const files = rawFiles.length ? rawFiles : singleFile instanceof File ? [singleFile] : [];
 
   if (files.length === 0) return NextResponse.json({ error: "Please select at least one file." }, { status: 400 });
-  if (files.length > MAX_UPLOAD_BATCH_FILES) return NextResponse.json({ error: `You can upload a maximum of ${MAX_UPLOAD_BATCH_FILES} files at once.` }, { status: 400 });
+  if (files.length > MAX_BATCH_FILES) return NextResponse.json({ error: `You can upload a maximum of ${MAX_BATCH_FILES} files at once.` }, { status: 400 });
 
   for (const file of files) {
     if (isZip(file)) return NextResponse.json({ error: `ZIP/archive files are not supported: ${file.name}` }, { status: 400 });
-    if (file.size > MAX_UPLOAD_FILE_SIZE_BYTES) return NextResponse.json({ error: `${file.name}: file exceeds the ${MAX_UPLOAD_FILE_SIZE_MB}MB limit.` }, { status: 400 });
+    if (file.type.startsWith("video/") || /\.(mp4|mov|mkv|webm|avi|m4v|wmv)$/i.test(file.name)) return NextResponse.json({ error: `${file.name}: video files are not supported on EWU StudyHub.` }, { status: 400 });
+    if (file.size > MAX_BYTES) return NextResponse.json({ error: `${file.name}: file exceeds the 100MB limit.` }, { status: 400 });
     if (!ALLOWED_MIME.has(file.type)) return NextResponse.json({ error: `${file.name}: unsupported file type.` }, { status: 400 });
   }
+
+  const rawAiAnalysis = String(formData.get("aiAnalysis") || "").trim();
+  const rawAiFinalMetadata = String(formData.get("aiFinalMetadata") || "").trim();
+  let aiAnalysis: Record<string, unknown> | null = null;
+  let aiFinalMetadata: Record<string, unknown> | null = null;
+  if (rawAiAnalysis) {
+    try {
+      const parsedAi = JSON.parse(rawAiAnalysis);
+      if (parsedAi && typeof parsedAi === "object") aiAnalysis = parsedAi as Record<string, unknown>;
+    } catch {
+      aiAnalysis = null;
+    }
+  }
+  if (rawAiFinalMetadata) {
+    try {
+      const parsedFinal = JSON.parse(rawAiFinalMetadata);
+      if (parsedFinal && typeof parsedFinal === "object") aiFinalMetadata = parsedFinal as Record<string, unknown>;
+    } catch {
+      aiFinalMetadata = null;
+    }
+  }
+  const aiGroupType = aiAnalysis?.group_type === "mixed_bundle" ? "mixed_bundle" : aiAnalysis?.group_type === "related_bundle" ? "related_bundle" : aiAnalysis?.group_type === "single" ? "single" : null;
 
   const parsed = uploadFileSchema.safeParse({
     title: formData.get("title"),
@@ -84,6 +109,7 @@ export async function POST(request: Request) {
 
   const data = parsed.data;
   const tableOfContents = String(formData.get("tableOfContents") ?? "").trim().slice(0, 3000);
+  // Course/department may be completed by System AI after submission when Seller AI Autofill was not used.
   if (data.pricingType === "paid" && data.priceCents < 1000) return NextResponse.json({ error: "Paid resources must be priced at least ৳10." }, { status: 400 });
 
   let universityId = profile.university_id;
@@ -101,18 +127,6 @@ export async function POST(request: Request) {
   if (!universityId) return NextResponse.json({ error: "Could not determine the university for this resource. Please select a valid department/course." }, { status: 400 });
 
   const admin = createAdminClient();
-
-  const configuredQuota = Number(process.env.STUDYHUB_STORAGE_QUOTA_BYTES ?? 0);
-  if (Number.isFinite(configuredQuota) && configuredQuota > 0) {
-    const { data: usage } = await admin.rpc("admin_storage_usage");
-    const storedBytes = (usage ?? []).reduce((sum, row) => sum + Number(row.total_bytes ?? 0), 0);
-    const incomingBytes = files.reduce((sum, file) => sum + file.size, 0);
-    const safetyThreshold = configuredQuota * 0.95;
-    if (storedBytes + incomingBytes > safetyThreshold) {
-      return NextResponse.json({ error: "StudyHub storage is close to its configured capacity. Please try again after storage cleanup or quota expansion." }, { status: 507 });
-    }
-  }
-
   const prepared: {
     file: File;
     bytes: Buffer;
@@ -146,40 +160,24 @@ export async function POST(request: Request) {
         try {
           const pdfDoc = await PDFDocument.load(bytes, { ignoreEncryption: true });
           pageCount = pdfDoc.getPageCount();
-
-          // Only paid resources need a preview artifact. Free resources can use
-          // the protected original through the normal free-access viewer, so
-          // duplicating the full PDF into files-preview only wastes storage.
-          if (data.pricingType === "paid" && pageCount > 0) {
-            const previewPages = Math.min(pageCount, Math.max(1, Math.ceil(pageCount * 0.3)));
+          if (data.pricingType === "free" && pageCount > 0) {
             const previewDoc = await PDFDocument.create();
-            const copiedPages = await previewDoc.copyPages(pdfDoc, Array.from({ length: previewPages }, (_, i) => i));
+            const copiedPages = await previewDoc.copyPages(pdfDoc, Array.from({ length: pageCount }, (_, i) => i));
             copiedPages.forEach((p) => previewDoc.addPage(p));
             const previewBytes = await previewDoc.save();
-            previewStoragePath = `${storagePath}.preview.pdf`;
+            previewStoragePath = `${user.id}/${fileHash}-preview.pdf`;
             const { error } = await supabase.storage.from("files-preview").upload(previewStoragePath, previewBytes, { contentType: "application/pdf", upsert: false });
             if (error) previewStoragePath = null;
           }
         } catch {
-          // Keep the original upload; preview can be generated later by the
-          // guest-safe preview endpoint when a legacy/failed artifact is needed.
+          // Keep the original upload; preview is optional metadata.
         }
       } else if (mimeToKind(file.type) === "image") {
         pageCount = 1;
-        if (data.pricingType === "paid") {
-          try {
-            const output = await PDFDocument.create();
-            const image = file.type === "image/png" ? await output.embedPng(bytes) : await output.embedJpg(bytes);
-            const previewHeight = Math.max(1, Math.round(image.height * 0.3));
-            const page = output.addPage([image.width, previewHeight]);
-            page.drawImage(image, { x: 0, y: -(image.height - previewHeight), width: image.width, height: image.height });
-            const previewBytes = await output.save();
-            previewStoragePath = `${storagePath}.preview.pdf`;
-            const { error } = await supabase.storage.from("files-preview").upload(previewStoragePath, previewBytes, { contentType: "application/pdf", upsert: false });
-            if (error) previewStoragePath = null;
-          } catch {
-            // Keep the original upload; a legacy-safe lazy preview can be built later.
-          }
+        if (data.pricingType === "free") {
+          previewStoragePath = `${user.id}/${fileHash}-preview.${ext}`;
+          const { error } = await supabase.storage.from("files-preview").upload(previewStoragePath, bytes, { contentType: file.type, upsert: false });
+          if (error) previewStoragePath = null;
         }
       }
 
@@ -219,6 +217,72 @@ export async function POST(request: Request) {
         .single();
       if (insertError || !inserted) throw new Error(`${item.file.name}: failed to save resource.`);
       insertedIds.push(inserted.id);
+      if (aiAnalysis) {
+        const finalTitle = data.title;
+        const finalDescription = data.description ?? null;
+        const finalCategory = data.category;
+        const aiTitle = typeof aiAnalysis.title === "string" ? aiAnalysis.title : null;
+        const aiDescription = typeof aiAnalysis.description === "string" ? aiAnalysis.description : null;
+        const aiCategory = typeof aiAnalysis.category === "string" ? aiAnalysis.category : null;
+        const aiSemester = typeof aiAnalysis.semester === "string" ? aiAnalysis.semester : null;
+        const aiYear = typeof aiAnalysis.year === "number" ? aiAnalysis.year : null;
+        const aiTags = Array.isArray(aiAnalysis.tags) ? aiAnalysis.tags.filter((x): x is string => typeof x === "string").slice(0, 30) : [];
+        const aiTopics = Array.isArray(aiAnalysis.topics) ? aiAnalysis.topics.filter((x): x is string => typeof x === "string").slice(0, 40) : [];
+        const finalTags = Array.isArray(aiFinalMetadata?.tags) ? aiFinalMetadata.tags.filter((x): x is string => typeof x === "string").slice(0, 30) : aiTags;
+        const finalTopics = Array.isArray(aiFinalMetadata?.topics) ? aiFinalMetadata.topics.filter((x): x is string => typeof x === "string").slice(0, 40) : aiTopics;
+        const finalDifficulty = typeof aiFinalMetadata?.difficulty === "string" && aiFinalMetadata.difficulty.trim() ? aiFinalMetadata.difficulty.trim().slice(0, 60) : (typeof aiAnalysis.difficulty === "string" ? aiAnalysis.difficulty : null);
+        const finalReadingTime = typeof aiFinalMetadata?.reading_time_minutes === "number" ? Math.max(1, Math.min(600, Math.round(aiFinalMetadata.reading_time_minutes))) : (typeof aiAnalysis.reading_time_minutes === "number" ? aiAnalysis.reading_time_minutes : null);
+        const aiSummary = typeof aiAnalysis.summary === "string" ? aiAnalysis.summary.slice(0, 6000) : null;
+        const aiGroupType = aiAnalysis.group_type === "related_bundle" || aiAnalysis.group_type === "mixed_bundle" ? aiAnalysis.group_type : "single";
+        const aiFileBreakdown = Array.isArray(aiAnalysis.file_breakdown) ? aiAnalysis.file_breakdown.slice(0, files.length) : [];
+        const aiGroupConflicts = Array.isArray(aiAnalysis.group_conflicts) ? aiAnalysis.group_conflicts.filter((x): x is string => typeof x === "string").slice(0, 20) : [];
+        const aiModeration = aiAnalysis.moderation_precheck && typeof aiAnalysis.moderation_precheck === "object" ? aiAnalysis.moderation_precheck as Record<string, unknown> : {};
+        const moderationFlags = Array.isArray(aiModeration.flags) ? aiModeration.flags.filter((x): x is string => typeof x === "string").slice(0, 20) : [];
+        const moderationRisk = Math.max(0, Math.min(100, Number(aiModeration.risk_score || 0)));
+        const moderationRationale = typeof aiModeration.rationale === "string" ? aiModeration.rationale.slice(0, 1500) : null;
+        const courseCode = typeof aiAnalysis.course_code === "string" ? aiAnalysis.course_code : null;
+        const departmentShort = typeof aiAnalysis.department_short_name === "string" ? aiAnalysis.department_short_name : null;
+        const aiSearchDocument = [
+          finalTitle, finalDescription, tableOfContents,
+          courseCode, departmentShort, finalCategory, data.semester, data.year,
+          aiTitle, aiDescription, aiSummary, aiCategory, aiSemester, aiYear,
+          aiGroupType, aiGroupConflicts.join(" "), JSON.stringify(aiFileBreakdown),
+          ...aiTags, ...aiTopics, ...finalTags, ...finalTopics,
+          finalDifficulty, finalReadingTime,
+          ...aiFileBreakdown.flatMap((entry) => [entry?.file_name, entry?.role, entry?.summary, ...(Array.isArray(entry?.topics) ? entry.topics : []), ...(Array.isArray(entry?.suggested_sections) ? entry.suggested_sections : [])]),
+        ].filter((value) => value !== null && value !== undefined && String(value).trim()).join(" ").slice(0, 16000);
+        let embedding: number[] | null = null;
+        try {
+          embedding = await embedText({
+            text: aiSearchDocument,
+            title: finalTitle,
+            taskType: "RETRIEVAL_DOCUMENT",
+            model: GEMINI_EMBED_MODEL,
+            outputDimensionality: 768,
+          });
+        } catch {
+          // AI metadata remains usable even if semantic indexing is temporarily unavailable.
+        }
+        await admin.from("ai_resource_analyses").upsert({
+          file_id: inserted.id, seller_id: user.id, status: "completed", model: typeof aiAnalysis.model === "string" ? aiAnalysis.model : null,
+          ai_title: aiTitle, ai_description: aiDescription, ai_course_code: courseCode, ai_course_name: null, ai_department_name: departmentShort,
+          ai_category: aiCategory, ai_semester: aiSemester, ai_year: aiYear, ai_tags: aiTags, ai_topics: aiTopics, ai_summary: aiSummary,
+          ai_content_index: aiSearchDocument, ai_search_document: aiSearchDocument,
+          ai_embedding: embedding,
+          ai_embedding_model: embedding ? GEMINI_EMBED_MODEL : null,
+          ai_embedding_updated_at: embedding ? new Date().toISOString() : null, ai_difficulty: typeof aiAnalysis.difficulty === "string" ? aiAnalysis.difficulty : null,
+          ai_reading_time_minutes: typeof aiAnalysis.reading_time_minutes === "number" ? aiAnalysis.reading_time_minutes : null,
+          ai_confidence: typeof aiAnalysis.confidence === "number" ? Math.max(0, Math.min(1, aiAnalysis.confidence)) : null,
+          moderation_flags: moderationFlags, moderation_risk_score: moderationRisk, source_consent: true,
+          ai_group_type: aiGroupType, ai_file_breakdown: aiFileBreakdown, ai_group_conflicts: aiGroupConflicts, ai_raw_analysis: aiAnalysis,
+          moderation_summary: moderationRationale, moderation_evidence: [...aiGroupConflicts, ...moderationFlags], moderation_model: typeof aiAnalysis.model === "string" ? aiAnalysis.model : null,
+          ai_analysis_version: typeof aiAnalysis.analysis_version === "string" ? aiAnalysis.analysis_version : "seller-upload-v3.1",
+          seller_edited_at: (aiTitle !== finalTitle || aiDescription !== finalDescription || aiCategory !== finalCategory || aiSemester !== data.semester || aiYear !== data.year) ? new Date().toISOString() : null,
+          seller_final_snapshot: { title: finalTitle, description: finalDescription, table_of_contents: tableOfContents || null, category: finalCategory, course_id: data.courseId ?? null, department_id: data.departmentId ?? null, semester: data.semester ?? null, year: data.year ?? null, tags: finalTags, topics: finalTopics, difficulty: finalDifficulty, reading_time_minutes: finalReadingTime },
+          seller_final_ai_metadata: { tags: finalTags, topics: finalTopics, difficulty: finalDifficulty, reading_time_minutes: finalReadingTime },
+          processed_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+        });
+      }
     }
 
     const label = files.length > 1 ? `"${data.title}" · ${files.length} files` : `"${data.title}"`;

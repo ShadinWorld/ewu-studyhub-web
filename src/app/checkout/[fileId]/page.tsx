@@ -11,7 +11,6 @@ import { formatBDT } from "@/lib/utils";
 import { BkashPaymentForm } from "@/components/checkout/bkash-payment-form";
 import { CopyButton } from "@/components/shared/copy-button";
 import { getBuyerPriceCents } from "@/lib/platform-pricing";
-import { InfoButton } from "@/components/ux/info-button";
 
 export default async function CheckoutPage({ params }: { params: { fileId: string } }) {
   const supabase = createClient();
@@ -62,7 +61,7 @@ export default async function CheckoutPage({ params }: { params: { fileId: strin
       <main className="container flex-1 py-10">
         <Card className="mx-auto max-w-lg">
           <CardHeader>
-            <div className="flex items-start justify-between gap-3"><CardTitle>Pay with bKash</CardTitle><InfoButton slug="purchase_resource" title="Purchase কীভাবে করবেন" /></div>
+            <CardTitle>Pay with bKash</CardTitle>
             <CardDescription>{file.title}{bundleCount > 1 ? ` · ${bundleCount} files included` : ""}</CardDescription>
           </CardHeader>
           <CardContent>

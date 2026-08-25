@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { UploadReviewCard, type UploadReviewBatch } from "@/components/admin/upload-review-card";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { AIResourceReviewButton } from "@/components/admin/ai-resource-review-button";
 import { Upload } from "lucide-react";
 
 export default async function PendingUploadsPage() {
@@ -15,6 +16,32 @@ export default async function PendingUploadsPage() {
   const sellerIds = Array.from(new Set((files ?? []).map((file) => file.seller_id).filter(Boolean)));
   const { data: sellers } = sellerIds.length ? await supabase.from("profiles").select("id,full_name").in("id", sellerIds) : { data: [] as { id: string; full_name: string | null }[] };
   const sellerNames = new Map((sellers ?? []).map((seller) => [seller.id, seller.full_name]));
+  const fileIds = (files ?? []).map((file) => file.id);
+  const { data: analyses } = fileIds.length ? await supabase.from("ai_resource_analyses").select("file_id,status,ai_confidence,ai_group_type,moderation_risk_score,moderation_summary,moderation_flags,ai_group_conflicts,moderation_reviewed_at").in("file_id", fileIds) : { data: [] as Array<{ file_id: string; status: string | null; ai_confidence: number | null; ai_group_type: string | null; moderation_risk_score: number | null; moderation_summary: string | null; moderation_flags: string[] | null; ai_group_conflicts: string[] | null; moderation_reviewed_at: string | null }> };
+  type ReviewAI = NonNullable<UploadReviewBatch["files"][number]["ai"]>;
+  const toStringArray = (value: unknown): string[] => {
+    if (!Array.isArray(value)) return [];
+    const result: string[] = [];
+    for (const item of value) {
+      if (typeof item === "string") result.push(item);
+    }
+    return result;
+  };
+
+  const analysisMap = new Map<string, ReviewAI>();
+  for (const item of analyses ?? []) {
+    const normalized: ReviewAI = {
+      status: item.status,
+      ai_confidence: item.ai_confidence,
+      ai_group_type: item.ai_group_type,
+      moderation_risk_score: item.moderation_risk_score,
+      moderation_summary: item.moderation_summary,
+      moderation_flags: toStringArray(item.moderation_flags),
+      ai_group_conflicts: toStringArray(item.ai_group_conflicts),
+      moderation_reviewed_at: item.moderation_reviewed_at,
+    };
+    analysisMap.set(item.file_id, normalized);
+  }
   type UploadFileRow = NonNullable<typeof files>[number];
   const batchKeys = new Map<string, UploadFileRow[]>();
   for (const file of files ?? []) {
@@ -41,6 +68,7 @@ export default async function PendingUploadsPage() {
         file_size_bytes: row.file_size_bytes,
         page_count: row.page_count,
         file_name: row.storage_path.split("/").pop() ?? null,
+        ai: analysisMap.get(row.id) ?? null,
       })),
     };
   });
