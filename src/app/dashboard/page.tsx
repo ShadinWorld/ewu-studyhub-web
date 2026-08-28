@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { DollarSign, Download, Eye, Heart, ShoppingBag, Wallet, Upload, Bell, BookOpen, Clock3, Grid2X2, Settings2, Search, ClipboardList } from "lucide-react";
+import { DollarSign, Download, Eye, Heart, ShoppingBag, Wallet, Upload, Bell, BookOpen, Clock3, Grid2X2, Settings2, Search, ClipboardList, Building2, Flame, Headphones, UserPlus, FolderOpen, Star, CreditCard } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MyUploadsList } from "@/components/files/my-uploads-list";
@@ -89,12 +89,17 @@ export default async function DashboardPage() {
           <AdaptiveQuickActions actions={sortAdaptiveActions([
             { id: "browse", label: "Browse resources", href: "/search", icon: "Search", tone: "primary" },
             { id: "purchases", label: "My Purchases", href: "/purchases", icon: "ShoppingBag" },
-            { id: "saved", label: "Saved", href: "/saved", icon: "Heart" },
+            { id: "saved", label: "Saved Resources", href: "/saved", icon: "Heart" },
             { id: "requests", label: "My Requests", href: "/requests", icon: "ClipboardList" },
+            { id: "courses", label: "My Courses", href: "/courses", icon: "BookOpen" },
+            { id: "downloads", label: "My Downloads", href: "/purchases", icon: "Download" },
             { id: "notifications", label: "Notifications", href: "/notifications", icon: "Bell" },
-            { id: "tools", label: "Student Tools", href: "/tools", icon: "Grid2X2" },
             { id: "history", label: "History", href: "/history", icon: "Clock3" },
-            { id: "courses", label: "Courses", href: "/courses", icon: "BookOpen" },
+            { id: "tools", label: "Student Tools", href: "/tools", icon: "Grid2X2" },
+            { id: "departments", label: "Departments", href: "/departments", icon: "Building2" },
+            { id: "trending", label: "Trending", href: "/trending", icon: "Flame" },
+            { id: "support", label: "Help & Support", href: "/support", icon: "Headphones" },
+            { id: "become-seller", label: "Become a Seller", href: "/dashboard/become-seller", icon: "UserPlus" },
             { id: "account", label: "Profile", href: "/account", icon: "Settings2" },
           ], actionCounts(quickActionActivity ?? []))} />
         </section>
@@ -193,15 +198,21 @@ export default async function DashboardPage() {
           <p className="text-xs text-muted-foreground">Adapts to your usage</p>
         </div>
         <AdaptiveQuickActions actions={sortAdaptiveActions([
-          { id: "upload", label: "Upload", href: "/dashboard/upload", icon: "Upload", tone: "primary" },
-          { id: "sales", label: "Sales & earnings", href: "/dashboard/sales", icon: "DollarSign" },
+          { id: "upload", label: "Upload Resource", href: "/dashboard/upload", icon: "Upload", tone: "primary" },
+          { id: "sales", label: "Sales & Earnings", href: "/dashboard/sales", icon: "DollarSign" },
+          { id: "my-resources", label: "My Resources", href: "/dashboard", icon: "FolderOpen" },
+          { id: "pending-approval", label: "Approval Updates", href: "/notifications", icon: "Clock3" },
           { id: "notifications", label: "Notifications", href: "/notifications", icon: "Bell" },
-          { id: "payment-settings", label: "Payment settings", href: "/dashboard/payment-settings", icon: "Wallet" },
+          { id: "payment-settings", label: "Payment Settings", href: "/dashboard/payment-settings", icon: "Wallet" },
           { id: "purchases", label: "Purchases", href: "/purchases", icon: "ShoppingBag" },
-          { id: "requests", label: "My Requests", href: "/requests", icon: "ClipboardList" },
-          { id: "tools", label: "Student Tools", href: "/tools", icon: "Grid2X2" },
+          { id: "requests", label: "Resource Requests", href: "/requests", icon: "ClipboardList" },
           { id: "history", label: "History", href: "/history", icon: "Clock3" },
-          { id: "account", label: "Profile", href: "/account", icon: "Settings2" },
+          { id: "tools", label: "Student Tools", href: "/tools", icon: "Grid2X2" },
+          { id: "browse", label: "Browse Resources", href: "/search", icon: "Search" },
+          { id: "courses", label: "Courses", href: "/courses", icon: "BookOpen" },
+          { id: "departments", label: "Departments", href: "/departments", icon: "Building2" },
+          { id: "trending", label: "Trending", href: "/trending", icon: "Flame" },
+          { id: "account", label: "Seller Profile", href: "/account", icon: "Settings2" },
         ], actionCounts(quickActionActivity ?? []))} />
       </section>
 

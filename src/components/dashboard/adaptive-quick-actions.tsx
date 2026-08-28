@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import {
-  Bell, BookOpen, ClipboardList, Clock3, DollarSign, Grid2X2, Heart, Search, Settings2, ShoppingBag, Upload, Wallet,
+  Bell, BookOpen, Building2, ClipboardList, Clock3, DollarSign, Download, Flame, FolderOpen, Grid2X2, Headphones, Heart, Search, Settings2, ShoppingBag, Upload, UserPlus, Wallet,
 } from "lucide-react";
 
 
@@ -18,7 +18,13 @@ export type AdaptiveIconName =
   | "Settings2"
   | "ShoppingBag"
   | "Upload"
-  | "Wallet";
+  | "Wallet"
+  | "Building2"
+  | "Flame"
+  | "Headphones"
+  | "UserPlus"
+  | "FolderOpen"
+  | "Download";
 
 const ICONS: Record<AdaptiveIconName, typeof Search> = {
   Bell,
@@ -33,6 +39,12 @@ const ICONS: Record<AdaptiveIconName, typeof Search> = {
   ShoppingBag,
   Upload,
   Wallet,
+  Building2,
+  Flame,
+  Headphones,
+  UserPlus,
+  FolderOpen,
+  Download,
 };
 
 export type AdaptiveAction = {

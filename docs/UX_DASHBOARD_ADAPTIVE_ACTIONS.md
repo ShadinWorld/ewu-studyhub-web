@@ -41,3 +41,6 @@ Make Student and Seller dashboards feel like personalized workspaces instead of 
 - Quick actions now use soft color-coded, 3D-inspired card treatments with per-action accents and subtle lift/arrow interaction.
 - Existing adaptive action ordering and click tracking are preserved.
 - Restored the global User Guide button in the shared Navbar. On narrow mobile screens it renders as an icon-only compact control; on larger screens it shows the User Guide label.
+
+## Expanded Quick Actions — 2026-08-28
+The Student and Seller dashboards now support more than nine quick-action entries while keeping a fixed three-column grid. The order remains adaptive using usage frequency and recency; first-time users receive sensible defaults. Student actions were expanded to include courses, downloads, departments, trending, support and become-a-seller. Seller actions were expanded to include resource/library access, approval updates, browse, courses, departments and trending. AI Assistant remains outside this grid, and Help/AI continues to use the existing combined/floating pattern.
