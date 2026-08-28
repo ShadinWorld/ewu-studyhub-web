@@ -21,3 +21,9 @@
 3. Seller opens Guide: Student + Seller capabilities available.
 4. Admin opens Guide: admin sections visible.
 5. Info Help copy matches the current page and does not duplicate the full guide.
+
+
+### Guide entry-point restoration
+- Restored the existing `UserGuideButton` to the global site navbar for guest and authenticated users.
+- Compact mode is icon-first on very small screens to avoid header crowding while remaining accessible via its label/tooltip.
+- The existing portal-based Guide UI, API, role-aware access rules and Admin Guide management remain unchanged.

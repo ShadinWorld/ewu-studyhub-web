@@ -22,3 +22,9 @@ The `User Guide` trigger is available from the navbar for logged-in and logged-o
 ### Header placement update
 
 The primary **User Guide** entry point is available in the global site header for **Guest, Student, Seller, and Admin** sessions. On mobile it stays visible as a compact `Guide` button; on larger screens it expands to `User Guide`. The control is intentionally highlighted with a subtle primary tint so new users can discover it without taking over the header.
+
+
+### Guide entry-point restoration
+- Restored the existing `UserGuideButton` to the global site navbar for guest and authenticated users.
+- Compact mode is icon-first on very small screens to avoid header crowding while remaining accessible via its label/tooltip.
+- The existing portal-based Guide UI, API, role-aware access rules and Admin Guide management remain unchanged.
