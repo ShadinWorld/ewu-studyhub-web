@@ -1,37 +1,48 @@
-import { createAdminClient, createClient } from "@/lib/supabase/server";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { CalendarDays, ClipboardCheck, Clock3, FileQuestion } from "lucide-react";
-import { createDeadline, deleteDeadline, updateRequestStatus, uploadAcademicDocument } from "./actions";
-import { HomepageBannerManager } from "@/components/admin/homepage-banner-manager";
-import { ResourceRequestDetails } from "@/components/admin/resource-request-details";
+import Link from "next/link";
+import { CalendarDays, ChevronRight, Clock3, FileQuestion, ImagePlus } from "lucide-react";
+import { createAdminClient } from "@/lib/supabase/server";
+import { Card } from "@/components/ui/card";
 
-export default async function AdminAcademicToolsPage(){const supabase=createClient();const admin=createAdminClient();const [{data:deadlines},{data:requests},{data:announcements},{data:documents},{data:departments},{data:courses},{data:bannerSettings},{data:dailyStats}]=await Promise.all([
-  admin.from("deadlines").select("id,title,due_at,category,term,year").order("due_at",{ascending:true}).limit(50),
-  admin.from("resource_requests").select("id,title,status,details,admin_note,created_at,user_id,course_id").order("created_at",{ascending:false}).limit(50),
-  admin.from("announcements").select("id,title,body,badge,cta_label,cta_link,image_url,mobile_image_url,image_alt,starts_at,ends_at,is_active,display_order,status,audience,is_dismissible,display_frequency,publish_mode,duration_days,target_department_id,target_course_id,impression_count,click_count").order("display_order",{ascending:true}).order("created_at",{ascending:false}).limit(100),
-  admin.from("academic_documents").select("id,document_type,term,year,title,mime_type,file_size_bytes,created_at").order("year",{ascending:false}).order("created_at",{ascending:false}).limit(20),
-  admin.from("departments").select("id,name,short_name").order("short_name"),
-  admin.from("courses").select("id,course_code,course_name,department_id").order("course_code").limit(2000),
-  admin.from("homepage_banner_settings").select("audience,max_visible,autoplay,auto_rotate_seconds,show_dots,show_arrows,transition").order("audience"),
-  admin.from("announcement_daily_stats").select("announcement_id,stat_date,impression_count,click_count").gte("stat_date",new Date(Date.now()-30*24*60*60*1000).toISOString().slice(0,10)).order("stat_date",{ascending:false}).limit(1000),
-]);
-const requestUserIds=Array.from(new Set((requests??[]).map(r=>r.user_id)));
-const requestCourseIds=Array.from(new Set((requests??[]).map(r=>r.course_id).filter((x): x is string => Boolean(x))));
-const [{data:requestProfiles},{data:requestCourses}]=await Promise.all([
-  requestUserIds.length ? admin.from("profiles").select("id,full_name").in("id",requestUserIds) : Promise.resolve({data:[] as {id:string;full_name:string}[]}),
-  requestCourseIds.length ? admin.from("courses").select("id,course_code").in("id",requestCourseIds) : Promise.resolve({data:[] as {id:string;course_code:string}[]}),
-]);
-const profileMap=new Map((requestProfiles??[]).map(p=>[p.id,p.full_name]));
-const requestCourseMap=new Map((requestCourses??[]).map(c=>[c.id,c.course_code]));
-return <div className="space-y-6"><div><p className="text-sm font-semibold text-primary">Student experience</p><h2 className="text-2xl font-bold">Academic Tools & Updates</h2><p className="mt-1 text-sm text-muted-foreground">Manage calendars, exam PDFs, deadlines, resource requests and homepage promotions.</p></div>
-<Card><CardHeader><CardTitle className="flex items-center gap-2"><CalendarDays className="h-5 w-5 text-primary"/>Academic calendar / final exam PDFs</CardTitle></CardHeader><CardContent><form action={uploadAcademicDocument} encType="multipart/form-data" className="grid gap-4 sm:grid-cols-2"><div className="space-y-2"><Label>Document type</Label><select name="document_type" className="h-10 w-full rounded-md border bg-background px-3 text-sm"><option value="academic_calendar">Academic Calendar</option><option value="final_exam_schedule">Final Exam Schedule</option></select></div><div className="space-y-2"><Label>Term</Label><select name="term" className="h-10 w-full rounded-md border bg-background px-3 text-sm"><option>spring</option><option>summer</option><option>fall</option></select></div><div className="space-y-2"><Label>Year</Label><Input name="year" type="number" defaultValue={new Date().getFullYear()} min="2020" max="2100"/></div><div className="space-y-2"><Label>Title</Label><Input name="title" placeholder="Summer 2026 Final Exam Schedule" required/></div><div className="space-y-2 sm:col-span-2"><Label>PDF or image</Label><Input name="file" type="file" accept="application/pdf,.pdf,image/jpeg,image/png,image/webp,image/gif" required/><p className="text-xs text-muted-foreground">PDF, JPG, PNG, WEBP or GIF · max 30 MB</p></div><div className="sm:col-span-2"><Button type="submit"><ClipboardCheck className="h-4 w-4"/>Upload / replace</Button></div></form><div className="mt-5 space-y-2">{documents?.map(d=><div key={d.id} className="flex flex-col gap-1 rounded-xl border p-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-sm font-medium">{d.title}</p><p className="text-xs text-muted-foreground">{d.document_type.replaceAll("_"," ")} · {d.term} {d.year} · {d.mime_type === "application/pdf" ? "PDF" : "Image"}{d.file_size_bytes ? ` · ${(d.file_size_bytes / 1024 / 1024).toFixed(1)} MB` : ""}</p></div><span className="text-xs text-muted-foreground">{new Date(d.created_at).toLocaleDateString()}</span></div>)}</div></CardContent></Card>
+export default async function AdminAcademicToolsPage() {
+  const admin = createAdminClient();
+  const [{ count: documentsCount }, { count: deadlinesCount }, { count: openRequestsCount }, { count: liveBannersCount }] = await Promise.all([
+    admin.from("academic_documents").select("id", { count: "exact", head: true }),
+    admin.from("deadlines").select("id", { count: "exact", head: true }),
+    admin.from("resource_requests").select("id", { count: "exact", head: true }).in("status", ["open", "in_progress"]),
+    admin.from("announcements").select("id", { count: "exact", head: true }).eq("is_active", true),
+  ]);
 
-<Card><CardHeader><CardTitle className="flex items-center gap-2"><Clock3 className="h-5 w-5 text-primary"/>Deadline tracker</CardTitle></CardHeader><CardContent><form action={createDeadline} className="grid gap-4 sm:grid-cols-2"><Input name="title" placeholder="Deadline title" required/><Input name="category" placeholder="Category e.g. Registration" defaultValue="Academic"/><select name="term" className="h-10 rounded-md border bg-background px-3 text-sm"><option value="">Any term</option><option>spring</option><option>summer</option><option>fall</option></select><Input name="year" type="number" placeholder="Year" defaultValue={new Date().getFullYear()}/><Input name="due_at" type="datetime-local" required/><Input name="link" placeholder="Official/source link (optional)"/><textarea name="description" className="min-h-24 rounded-md border bg-background px-3 py-2 text-sm sm:col-span-2" placeholder="Short description"/><Button type="submit" className="sm:col-span-2">Add deadline</Button></form><div className="mt-5 space-y-2">{deadlines?.map(d=><div key={d.id} className="flex flex-col gap-2 rounded-xl border p-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-sm font-medium">{d.title}</p><p className="text-xs text-muted-foreground">{d.category} · {new Date(d.due_at).toLocaleString()}</p></div><form action={deleteDeadline}><input type="hidden" name="id" value={d.id}/><Button type="submit" size="sm" variant="destructive">Delete</Button></form></div>)}</div></CardContent></Card>
+  const tiles = [
+    { href: "/admin/academic-tools/calendar", icon: CalendarDays, title: "Academic calendar & final exams", description: "Upload the academic calendar and final exam schedule PDFs.", meta: `${documentsCount ?? 0} documents` },
+    { href: "/admin/academic-tools/deadlines", icon: Clock3, title: "Deadline tracker", description: "Registration, payment and academic deadlines shown to students.", meta: `${deadlinesCount ?? 0} deadlines` },
+    { href: "/admin/academic-tools/requests", icon: FileQuestion, title: "Resource requests", description: "Student requests for resources that aren't on StudyHub yet.", meta: `${openRequestsCount ?? 0} open` },
+    { href: "/admin/academic-tools/banners", icon: ImagePlus, title: "Giant Hero Banner Manager", description: "Homepage campaign banners — schedule, target and track performance.", meta: `${liveBannersCount ?? 0} live` },
+  ];
 
-<Card><CardHeader><CardTitle className="flex items-center gap-2"><FileQuestion className="h-5 w-5 text-primary"/>Resource requests</CardTitle></CardHeader><CardContent><ResourceRequestDetails requests={(requests ?? []) as any} profileMap={Object.fromEntries(profileMap)} courseMap={Object.fromEntries(requestCourseMap)} updateRequestStatus={updateRequestStatus} returnTo="/admin/academic-tools"/></CardContent></Card>
-
-<section className="space-y-3"><div><p className="text-sm font-semibold text-primary">Homepage campaigns</p><h3 className="text-2xl font-bold tracking-tight">Giant Hero Banner Manager</h3><p className="mt-1 text-sm text-muted-foreground">Create image-led campaigns, target audiences, schedule visibility, control order, preview mobile and review campaign performance.</p></div><HomepageBannerManager banners={(announcements??[]) as any} departments={departments??[]} courses={courses??[]} settings={(bannerSettings??[]) as any} daily={(dailyStats??[]) as any}/></section>
-</div>}
+  return (
+    <div className="space-y-6">
+      <div>
+        <p className="text-sm font-semibold text-primary">Student experience</p>
+        <h2 className="text-2xl font-bold">Academic Tools & Updates</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Manage calendars, exam PDFs, deadlines, resource requests and homepage promotions — each in its own page.</p>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {tiles.map((tile) => (
+          <Link key={tile.href} href={tile.href}>
+            <Card className="flex h-full items-start gap-3 p-4 transition-colors hover:border-primary/40 hover:bg-primary/[0.03]">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><tile.icon className="h-5 w-5" /></span>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-semibold">{tile.title}</p>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">{tile.description}</p>
+                <p className="mt-2 text-xs font-semibold text-primary">{tile.meta}</p>
+              </div>
+            </Card>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}

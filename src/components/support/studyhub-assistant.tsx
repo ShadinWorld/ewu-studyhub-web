@@ -85,8 +85,7 @@ export function WhatsAppSupportButton() {
   return <>
     <button type="button" onClick={() => { setOpen(true); setMode("home"); }} aria-label="Open StudyHub Assistant" className="fixed bottom-24 left-4 z-50 inline-flex items-center gap-2 rounded-full border bg-card/95 px-3 py-2.5 text-sm font-semibold text-foreground shadow-xl backdrop-blur transition-all hover:-translate-y-0.5 hover:shadow-2xl md:bottom-6 md:left-6">
       <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground"><Sparkles className="h-4 w-4" /></span>
-      <span className="hidden sm:inline">StudyHub Assistant</span>
-      <span className="sm:hidden">Help</span>
+      <span>Ask AI</span>
     </button>
 
     {open && <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 p-3 backdrop-blur-sm sm:items-center" role="dialog" aria-modal="true" aria-labelledby="assistant-title">

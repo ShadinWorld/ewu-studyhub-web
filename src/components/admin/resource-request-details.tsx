@@ -25,39 +25,74 @@ type Props = {
   returnTo?: string;
 };
 
-export function ResourceRequestDetails({ requests, profileMap, courseMap, updateRequestStatus, historyMap = {}, returnTo = "/admin/academic-tools" }: Props) {
+const ACTIVE_STATUSES = new Set(["open", "in_progress"]);
+
+function RequestCard({
+  request,
+  profileMap,
+  courseMap,
+  updateRequestStatus,
+  returnTo,
+  onView,
+}: {
+  request: RequestRow;
+  profileMap: Record<string, string>;
+  courseMap: Record<string, string>;
+  updateRequestStatus: (formData: FormData) => Promise<void>;
+  returnTo: string;
+  onView: () => void;
+}) {
+  return (
+    <div className="rounded-xl border p-4">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <p className="font-semibold">{request.title}</p>
+          <p className="text-xs text-muted-foreground">
+            {request.course_id ? courseMap[request.course_id] ?? "General" : "General"} · {profileMap[request.user_id] ?? "Student"} · {new Date(request.created_at).toLocaleDateString()}
+          </p>
+          <Button type="button" variant="link" className="mt-1 h-auto p-0 text-xs" onClick={onView}>
+            View
+          </Button>
+        </div>
+        <span className="rounded-full border px-2 py-1 text-[11px] font-semibold capitalize">{String(request.status).replace("_", " ")}</span>
+      </div>
+      <form action={updateRequestStatus} className="mt-3 grid gap-2 sm:grid-cols-[180px_1fr_auto]">
+        <input type="hidden" name="id" value={request.id} />
+        <input type="hidden" name="return_to" value={returnTo} />
+        <select name="status" defaultValue={request.status} className="h-10 rounded-md border bg-background px-3 text-sm">
+          <option value="open">Open</option>
+          <option value="in_progress">In progress</option>
+          <option value="fulfilled">Fulfilled</option>
+          <option value="closed">Closed</option>
+        </select>
+        <Input name="admin_note" defaultValue={request.admin_note ?? ""} placeholder="Admin note" />
+        <Button type="submit">Update</Button>
+      </form>
+    </div>
+  );
+}
+
+export function ResourceRequestDetails({ requests, profileMap, courseMap, updateRequestStatus, historyMap = {}, returnTo = "/admin/academic-tools/requests" }: Props) {
   const [selected, setSelected] = useState<RequestRow | null>(null);
+  const activeRequests = requests.filter((r) => ACTIVE_STATUSES.has(r.status));
+  const historyRequests = requests.filter((r) => !ACTIVE_STATUSES.has(r.status));
 
   return (
-    <div className="space-y-3">
-      {requests.length ? requests.map((request) => (
-        <div key={request.id} className="rounded-xl border p-4">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <p className="font-semibold">{request.title}</p>
-              <p className="text-xs text-muted-foreground">
-                {request.course_id ? courseMap[request.course_id] ?? "General" : "General"} · {profileMap[request.user_id] ?? "Student"} · {new Date(request.created_at).toLocaleDateString()}
-              </p>
-              <Button type="button" variant="link" className="mt-1 h-auto p-0 text-xs" onClick={() => setSelected(request)}>
-                View details
-              </Button>
-            </div>
-            <span className="rounded-full border px-2 py-1 text-[11px] font-semibold capitalize">{String(request.status).replace("_", " ")}</span>
-          </div>
-          <form action={updateRequestStatus} className="mt-3 grid gap-2 sm:grid-cols-[180px_1fr_auto]">
-            <input type="hidden" name="id" value={request.id} />
-            <input type="hidden" name="return_to" value={returnTo} />
-            <select name="status" defaultValue={request.status} className="h-10 rounded-md border bg-background px-3 text-sm">
-              <option value="open">Open</option>
-              <option value="in_progress">In progress</option>
-              <option value="fulfilled">Fulfilled</option>
-              <option value="closed">Closed</option>
-            </select>
-            <Input name="admin_note" defaultValue={request.admin_note ?? ""} placeholder="Admin note" />
-            <Button type="submit">Update</Button>
-          </form>
+    <div className="space-y-6">
+      <div className="space-y-3">
+        {activeRequests.length ? activeRequests.map((request) => (
+          <RequestCard key={request.id} request={request} profileMap={profileMap} courseMap={courseMap} updateRequestStatus={updateRequestStatus} returnTo={returnTo} onView={() => setSelected(request)} />
+        )) : <p className="text-sm text-muted-foreground">No open resource requests.</p>}
+      </div>
+
+      {historyRequests.length > 0 && (
+        <div className="space-y-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">History</p>
+          {historyRequests.map((request) => (
+            <RequestCard key={request.id} request={request} profileMap={profileMap} courseMap={courseMap} updateRequestStatus={updateRequestStatus} returnTo={returnTo} onView={() => setSelected(request)} />
+          ))}
         </div>
-      )) : <p className="text-sm text-muted-foreground">No resource requests.</p>}
+      )}
 
       {selected ? (
         <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/50 p-3 sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-label="Resource request details" onClick={() => setSelected(null)}>

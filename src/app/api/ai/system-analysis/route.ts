@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { embedText, generateStructured, GEMINI_EMBED_MODEL, GEMINI_SELLER_MODEL } from "@/lib/ai/gemini";
-import { resourceSuggestionSchema, type ResourceSuggestion } from "@/app/api/ai/resource-suggest/route";
+import { resourceSuggestionSchema, type ResourceSuggestion } from "@/lib/ai/resource-suggestion-schema";
 
 function safeString(value: unknown, max: number) { return typeof value === "string" ? value.slice(0, max) : ""; }
 function fileName(path: string) { return path.split("/").pop() || "resource"; }

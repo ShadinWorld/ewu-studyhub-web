@@ -57,6 +57,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "You need to become a seller before uploading. Go to Dashboard → Become a Seller." }, { status: 403 });
   }
 
+  if (!isAdminUploader) {
+    const { data: paymentSettings } = await supabase
+      .from("seller_payment_settings")
+      .select("bkash_number")
+      .eq("seller_id", user.id)
+      .maybeSingle();
+    if (!paymentSettings?.bkash_number) {
+      return NextResponse.json(
+        {
+          error:
+            "আপলোড করার আগে আপনার bKash পেআউট নম্বর যোগ করতে হবে — আপনার রিসোর্স বিক্রি হলে এই নম্বরেই টাকা পাঠানো হবে। Dashboard → Payment Settings এ গিয়ে নম্বরটি যোগ করুন।",
+        },
+        { status: 403 },
+      );
+    }
+  }
+
   const formData = await request.formData();
   const rawFiles = formData.getAll("files").filter((value): value is File => value instanceof File);
   const singleFile = formData.get("file");

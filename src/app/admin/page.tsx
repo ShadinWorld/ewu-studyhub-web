@@ -2,12 +2,13 @@ import Link from "next/link";
 import {
   Activity,
   AlertCircle,
-  ArrowRight,
   BookOpen,
   CreditCard,
   FileCheck2,
   Files,
+  FileQuestion,
   Flag,
+  ImagePlus,
   Search,
   ShieldCheck,
   Store,
@@ -40,6 +41,8 @@ export default async function AdminOverviewPage() {
     { count: payoutRequests },
     { count: supportCount },
     { count: sellerCount },
+    { count: openResourceRequests },
+    { count: liveBannerCount },
     { data: purchases },
     { data: recentLogs },
     { data: dailyStats },
@@ -54,6 +57,8 @@ export default async function AdminOverviewPage() {
     supabase.from("payouts").select("id", { count: "exact", head: true }).eq("status", "pending").eq("payment_method", "bkash"),
     supabase.from("support_tickets").select("id", { count: "exact", head: true }).in("status", ["new", "in_review"]),
     supabase.from("profiles").select("id", { count: "exact", head: true }).eq("is_seller", true),
+    supabase.from("resource_requests").select("id", { count: "exact", head: true }).in("status", ["open", "in_progress"]),
+    supabase.from("announcements").select("id", { count: "exact", head: true }).eq("is_active", true),
     supabase.from("purchases").select("amount_cents, commission_cents, seller_earning_cents, created_at").eq("status", "completed"),
     supabase.from("audit_logs").select("id, action, target_table, target_id, metadata, actor_id, created_at").order("created_at", { ascending: false }).limit(8),
     supabase.from("platform_daily_stats").select("date,new_users,active_users,total_sales,total_revenue_cents,total_commission_cents").order("date", { ascending: false }).limit(14),
@@ -102,10 +107,31 @@ export default async function AdminOverviewPage() {
     { href: "/admin/payouts", label: "Seller payouts", count: payoutRequests ?? 0, icon: Wallet, tone: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" },
     { href: "/admin/reports", label: "Open reports", count: reportCount ?? 0, icon: Flag, tone: "border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300" },
     { href: "/admin/support", label: "Support requests", count: supportCount ?? 0, icon: AlertCircle, tone: "border-cyan-500/30 bg-cyan-500/10 text-cyan-700 dark:text-cyan-300" },
+    { href: "/admin/academic-tools/requests", label: "Resource requests", count: openResourceRequests ?? 0, icon: FileQuestion, tone: "border-indigo-500/30 bg-indigo-500/10 text-indigo-700 dark:text-indigo-300" },
+    { href: "/admin/academic-tools/banners", label: "Hero banners", count: liveBannerCount ?? 0, icon: ImagePlus, tone: "border-fuchsia-500/30 bg-fuchsia-500/10 text-fuchsia-700 dark:text-fuchsia-300" },
   ];
 
   return (
     <div className="space-y-6 sm:space-y-8">
+      <section>
+        <div className="mb-3 flex items-end justify-between gap-3">
+          <div>
+            <h3 className="text-lg font-bold">Needs your attention</h3>
+            <p className="text-sm text-muted-foreground">Open the right queue without hunting through menus.</p>
+          </div>
+          <span className="rounded-full border px-3 py-1 text-xs font-semibold">{totalPending} open</span>
+        </div>
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+          {actions.map(({ href, label, count, icon: Icon, tone }) => (
+            <Link key={href} href={href} className="group flex flex-col items-center gap-1.5 rounded-xl border bg-card p-2.5 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md sm:rounded-2xl sm:p-3.5">
+              <div className={`flex h-8 w-8 items-center justify-center rounded-lg border sm:h-10 sm:w-10 sm:rounded-xl ${tone}`}><Icon className="h-4 w-4 sm:h-5 sm:w-5" /></div>
+              <p className="mt-0.5 line-clamp-2 text-[11px] font-semibold leading-tight sm:text-sm">{label}</p>
+              <p className="text-base font-bold sm:text-xl">{count}</p>
+            </Link>
+          ))}
+        </div>
+      </section>
+
       <section className="rounded-3xl border bg-gradient-to-br from-primary/15 via-card to-background p-5 shadow-sm sm:p-7">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
@@ -127,16 +153,7 @@ export default async function AdminOverviewPage() {
       </section>
 
       <section>
-        <div className="mb-4 flex items-end justify-between gap-3"><div><h3 className="text-lg font-bold">Needs your attention</h3><p className="text-sm text-muted-foreground">Open the right queue and resolve it without hunting through menus.</p></div><span className="rounded-full border px-3 py-1 text-xs font-semibold">{totalPending} open</span></div>
-        <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4"><MiniMetric label="Today sales" value={formatBDT(todaySales)} /><MiniMetric label="Platform revenue" value={formatBDT(totalCommission)} /><MiniMetric label="Seller earnings" value={formatBDT(totalSellerEarnings)} /><MiniMetric label="Pending payout" value={formatBDT(pendingPayoutTotal)} /><MiniMetric label="Completed payout" value={formatBDT(completedPayoutTotal)} /></div>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {actions.map(({ href, label, count, icon: Icon, tone }) => (
-            <Link key={href} href={href} className="group rounded-2xl border bg-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg">
-              <div className={`flex h-11 w-11 items-center justify-center rounded-xl border ${tone}`}><Icon className="h-5 w-5" /></div>
-              <div className="mt-4 flex items-end justify-between gap-3"><div><p className="text-sm font-semibold">{label}</p><p className="mt-1 text-2xl font-bold">{count}</p></div><ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" /></div>
-            </Link>
-          ))}
-        </div>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4"><MiniMetric label="Today sales" value={formatBDT(todaySales)} /><MiniMetric label="Platform revenue" value={formatBDT(totalCommission)} /><MiniMetric label="Seller earnings" value={formatBDT(totalSellerEarnings)} /><MiniMetric label="Pending payout" value={formatBDT(pendingPayoutTotal)} /><MiniMetric label="Completed payout" value={formatBDT(completedPayoutTotal)} /></div>
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[1.6fr_1fr]">

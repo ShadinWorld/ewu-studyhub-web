@@ -50,7 +50,7 @@ export default async function AdminPendingPage({ searchParams }: { searchParams?
     ...(sellers ?? []).map((r: any) => ({ key: `s-${r.id}`, type: "Seller verification", title: r.full_name ?? "Seller request", who: r.university_email ?? "EWU student", created: r.created_at, href: "/admin/sellers" })),
     ...(payouts ?? []).map((r: any) => ({ key: `p-${r.id}`, type: "Payout request", title: `BDT ${(r.amount_cents / 100).toFixed(2)}`, who: names.get(r.seller_id) ?? "Seller", created: r.created_at, href: "/admin/payouts" })),
     ...(purchases ?? []).map((r: any) => ({ key: `b-${r.id}`, type: "Purchase request", title: r.files?.title ?? "Resource purchase", who: names.get(r.buyer_id) ?? "Buyer", created: r.created_at, href: "/admin/payments" })),
-    ...(resourceRequests ?? []).map((r: any) => ({ key: `rr-${r.id}`, type: "Resource request", title: r.title, who: names.get(r.user_id) ?? "Student", created: r.created_at, href: "/admin/academic-tools" })),
+    ...(resourceRequests ?? []).map((r: any) => ({ key: `rr-${r.id}`, type: "Resource request", title: r.title, who: names.get(r.user_id) ?? "Student", created: r.created_at, href: "/admin/academic-tools/requests" })),
     ...(reports ?? []).map((r: any) => ({ key: `rep-${r.id}`, type: "Report", title: r.files?.title ?? String(r.reason).replaceAll("_", " "), who: names.get(r.reporter_id) ?? "User", created: r.created_at, href: "/admin/reports" })),
     ...(support ?? []).map((r: any) => ({ key: `sup-${r.id}`, type: "Support", title: r.subject || `${String(r.category).replaceAll("_", " ")} request`, who: names.get(r.user_id) ?? "User", created: r.created_at, href: "/admin/support" })),
   ].map((row) => {

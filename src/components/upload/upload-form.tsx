@@ -281,6 +281,50 @@ export function UploadForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <Label htmlFor="file">Files</Label>
+          <span className="text-xs font-semibold text-muted-foreground">{files.length}/{MAX_BATCH_FILES} selected</span>
+        </div>
+        <div className="rounded-2xl border border-dashed p-4 sm:p-5">
+          <div className="flex flex-col items-center justify-center text-center">
+            <UploadCloud className="mb-2 h-8 w-8 text-muted-foreground" />
+            <p className="text-sm font-semibold">{files.length ? "Selected files" : "Select files for one resource"}</p>
+            <p className="mt-1 text-xs text-muted-foreground">Up to {MAX_BATCH_FILES} files • 100MB each • ZIP/archives are not allowed</p>
+            <label htmlFor="file" className="mt-3 inline-flex cursor-pointer items-center rounded-lg border bg-background px-4 py-2 text-sm font-semibold hover:bg-accent">
+              {files.length ? "Add / change files" : "Choose files"}
+            </label>
+          </div>
+          {files.length > 0 && (
+            <div className="mt-4 space-y-2">
+              {files.map((file) => (
+                <div key={`${file.name}-${file.lastModified}`} className="flex items-center gap-3 rounded-xl border bg-card px-3 py-2.5">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{file.name}</p>
+                    <p className="text-[11px] text-muted-foreground">{file.type || "File"} · {(file.size / 1024 / 1024).toFixed(1)} MB</p>
+                  </div>
+                  <button type="button" onClick={() => { setFiles((current) => current.filter((item) => item !== file)); setAiAnalysis(null); setAiError(""); }} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border text-muted-foreground hover:bg-accent hover:text-foreground" aria-label={`Remove ${file.name}`}>
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <input
+          id="file"
+          type="file"
+          className="hidden"
+          accept=".pdf,.ppt,.pptx,.doc,.docx,.png,.jpg,.jpeg"
+          multiple
+          onChange={(e) => {
+            const next = Array.from(e.target.files ?? []);
+            updateFiles([...files, ...next]);
+            e.currentTarget.value = "";
+          }}
+        />
+      </div>
+
       <div className="rounded-2xl border bg-card p-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
@@ -326,31 +370,6 @@ export function UploadForm({
         <textarea id="tableOfContents" name="tableOfContents" maxLength={3000} rows={6} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" placeholder={"Example:\n1. Introduction\n2. Database Fundamentals\n3. ER Model\n4. Normalization\n5. SQL Queries"} />
         <p className="text-xs text-muted-foreground">Add the main topics, chapters or questions covered so buyers can quickly understand what they are getting.</p>
       </div>
-
-      {aiAnalysis && (
-        <div className="grid gap-4 rounded-2xl border border-primary/20 bg-primary/[0.03] p-4 sm:grid-cols-2">
-          <div className="sm:col-span-2">
-            <p className="text-sm font-semibold">AI metadata review</p>
-            <p className="mt-1 text-xs text-muted-foreground">AI suggestions are editable. Your edited topics, tags and study details are saved as your final seller metadata while the original AI analysis is preserved separately.</p>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="aiTopics">Topics</Label>
-            <Input id="aiTopics" value={sellerAIOverrides.topics.join(", ")} onChange={(e) => setSellerAIOverrides((current) => ({ ...current, topics: e.target.value.split(",").map((x) => x.trim()).filter(Boolean).slice(0, 40) }))} placeholder="recursion, tree traversal, stack" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="aiTags">Tags</Label>
-            <Input id="aiTags" value={sellerAIOverrides.tags.join(", ")} onChange={(e) => setSellerAIOverrides((current) => ({ ...current, tags: e.target.value.split(",").map((x) => x.trim()).filter(Boolean).slice(0, 30) }))} placeholder="exam, lecture, revision" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="aiDifficulty">Difficulty</Label>
-            <Input id="aiDifficulty" value={sellerAIOverrides.difficulty} onChange={(e) => setSellerAIOverrides((current) => ({ ...current, difficulty: e.target.value.slice(0, 60) }))} placeholder="Beginner / Intermediate / Advanced" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="aiReadingTime">Estimated study time (minutes)</Label>
-            <Input id="aiReadingTime" type="number" min={1} max={600} value={sellerAIOverrides.reading_time_minutes ?? ""} onChange={(e) => setSellerAIOverrides((current) => ({ ...current, reading_time_minutes: e.target.value ? Math.max(1, Math.min(600, Number(e.target.value))) : null }))} placeholder="60" />
-          </div>
-        </div>
-      )}
 
       <div className="space-y-2">
         <Label htmlFor="category">Category</Label>
@@ -547,50 +566,6 @@ export function UploadForm({
             </p>
           </div>
         )}
-      </div>
-
-      <div className="space-y-3">
-        <div className="flex items-center justify-between gap-3">
-          <Label htmlFor="file">Files</Label>
-          <span className="text-xs font-semibold text-muted-foreground">{files.length}/{MAX_BATCH_FILES} selected</span>
-        </div>
-        <div className="rounded-2xl border border-dashed p-4 sm:p-5">
-          <div className="flex flex-col items-center justify-center text-center">
-            <UploadCloud className="mb-2 h-8 w-8 text-muted-foreground" />
-            <p className="text-sm font-semibold">{files.length ? "Selected files" : "Select files for one resource"}</p>
-            <p className="mt-1 text-xs text-muted-foreground">Up to {MAX_BATCH_FILES} files • 100MB each • ZIP/archives are not allowed</p>
-            <label htmlFor="file" className="mt-3 inline-flex cursor-pointer items-center rounded-lg border bg-background px-4 py-2 text-sm font-semibold hover:bg-accent">
-              {files.length ? "Add / change files" : "Choose files"}
-            </label>
-          </div>
-          {files.length > 0 && (
-            <div className="mt-4 space-y-2">
-              {files.map((file) => (
-                <div key={`${file.name}-${file.lastModified}`} className="flex items-center gap-3 rounded-xl border bg-card px-3 py-2.5">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{file.name}</p>
-                    <p className="text-[11px] text-muted-foreground">{file.type || "File"} · {(file.size / 1024 / 1024).toFixed(1)} MB</p>
-                  </div>
-                  <button type="button" onClick={() => { setFiles((current) => current.filter((item) => item !== file)); setAiAnalysis(null); setAiError(""); }} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border text-muted-foreground hover:bg-accent hover:text-foreground" aria-label={`Remove ${file.name}`}>
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-        <input
-          id="file"
-          type="file"
-          className="hidden"
-          accept=".pdf,.ppt,.pptx,.doc,.docx,.png,.jpg,.jpeg"
-          multiple
-          onChange={(e) => {
-            const next = Array.from(e.target.files ?? []);
-            updateFiles([...files, ...next]);
-            e.currentTarget.value = "";
-          }}
-        />
       </div>
 
       <Button type="submit" size="lg" className="w-full" disabled={submitting}>

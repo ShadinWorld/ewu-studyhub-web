@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ChevronDown, FileQuestion, LifeBuoy, Flag, UserCheck, CalendarDays, ClipboardList, BookOpen, Calculator, ListChecks } from "lucide-react";
 import { usePathname } from "next/navigation";
 const items = [
-  ["/admin/student-tools/resource-requests", "Resource Requests", FileQuestion],
+  ["/admin/academic-tools/requests", "Resource Requests", FileQuestion],
   ["/admin/student-tools/support", "Support", LifeBuoy],
   ["/admin/student-tools/reports", "Reports", Flag],
   ["/admin/student-tools/seller-verification", "Seller Verification", UserCheck],
