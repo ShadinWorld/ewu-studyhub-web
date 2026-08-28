@@ -31,3 +31,13 @@ Make Student and Seller dashboards feel like personalized workspaces instead of 
 - Frequent actions naturally rise toward the top over time.
 - Low-use actions remain available but move lower in the grid rather than disappearing.
 - The dashboard should feel current through context-aware messaging without becoming noisy.
+
+
+### 2026-08-28 serialization hardening
+`AdaptiveQuickActions` is a Client Component. Server-rendered dashboard pages now pass serializable icon-name strings rather than Lucide component functions. The Client Component maps those names back to Lucide icons locally. This prevents Next.js Server→Client serialization errors without changing adaptive ordering or analytics behavior.
+
+
+## 2026-08-28 UI refinement
+- Quick actions now use soft color-coded, 3D-inspired card treatments with per-action accents and subtle lift/arrow interaction.
+- Existing adaptive action ordering and click tracking are preserved.
+- Restored the global User Guide button in the shared Navbar. On narrow mobile screens it renders as an icon-only compact control; on larger screens it shows the User Guide label.

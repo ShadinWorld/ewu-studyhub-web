@@ -97,7 +97,7 @@ function roleVisible(item: OverviewItem, payload: GuidePayload) {
   return true;
 }
 
-export function UserGuideButton({ className = "", compact = false }: { className?: string; compact?: boolean }) {
+export function UserGuideButton({ className = "", compact = false, iconOnlyOnMobile = false }: { className?: string; compact?: boolean; iconOnlyOnMobile?: boolean }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [payload, setPayload] = useState<GuidePayload | null>(null);
@@ -188,7 +188,7 @@ export function UserGuideButton({ className = "", compact = false }: { className
         title="EWU StudyHub User Guide"
       >
         <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
-        <span>{compact ? <><span className="sm:hidden">Guide</span><span className="hidden sm:inline">User Guide</span></> : "User Guide"}</span>
+        <span className={iconOnlyOnMobile ? "hidden sm:inline" : ""}>{compact ? <><span className="sm:hidden">Guide</span><span className="hidden sm:inline">User Guide</span></> : "User Guide"}</span>
       </Button>
 
       {mounted && open && createPortal(

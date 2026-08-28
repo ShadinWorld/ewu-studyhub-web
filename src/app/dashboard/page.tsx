@@ -87,15 +87,15 @@ export default async function DashboardPage() {
             <p className="text-xs text-muted-foreground">Adapts to your usage</p>
           </div>
           <AdaptiveQuickActions actions={sortAdaptiveActions([
-            { id: "browse", label: "Browse resources", href: "/search", icon: Search, tone: "primary" },
-            { id: "purchases", label: "My Purchases", href: "/purchases", icon: ShoppingBag },
-            { id: "saved", label: "Saved", href: "/saved", icon: Heart },
-            { id: "requests", label: "My Requests", href: "/requests", icon: ClipboardList },
-            { id: "notifications", label: "Notifications", href: "/notifications", icon: Bell },
-            { id: "tools", label: "Student Tools", href: "/tools", icon: Grid2X2 },
-            { id: "history", label: "History", href: "/history", icon: Clock3 },
-            { id: "courses", label: "Courses", href: "/courses", icon: BookOpen },
-            { id: "account", label: "Profile", href: "/account", icon: Settings2 },
+            { id: "browse", label: "Browse resources", href: "/search", icon: "Search", tone: "primary" },
+            { id: "purchases", label: "My Purchases", href: "/purchases", icon: "ShoppingBag" },
+            { id: "saved", label: "Saved", href: "/saved", icon: "Heart" },
+            { id: "requests", label: "My Requests", href: "/requests", icon: "ClipboardList" },
+            { id: "notifications", label: "Notifications", href: "/notifications", icon: "Bell" },
+            { id: "tools", label: "Student Tools", href: "/tools", icon: "Grid2X2" },
+            { id: "history", label: "History", href: "/history", icon: "Clock3" },
+            { id: "courses", label: "Courses", href: "/courses", icon: "BookOpen" },
+            { id: "account", label: "Profile", href: "/account", icon: "Settings2" },
           ], actionCounts(quickActionActivity ?? []))} />
         </section>
 
@@ -193,15 +193,15 @@ export default async function DashboardPage() {
           <p className="text-xs text-muted-foreground">Adapts to your usage</p>
         </div>
         <AdaptiveQuickActions actions={sortAdaptiveActions([
-          { id: "upload", label: "Upload", href: "/dashboard/upload", icon: Upload, tone: "primary" },
-          { id: "sales", label: "Sales & earnings", href: "/dashboard/sales", icon: DollarSign },
-          { id: "notifications", label: "Notifications", href: "/notifications", icon: Bell },
-          { id: "payment-settings", label: "Payment settings", href: "/dashboard/payment-settings", icon: Wallet },
-          { id: "purchases", label: "Purchases", href: "/purchases", icon: ShoppingBag },
-          { id: "requests", label: "My Requests", href: "/requests", icon: ClipboardList },
-          { id: "tools", label: "Student Tools", href: "/tools", icon: Grid2X2 },
-          { id: "history", label: "History", href: "/history", icon: Clock3 },
-          { id: "account", label: "Profile", href: "/account", icon: Settings2 },
+          { id: "upload", label: "Upload", href: "/dashboard/upload", icon: "Upload", tone: "primary" },
+          { id: "sales", label: "Sales & earnings", href: "/dashboard/sales", icon: "DollarSign" },
+          { id: "notifications", label: "Notifications", href: "/notifications", icon: "Bell" },
+          { id: "payment-settings", label: "Payment settings", href: "/dashboard/payment-settings", icon: "Wallet" },
+          { id: "purchases", label: "Purchases", href: "/purchases", icon: "ShoppingBag" },
+          { id: "requests", label: "My Requests", href: "/requests", icon: "ClipboardList" },
+          { id: "tools", label: "Student Tools", href: "/tools", icon: "Grid2X2" },
+          { id: "history", label: "History", href: "/history", icon: "Clock3" },
+          { id: "account", label: "Profile", href: "/account", icon: "Settings2" },
         ], actionCounts(quickActionActivity ?? []))} />
       </section>
 
