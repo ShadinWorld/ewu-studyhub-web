@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { DollarSign, Download, Eye, Heart, ShoppingBag, Wallet, Upload } from "lucide-react";
+import { Bell, BookOpen, ClipboardList, DollarSign, Download, Eye, Heart, History, Search, ShoppingBag, UserRound, Wallet, Wrench, Upload } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MyUploadsList } from "@/components/files/my-uploads-list";
@@ -48,21 +48,43 @@ export default async function DashboardPage() {
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">Everything important is one tap away: purchases, saved resources, notifications and your seller journey.</p>
         </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <StatCard icon={<ShoppingBag className="h-5 w-5" />} label="Recent purchases" value={String(purchases?.length ?? 0)} />
-          <StatCard icon={<ClockIcon />} label="Pending payments" value={String(pendingCount ?? 0)} />
-          <StatCard icon={<Heart className="h-5 w-5" />} label="Saved resources" value={String(savedCount ?? 0)} />
-          <StatCard icon={<CheckIcon />} label="Approved in recent list" value={String(completedCount)} />
-        </div>
+        <section className="mt-6">
+          <div className="mb-3 flex items-end justify-between gap-3">
+            <div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Your activity</p><h2 className="mt-1 text-lg font-bold tracking-tight">A quick look at your StudyHub</h2></div>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <StatCard icon={<ShoppingBag className="h-5 w-5" />} label="Recent purchases" value={String(purchases?.length ?? 0)} />
+            <StatCard icon={<ClockIcon />} label="Pending payments" value={String(pendingCount ?? 0)} />
+            <StatCard icon={<Heart className="h-5 w-5" />} label="Saved resources" value={String(savedCount ?? 0)} />
+            <StatCard icon={<CheckIcon />} label="Approved resources" value={String(completedCount)} />
+          </div>
+        </section>
 
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Button asChild className="h-12"><Link href="/search">Browse resources</Link></Button>
-          <Button asChild variant="outline" className="h-12"><Link href="/purchases">My Purchases</Link></Button>
-          <Button asChild variant="outline" className="h-12"><Link href="/saved">Saved</Link></Button>
-          <Button asChild variant="outline" className="h-12"><Link href="/requests">My Requests</Link></Button>
-          <Button asChild variant="outline" className="relative h-12"><Link href="/notifications">Notifications{actionNotifications?.some((n) => !n.is_read) ? <span className="ml-1 rounded-full bg-primary px-1.5 py-0.5 text-[10px] text-primary-foreground">{actionNotifications.filter((n) => !n.is_read).length}</span> : null}</Link></Button>
-          <Button asChild variant="outline" className="h-12"><Link href="/tools">Student Tools</Link></Button><Button asChild variant="outline" className="h-12"><Link href="/history">History</Link></Button>
-        </div>
+        <section className="mt-7">
+          <div className="mb-3 flex items-end justify-between gap-3">
+            <div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Quick actions</p><h2 className="mt-1 text-lg font-bold tracking-tight">Everything important, one tap away</h2></div>
+          </div>
+          <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-3 lg:grid-cols-3">
+            <DashboardAction href="/search" label="Browse" icon={<Search className="h-5 w-5" />} primary />
+            <DashboardAction href="/purchases" label="Purchases" icon={<ShoppingBag className="h-5 w-5" />} />
+            <DashboardAction href="/saved" label="Saved" icon={<Heart className="h-5 w-5" />} />
+            <DashboardAction href="/requests" label="Requests" icon={<ClipboardList className="h-5 w-5" />} />
+            <DashboardAction href="/notifications" label="Notifications" icon={<Bell className="h-5 w-5" />} badge={actionNotifications?.filter((n) => !n.is_read).length || 0} />
+            <DashboardAction href="/tools" label="Student Tools" icon={<Wrench className="h-5 w-5" />} />
+            <DashboardAction href="/history" label="History" icon={<History className="h-5 w-5" />} />
+            <DashboardAction href="/courses" label="Courses" icon={<BookOpen className="h-5 w-5" />} />
+            <DashboardAction href="/account" label="Profile" icon={<UserRound className="h-5 w-5" />} />
+          </div>
+        </section>
+
+        {purchases?.[0] ? <section className="mt-7">
+          <div className="rounded-2xl border bg-gradient-to-br from-primary/8 via-card to-card p-4 shadow-sm sm:p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Continue with your latest purchase</p><h2 className="mt-1 truncate text-lg font-bold">{((purchases[0].files as { title?: string | null } | null)?.title) ?? "Your resource"}</h2><p className="mt-1 text-sm text-muted-foreground">Open your latest purchased resource and continue from there.</p></div>
+              <Button asChild className="shrink-0"><Link href={`/files/${purchases[0].file_id}`}>Continue</Link></Button>
+            </div>
+          </div>
+        </section> : null}
 
         <div className="mt-4 rounded-xl border bg-muted/20 p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -159,6 +181,19 @@ export default async function DashboardPage() {
         <MyUploadsList files={myFiles ?? []} />
       </div>
     </div>
+  );
+}
+
+function DashboardAction({ href, label, icon, primary = false, badge = 0 }: { href: string; label: string; icon: React.ReactNode; primary?: boolean; badge?: number }) {
+  return (
+    <Link
+      href={href}
+      className={`group relative flex min-h-[92px] flex-col items-center justify-center gap-2 rounded-2xl border p-2.5 text-center shadow-[0_5px_0_rgba(15,23,42,0.05)] transition-transform duration-150 active:translate-y-0.5 hover:-translate-y-0.5 hover:shadow-[0_7px_0_rgba(15,23,42,0.08)] ${primary ? "border-primary/20 bg-primary text-primary-foreground" : "bg-card hover:bg-accent/70"}`}
+    >
+      <span className={`flex h-10 w-10 items-center justify-center rounded-xl border ${primary ? "border-primary-foreground/20 bg-primary-foreground/10" : "border-border bg-muted/40 group-hover:bg-background"}`}>{icon}</span>
+      <span className="text-[11px] font-semibold leading-tight sm:text-xs">{label}</span>
+      {badge > 0 ? <span className={`absolute right-1.5 top-1.5 rounded-full px-1.5 py-0.5 text-[9px] font-bold ${primary ? "bg-background text-primary" : "bg-primary text-primary-foreground"}`}>{badge}</span> : null}
+    </Link>
   );
 }
 

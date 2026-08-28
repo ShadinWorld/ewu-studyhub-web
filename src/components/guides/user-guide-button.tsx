@@ -188,11 +188,7 @@ export function UserGuideButton({ className = "", compact = false }: { className
         title="EWU StudyHub User Guide"
       >
         <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
-        {compact ? (
-          <>
-            <span className="sr-only sm:not-sr-only sm:inline">User Guide</span>
-          </>
-        ) : "User Guide"}
+        <span>{compact ? <><span className="sm:hidden">Guide</span><span className="hidden sm:inline">User Guide</span></> : "User Guide"}</span>
       </Button>
 
       {mounted && open && createPortal(
