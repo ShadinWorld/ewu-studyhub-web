@@ -61,3 +61,10 @@ The PWA icon set was refreshed with a dedicated StudyHub academic mark. Updated 
 - PDF.js continues to load from the existing CDN runtime path.
 - Contextual Help reuses current `help_items` slugs; no new database migration was introduced.
 - Historical duplicate migration numbers remain unchanged by design.
+
+
+## Follow-up: Help scope and PWA install UX
+- Reverted the V5 global route-wide ContextualHelp overlay. Existing page-level/admin-managed InfoButton placements remain the source of contextual help.
+- Added an install entry inside the authenticated user menu. Chromium browsers can use `beforeinstallprompt`; other cases receive browser-specific installation guidance.
+- Strengthened the manifest with explicit `id`, `scope`, and `prefer_related_applications: false`.
+- PWA installation availability remains browser/device dependent; the app now gives users a discoverable in-product path instead of relying only on browser UI.

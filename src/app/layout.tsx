@@ -9,7 +9,6 @@ import { PullToRefresh } from "@/components/shared/pull-to-refresh";
 import { ServiceWorkerRegister } from "@/components/shared/service-worker-register";
 import { SwipeBackGesture } from "@/components/navigation/swipe-back";
 import { BackToTopButton } from "@/components/ux/back-to-top";
-import { ContextualHelp } from "@/components/ux/contextual-help";
 
 
 export const metadata: Metadata = {
@@ -44,7 +43,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </RealtimeSyncProvider>
           <MobileBottomNav />
           <WhatsAppSupportButton />
-          <ContextualHelp />
           <BackToTopButton />
           <Toaster richColors position="top-center" />
         </ThemeProvider>

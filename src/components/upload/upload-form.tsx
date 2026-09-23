@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RESOURCE_CATEGORIES, SEMESTERS } from "@/lib/constants";
 import type { Department, Course } from "@/types/database.types";
-import { FilePreviewModal } from "@/components/ux/file-preview-modal";
+import { FilePreviewModal } from "@/components/ux/file-preview-modal";import { InfoButton } from "@/components/ux/info-button";
+
 
 const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, "");
 
@@ -356,7 +357,24 @@ export function UploadForm({
         {aiError && <div className="mt-2 rounded-lg border border-destructive/20 bg-destructive/5 p-2 text-xs text-destructive">{aiError}</div>}
       </div>
       <div className="space-y-2">
-        <Label htmlFor="title">Title</Label>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <Label htmlFor="title">Title</Label>
+            <p className="mt-1 text-xs text-muted-foreground">Use a clear title so students immediately know what this resource contains.</p>
+          </div>
+          <InfoButton slug="seller_upload" title="Resource Upload">
+            <div className="space-y-3">
+              <p>Choose the correct course, category and pricing before submitting.</p>
+              <ul className="space-y-2 pl-5" style={{ listStyleType: "disc" }}>
+                <li>Maximum 3 files per resource.</li>
+                <li>Each file can be up to 100MB.</li>
+                <li>ZIP, RAR and 7Z archives are not accepted.</li>
+                <li>Tap a selected file to preview it before you submit.</li>
+                <li>Paid resources keep the seller price separate from the platform fee.</li>
+              </ul>
+            </div>
+          </InfoButton>
+        </div>
         <Input id="title" name="title" required minLength={5} maxLength={150} placeholder="e.g. CSE303 Final Exam Notes — Complete" />
       </div>
 
