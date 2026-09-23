@@ -70,47 +70,60 @@ function trackAction(actionId: string, href: string, label: string) {
 
 export function AdaptiveQuickActions({ actions }: { actions: AdaptiveAction[] }) {
   const toneByAction: Record<string, string> = {
-    browse: "border-sky-200/80 bg-sky-50/80 text-sky-950 dark:border-sky-900/60 dark:bg-sky-950/35 dark:text-sky-100",
-    purchases: "border-violet-200/80 bg-violet-50/80 text-violet-950 dark:border-violet-900/60 dark:bg-violet-950/35 dark:text-violet-100",
-    saved: "border-rose-200/80 bg-rose-50/80 text-rose-950 dark:border-rose-900/60 dark:bg-rose-950/35 dark:text-rose-100",
-    requests: "border-amber-200/80 bg-amber-50/80 text-amber-950 dark:border-amber-900/60 dark:bg-amber-950/35 dark:text-amber-100",
-    notifications: "border-orange-200/80 bg-orange-50/80 text-orange-950 dark:border-orange-900/60 dark:bg-orange-950/35 dark:text-orange-100",
-    tools: "border-teal-200/80 bg-teal-50/80 text-teal-950 dark:border-teal-900/60 dark:bg-teal-950/35 dark:text-teal-100",
-    history: "border-indigo-200/80 bg-indigo-50/80 text-indigo-950 dark:border-indigo-900/60 dark:bg-indigo-950/35 dark:text-indigo-100",
-    courses: "border-emerald-200/80 bg-emerald-50/80 text-emerald-950 dark:border-emerald-900/60 dark:bg-emerald-950/35 dark:text-emerald-100",
-    account: "border-slate-200/80 bg-slate-50/90 text-slate-950 dark:border-slate-800 dark:bg-slate-900/65 dark:text-slate-100",
-    upload: "border-emerald-200/80 bg-emerald-50/80 text-emerald-950 dark:border-emerald-900/60 dark:bg-emerald-950/35 dark:text-emerald-100",
-    sales: "border-sky-200/80 bg-sky-50/80 text-sky-950 dark:border-sky-900/60 dark:bg-sky-950/35 dark:text-sky-100",
-    "payment-settings": "border-amber-200/80 bg-amber-50/80 text-amber-950 dark:border-amber-900/60 dark:bg-amber-950/35 dark:text-amber-100",
+    browse: "border-sky-200 bg-gradient-to-br from-sky-100 via-sky-50 to-white text-sky-950 dark:border-sky-800/70 dark:from-sky-950/70 dark:via-sky-900/45 dark:to-sky-950/20 dark:text-sky-50",
+    purchases: "border-violet-200 bg-gradient-to-br from-violet-100 via-violet-50 to-white text-violet-950 dark:border-violet-800/70 dark:from-violet-950/70 dark:via-violet-900/45 dark:to-violet-950/20 dark:text-violet-50",
+    saved: "border-rose-200 bg-gradient-to-br from-rose-100 via-rose-50 to-white text-rose-950 dark:border-rose-800/70 dark:from-rose-950/70 dark:via-rose-900/45 dark:to-rose-950/20 dark:text-rose-50",
+    requests: "border-amber-200 bg-gradient-to-br from-amber-100 via-amber-50 to-white text-amber-950 dark:border-amber-800/70 dark:from-amber-950/70 dark:via-amber-900/45 dark:to-amber-950/20 dark:text-amber-50",
+    notifications: "border-orange-200 bg-gradient-to-br from-orange-100 via-orange-50 to-white text-orange-950 dark:border-orange-800/70 dark:from-orange-950/70 dark:via-orange-900/45 dark:to-orange-950/20 dark:text-orange-50",
+    tools: "border-teal-200 bg-gradient-to-br from-teal-100 via-teal-50 to-white text-teal-950 dark:border-teal-800/70 dark:from-teal-950/70 dark:via-teal-900/45 dark:to-teal-950/20 dark:text-teal-50",
+    history: "border-indigo-200 bg-gradient-to-br from-indigo-100 via-indigo-50 to-white text-indigo-950 dark:border-indigo-800/70 dark:from-indigo-950/70 dark:via-indigo-900/45 dark:to-indigo-950/20 dark:text-indigo-50",
+    courses: "border-emerald-200 bg-gradient-to-br from-emerald-100 via-emerald-50 to-white text-emerald-950 dark:border-emerald-800/70 dark:from-emerald-950/70 dark:via-emerald-900/45 dark:to-emerald-950/20 dark:text-emerald-50",
+    account: "border-slate-200 bg-gradient-to-br from-slate-100 via-slate-50 to-white text-slate-950 dark:border-slate-700 dark:from-slate-900 dark:via-slate-800/70 dark:to-slate-900/40 dark:text-slate-50",
+    downloads: "border-blue-200 bg-gradient-to-br from-blue-100 via-blue-50 to-white text-blue-950 dark:border-blue-800/70 dark:from-blue-950/70 dark:via-blue-900/45 dark:to-blue-950/20 dark:text-blue-50",
+    departments: "border-cyan-200 bg-gradient-to-br from-cyan-100 via-cyan-50 to-white text-cyan-950 dark:border-cyan-800/70 dark:from-cyan-950/70 dark:via-cyan-900/45 dark:to-cyan-950/20 dark:text-cyan-50",
+    trending: "border-pink-200 bg-gradient-to-br from-pink-100 via-pink-50 to-white text-pink-950 dark:border-pink-800/70 dark:from-pink-950/70 dark:via-pink-900/45 dark:to-pink-950/20 dark:text-pink-50",
+    support: "border-cyan-200 bg-gradient-to-br from-cyan-100 via-cyan-50 to-white text-cyan-950 dark:border-cyan-800/70 dark:from-cyan-950/70 dark:via-cyan-900/45 dark:to-cyan-950/20 dark:text-cyan-50",
+    "become-seller": "border-fuchsia-200 bg-gradient-to-br from-fuchsia-100 via-fuchsia-50 to-white text-fuchsia-950 dark:border-fuchsia-800/70 dark:from-fuchsia-950/70 dark:via-fuchsia-900/45 dark:to-fuchsia-950/20 dark:text-fuchsia-50",
+    upload: "border-emerald-200 bg-gradient-to-br from-emerald-100 via-emerald-50 to-white text-emerald-950 dark:border-emerald-800/70 dark:from-emerald-950/70 dark:via-emerald-900/45 dark:to-emerald-950/20 dark:text-emerald-50",
+    sales: "border-sky-200 bg-gradient-to-br from-sky-100 via-sky-50 to-white text-sky-950 dark:border-sky-800/70 dark:from-sky-950/70 dark:via-sky-900/45 dark:to-sky-950/20 dark:text-sky-50",
+    "payment-settings": "border-amber-200 bg-gradient-to-br from-amber-100 via-amber-50 to-white text-amber-950 dark:border-amber-800/70 dark:from-amber-950/70 dark:via-amber-900/45 dark:to-amber-950/20 dark:text-amber-50",
+    "pending-approval": "border-orange-200 bg-gradient-to-br from-orange-100 via-orange-50 to-white text-orange-950 dark:border-orange-800/70 dark:from-orange-950/70 dark:via-orange-900/45 dark:to-orange-950/20 dark:text-orange-50",
+    "my-resources": "border-cyan-200 bg-gradient-to-br from-cyan-100 via-cyan-50 to-white text-cyan-950 dark:border-cyan-800/70 dark:from-cyan-950/70 dark:via-cyan-900/45 dark:to-cyan-950/20 dark:text-cyan-50",
+    "resource-requests": "border-fuchsia-200 bg-gradient-to-br from-fuchsia-100 via-fuchsia-50 to-white text-fuchsia-950 dark:border-fuchsia-800/70 dark:from-fuchsia-950/70 dark:via-fuchsia-900/45 dark:to-fuchsia-950/20 dark:text-fuchsia-50",
   };
 
   const iconByAction: Record<string, string> = {
-    browse: "bg-sky-500/12 text-sky-700 dark:bg-sky-400/15 dark:text-sky-200",
-    purchases: "bg-violet-500/12 text-violet-700 dark:bg-violet-400/15 dark:text-violet-200",
-    saved: "bg-rose-500/12 text-rose-700 dark:bg-rose-400/15 dark:text-rose-200",
-    requests: "bg-amber-500/12 text-amber-700 dark:bg-amber-400/15 dark:text-amber-200",
-    notifications: "bg-orange-500/12 text-orange-700 dark:bg-orange-400/15 dark:text-orange-200",
-    tools: "bg-teal-500/12 text-teal-700 dark:bg-teal-400/15 dark:text-teal-200",
-    history: "bg-indigo-500/12 text-indigo-700 dark:bg-indigo-400/15 dark:text-indigo-200",
-    courses: "bg-emerald-500/12 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-200",
-    account: "bg-slate-500/12 text-slate-700 dark:bg-slate-400/15 dark:text-slate-200",
-    upload: "bg-emerald-500/12 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-200",
-    sales: "bg-sky-500/12 text-sky-700 dark:bg-sky-400/15 dark:text-sky-200",
-    "payment-settings": "bg-amber-500/12 text-amber-700 dark:bg-amber-400/15 dark:text-amber-200",
+    browse: "bg-sky-500/18 text-sky-700 dark:bg-sky-400/15 dark:text-sky-200",
+    purchases: "bg-violet-500/18 text-violet-700 dark:bg-violet-400/15 dark:text-violet-200",
+    saved: "bg-rose-500/18 text-rose-700 dark:bg-rose-400/15 dark:text-rose-200",
+    requests: "bg-amber-500/18 text-amber-700 dark:bg-amber-400/15 dark:text-amber-200",
+    notifications: "bg-orange-500/18 text-orange-700 dark:bg-orange-400/15 dark:text-orange-200",
+    tools: "bg-teal-500/18 text-teal-700 dark:bg-teal-400/15 dark:text-teal-200",
+    history: "bg-indigo-500/18 text-indigo-700 dark:bg-indigo-400/15 dark:text-indigo-200",
+    courses: "bg-emerald-500/18 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-200",
+    account: "bg-slate-500/18 text-slate-700 dark:bg-slate-400/15 dark:text-slate-200",
+    downloads: "bg-blue-500/18 text-blue-700 dark:bg-blue-400/15 dark:text-blue-200",
+    departments: "bg-cyan-500/18 text-cyan-700 dark:bg-cyan-400/15 dark:text-cyan-200",
+    trending: "bg-pink-500/18 text-pink-700 dark:bg-pink-400/15 dark:text-pink-200",
+    support: "bg-cyan-500/18 text-cyan-700 dark:bg-cyan-400/15 dark:text-cyan-200",
+    "become-seller": "bg-fuchsia-500/18 text-fuchsia-700 dark:bg-fuchsia-400/15 dark:text-fuchsia-200",
+    upload: "bg-emerald-500/18 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-200",
+    sales: "bg-sky-500/18 text-sky-700 dark:bg-sky-400/15 dark:text-sky-200",
+    "payment-settings": "bg-amber-500/18 text-amber-700 dark:bg-amber-400/15 dark:text-amber-200",
   };
 
   return (
     <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
       {actions.map((action) => {
         const Icon = ICONS[action.icon];
-        const cardTone = toneByAction[action.id] ?? "border-border bg-card text-foreground";
+        const cardTone = toneByAction[action.id] ?? "border-slate-200 bg-gradient-to-br from-slate-100 via-white to-slate-50 text-slate-950 dark:border-slate-700 dark:from-slate-900 dark:via-slate-800/70 dark:to-slate-900/40 dark:text-slate-50";
         const iconTone = iconByAction[action.id] ?? "bg-muted text-primary";
         return (
           <Link
             key={action.id}
             href={action.href}
             onClick={() => trackAction(action.id, action.href, action.label)}
-            className={`group relative min-h-[92px] overflow-hidden rounded-2xl border p-3 shadow-[0_10px_22px_-16px_rgba(15,23,42,0.55)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_-18px_rgba(15,23,42,0.65)] active:translate-y-0 sm:min-h-[108px] sm:p-4 ${cardTone}`}
+            className={`dashboard-action-card group relative min-h-[92px] overflow-hidden rounded-2xl border p-3 shadow-[0_12px_24px_-14px_rgba(15,23,42,0.42)] ring-1 ring-black/[0.03] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_30px_-14px_rgba(15,23,42,0.48)] active:translate-y-0 sm:min-h-[108px] sm:p-4 ${cardTone}`}
           >
             <span className="absolute -right-5 -top-6 h-16 w-16 rounded-full bg-white/35 blur-2xl dark:bg-white/5" />
             <span className={`relative flex h-9 w-9 items-center justify-center rounded-xl ${iconTone} ring-1 ring-black/5 dark:ring-white/10`}>

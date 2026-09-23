@@ -3,12 +3,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { CheckCircle2, Loader2, Search, Sparkles, UploadCloud, X } from "lucide-react";
+import { CheckCircle2, Eye, Loader2, Search, Sparkles, UploadCloud, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RESOURCE_CATEGORIES, SEMESTERS } from "@/lib/constants";
 import type { Department, Course } from "@/types/database.types";
+import { FilePreviewModal } from "@/components/ux/file-preview-modal";
 
 const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, "");
 
@@ -45,6 +46,7 @@ export function UploadForm({
   const [semester, setSemester] = useState<string>("Spring");
   const [submitting, setSubmitting] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
+  const [previewFile, setPreviewFile] = useState<File | null>(null);
   const MAX_BATCH_FILES = 3;
   const [uploadStatuses, setUploadStatuses] = useState<Array<{ name: string; status: "queued" | "uploading" | "success" | "error"; message?: string }>>([]);
   const aiConsent = true;
@@ -145,6 +147,7 @@ export function UploadForm({
       return;
     }
     setFiles(deduped);
+    setPreviewFile((current) => current && deduped.includes(current) ? current : null);
     setUploadStatuses([]);
     setAiAnalysis(null);
     setSellerAIOverrides({ tags: [], topics: [], difficulty: "", reading_time_minutes: null });
@@ -280,6 +283,7 @@ export function UploadForm({
   }
 
   return (
+    <>
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-3">
@@ -298,12 +302,15 @@ export function UploadForm({
           {files.length > 0 && (
             <div className="mt-4 space-y-2">
               {files.map((file) => (
-                <div key={`${file.name}-${file.lastModified}`} className="flex items-center gap-3 rounded-xl border bg-card px-3 py-2.5">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{file.name}</p>
-                    <p className="text-[11px] text-muted-foreground">{file.type || "File"} · {(file.size / 1024 / 1024).toFixed(1)} MB</p>
-                  </div>
-                  <button type="button" onClick={() => { setFiles((current) => current.filter((item) => item !== file)); setAiAnalysis(null); setAiError(""); }} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border text-muted-foreground hover:bg-accent hover:text-foreground" aria-label={`Remove ${file.name}`}>
+                <div key={`${file.name}-${file.lastModified}`} className="flex items-center gap-2 rounded-xl border bg-card px-2.5 py-2.5 transition hover:border-primary/35 hover:bg-primary/[0.02]">
+                  <button type="button" onClick={() => setPreviewFile(file)} className="flex min-w-0 flex-1 items-center gap-3 rounded-lg px-1.5 py-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label={`Preview ${file.name}`}>
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Eye className="h-4 w-4" /></span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium">{file.name}</span>
+                      <span className="block text-[11px] text-muted-foreground">{file.type || "File"} · {(file.size / 1024 / 1024).toFixed(1)} MB · Tap to preview</span>
+                    </span>
+                  </button>
+                  <button type="button" onClick={() => { setFiles((current) => current.filter((item) => item !== file)); setPreviewFile((current) => current === file ? null : current); setAiAnalysis(null); setAiError(""); }} className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border text-muted-foreground hover:bg-accent hover:text-foreground" aria-label={`Remove ${file.name}`}>
                     <X className="h-4 w-4" />
                   </button>
                 </div>
@@ -572,5 +579,7 @@ export function UploadForm({
         {submitting ? `Uploading ${uploadStatuses.filter((x) => x.status === "success").length}/${files.length}…` : "Submit for review"}
       </Button>
     </form>
+    {previewFile && <FilePreviewModal file={previewFile} onClose={() => setPreviewFile(null)} />}
+    </>
   );
 }
