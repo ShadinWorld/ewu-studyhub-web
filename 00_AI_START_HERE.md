@@ -41,6 +41,3 @@ The user may move this project between ChatGPT accounts. The ZIP must be suffici
 - Added per-seller, per-file-set AI result cache via migration `0047_ai_free_tier_resilience.sql`.
 - Added frontend retry countdown to prevent immediate repeat calls after transient errors.
 - Original files are not stored in the AI cache; only structured AI output is cached.
-
-
-V5 follow-up: the global route-wide contextual Help overlay was intentionally removed; existing page-level InfoButton placements remain. PWA install discoverability was improved with a user-menu install action and manifest hardening.

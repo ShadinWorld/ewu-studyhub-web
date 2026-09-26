@@ -181,11 +181,11 @@ export default async function AdminOverviewPage() {
       </section>
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <QuickLink href="/admin/users" icon={<Users className="h-4 w-4" />} tone="sky" title="Users & roles" text="Manage accounts and permissions" />
-        <QuickLink href="/admin/resources" icon={<BookOpen className="h-4 w-4" />} tone="emerald" title="Resource control" text="Review and manage the catalog" />
-        <QuickLink href="/admin/settings" icon={<ShieldCheck className="h-4 w-4" />} tone="amber" title="Security & payments" text="bKash, commission and admin controls" />
-        <QuickLink href="/admin/search" icon={<Search className="h-4 w-4" />} tone="violet" title="Global search" text="Find users, courses and resources" />
-        <QuickLink href="/admin/storage" icon={<HardDrive className="h-4 w-4" />} tone="cyan" title="Storage" text="Monitor usage and clean orphaned files" />
+        <QuickLink href="/admin/users" icon={<Users className="h-4 w-4" />} title="Users & roles" text="Manage accounts and permissions" />
+        <QuickLink href="/admin/resources" icon={<BookOpen className="h-4 w-4" />} title="Resource control" text="Review and manage the catalog" />
+        <QuickLink href="/admin/settings" icon={<ShieldCheck className="h-4 w-4" />} title="Security & payments" text="bKash, commission and admin controls" />
+        <QuickLink href="/admin/search" icon={<Search className="h-4 w-4" />} title="Global search" text="Find users, courses and resources" />
+        <QuickLink href="/admin/storage" icon={<HardDrive className="h-4 w-4" />} title="Storage" text="Monitor usage and clean orphaned files" />
       </section>
     </div>
   );
@@ -195,14 +195,4 @@ function StatCard({ label, value, icon, highlight }: { label: string; value: str
   return <Card className={highlight ? "border-primary/40 bg-primary/[0.03]" : ""}><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-xs font-semibold text-muted-foreground">{label}</CardTitle><span className="text-primary">{icon}</span></CardHeader><CardContent><div className="truncate text-lg font-bold sm:text-2xl">{value}</div></CardContent></Card>;
 }
 function MiniMetric({ label, value }: { label: string; value: string }) { return <div className="rounded-xl border bg-muted/20 p-3"><p className="text-[11px] text-muted-foreground">{label}</p><p className="mt-1 text-lg font-bold">{value}</p></div>; }
-function QuickLink({ href, icon, title, text, tone }: { href: string; icon: React.ReactNode; title: string; text: string; tone: "sky" | "emerald" | "amber" | "violet" | "cyan" }) {
-  const toneClass = {
-    sky: "border-sky-200 bg-gradient-to-br from-sky-50 via-card to-background text-sky-950 dark:border-sky-800/60 dark:from-sky-950/35 dark:text-sky-50",
-    emerald: "border-emerald-200 bg-gradient-to-br from-emerald-50 via-card to-background text-emerald-950 dark:border-emerald-800/60 dark:from-emerald-950/35 dark:text-emerald-50",
-    amber: "border-amber-200 bg-gradient-to-br from-amber-50 via-card to-background text-amber-950 dark:border-amber-800/60 dark:from-amber-950/35 dark:text-amber-50",
-    violet: "border-violet-200 bg-gradient-to-br from-violet-50 via-card to-background text-violet-950 dark:border-violet-800/60 dark:from-violet-950/35 dark:text-violet-50",
-    cyan: "border-cyan-200 bg-gradient-to-br from-cyan-50 via-card to-background text-cyan-950 dark:border-cyan-800/60 dark:from-cyan-950/35 dark:text-cyan-50",
-  }[tone];
-  const iconTone = { sky: "text-sky-600 dark:text-sky-300", emerald: "text-emerald-600 dark:text-emerald-300", amber: "text-amber-600 dark:text-amber-300", violet: "text-violet-600 dark:text-violet-300", cyan: "text-cyan-600 dark:text-cyan-300" }[tone];
-  return <Link href={href} className={`group relative overflow-hidden rounded-2xl border p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-lg ${toneClass}`}><span className={`inline-flex h-9 w-9 items-center justify-center rounded-xl bg-background/75 ring-1 ring-black/5 dark:ring-white/10 ${iconTone}`}>{icon}</span><p className="mt-3 font-semibold">{title}</p><p className="mt-1 text-xs leading-5 text-muted-foreground">{text}</p><span className="absolute right-3 top-3 text-current/35 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">↗</span></Link>;
-}
+function QuickLink({ href, icon, title, text }: { href: string; icon: React.ReactNode; title: string; text: string }) { return <Link href={href} className="rounded-2xl border bg-card p-4 transition hover:border-primary/40 hover:shadow-md"><span className="text-primary">{icon}</span><p className="mt-3 font-semibold">{title}</p><p className="mt-1 text-xs leading-5 text-muted-foreground">{text}</p></Link>; }

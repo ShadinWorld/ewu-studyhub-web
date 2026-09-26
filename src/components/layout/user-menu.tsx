@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { logoutAction } from "@/app/(auth)/actions";
 import type { UserRole } from "@/types/database.types";
-import { PwaInstallMenuItem } from "@/components/pwa/pwa-install-menu-item";
 
 type Role = UserRole;
 
@@ -102,7 +101,6 @@ export function UserMenu({ fullName, email, avatarUrl, role, isSeller }: UserMen
         )}
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild><Link href="/account" className="cursor-pointer"><Settings2 className="mr-2 h-4 w-4" />Account</Link></DropdownMenuItem>
-        <PwaInstallMenuItem />
         <DropdownMenuItem asChild className="cursor-pointer text-destructive focus:text-destructive">
           <form action={logoutAction} className="w-full">
             <button type="submit" className="flex w-full items-center">

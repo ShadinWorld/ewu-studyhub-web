@@ -2,8 +2,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { HardDrive, Trash2, AlertTriangle } from "lucide-react";
-import { deleteStorageObject } from "./actions";import { InfoButton } from "@/components/ux/info-button";
-
+import { deleteStorageObject } from "./actions";
 
 function formatBytes(bytes: number) { if (!bytes) return "0 B"; const u=["B","KB","MB","GB","TB"]; const i=Math.min(Math.floor(Math.log(bytes)/Math.log(1024)),u.length-1); return `${(bytes/1024**i).toFixed(i===0?0:2)} ${u[i]}`; }
 export default async function AdminStoragePage() {
@@ -15,7 +14,7 @@ export default async function AdminStoragePage() {
   const objectCount=rows.reduce((s,r)=>s+Number(r.object_count||0),0);
   // Supabase storage quotas vary by plan, so do not invent a quota. Show actual usage by bucket.
   return <div className="space-y-6">
-    <div><p className="text-sm font-semibold text-primary">Infrastructure</p><h2 className="text-2xl font-bold">Storage</h2><InfoButton slug="admin_storage" title="Storage Health"><div className="space-y-3"><p>Storage Health helps you monitor how much data each StudyHub bucket is using and identify likely orphaned objects.</p><ul className="space-y-2 pl-5" style={{ listStyleType: "disc" }}><li>Stored bytes and object counts are shown by bucket.</li><li>Cleanup candidates are objects not linked to current database records.</li><li>Storage usage and download/egress traffic are different metrics.</li></ul></div></InfoButton><p className="mt-1 text-sm text-muted-foreground">Monitor every StudyHub storage bucket and clean up unlinked objects before they become waste.</p></div>
+    <div><p className="text-sm font-semibold text-primary">Infrastructure</p><h2 className="text-2xl font-bold">Storage</h2><p className="mt-1 text-sm text-muted-foreground">Monitor every StudyHub storage bucket and clean up unlinked objects before they become waste.</p></div>
     {usageError ? <Card className="border-destructive/30"><CardContent className="p-5 text-sm text-destructive">Storage statistics are unavailable: {usageError.message}</CardContent></Card> : <>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3"><Metric label="Total stored" value={formatBytes(total)} /><Metric label="Objects" value={objectCount.toLocaleString()} /><Metric label="Buckets" value={String(rows.length)} /></div>
       <Card><CardHeader><CardTitle className="flex items-center gap-2"><HardDrive className="h-5 w-5 text-primary" />Bucket usage</CardTitle></CardHeader><CardContent className="space-y-3">{rows.map(r=>{const bytes=Number(r.total_bytes||0);const pct=total?Math.round(bytes/total*100):0;return <div key={r.bucket_id} className="rounded-xl border p-4"><div className="flex items-center justify-between gap-3"><div><p className="font-semibold">{r.bucket_id}</p><p className="text-xs text-muted-foreground">{Number(r.object_count).toLocaleString()} objects</p></div><p className="font-bold">{formatBytes(bytes)}</p></div><div className="mt-3 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{width:`${pct}%`}} /></div><p className="mt-1 text-[11px] text-muted-foreground">{pct}% of StudyHub stored bytes</p></div>})}</CardContent></Card>

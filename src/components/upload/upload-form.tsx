@@ -2,15 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { toast } from "sonner";
-import { CheckCircle2, Eye, Loader2, Search, Sparkles, UploadCloud, X } from "lucide-react";
+import { CheckCircle2, Loader2, Search, Sparkles, UploadCloud, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RESOURCE_CATEGORIES, SEMESTERS } from "@/lib/constants";
 import type { Department, Course } from "@/types/database.types";
-import { FilePreviewModal } from "@/components/ux/file-preview-modal";import { InfoButton } from "@/components/ux/info-button";
-
 
 const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, "");
 
@@ -34,10 +33,12 @@ export function UploadForm({
   departments,
   courses,
   allowAdmin = false,
+  hasBkash = false,
 }: {
   departments: UploadDepartment[];
   courses: UploadCourse[];
   allowAdmin?: boolean;
+  hasBkash?: boolean;
 }) {
   const router = useRouter();
   const [pricingType, setPricingType] = useState<"free" | "paid">("free");
@@ -47,7 +48,6 @@ export function UploadForm({
   const [semester, setSemester] = useState<string>("Spring");
   const [submitting, setSubmitting] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
-  const [previewFile, setPreviewFile] = useState<File | null>(null);
   const MAX_BATCH_FILES = 3;
   const [uploadStatuses, setUploadStatuses] = useState<Array<{ name: string; status: "queued" | "uploading" | "success" | "error"; message?: string }>>([]);
   const aiConsent = true;
@@ -148,7 +148,6 @@ export function UploadForm({
       return;
     }
     setFiles(deduped);
-    setPreviewFile((current) => current && deduped.includes(current) ? current : null);
     setUploadStatuses([]);
     setAiAnalysis(null);
     setSellerAIOverrides({ tags: [], topics: [], difficulty: "", reading_time_minutes: null });
@@ -244,6 +243,10 @@ export function UploadForm({
         toast.error(`Price must be between ৳${MIN_PRICE} and ৳${MAX_PRICE}.`);
         return;
       }
+      if (!hasBkash && !allowAdmin) {
+        toast.error("Paid Resource বিক্রি করে earnings পেতে আগে bKash payout number যোগ করুন। Free Resource upload করতে bKash number এখনই প্রয়োজন নেই।");
+        return;
+      }
     }
 
     setSubmitting(true);
@@ -284,7 +287,6 @@ export function UploadForm({
   }
 
   return (
-    <>
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-3">
@@ -303,15 +305,12 @@ export function UploadForm({
           {files.length > 0 && (
             <div className="mt-4 space-y-2">
               {files.map((file) => (
-                <div key={`${file.name}-${file.lastModified}`} className="flex items-center gap-2 rounded-xl border bg-card px-2.5 py-2.5 transition hover:border-primary/35 hover:bg-primary/[0.02]">
-                  <button type="button" onClick={() => setPreviewFile(file)} className="flex min-w-0 flex-1 items-center gap-3 rounded-lg px-1.5 py-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label={`Preview ${file.name}`}>
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Eye className="h-4 w-4" /></span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-medium">{file.name}</span>
-                      <span className="block text-[11px] text-muted-foreground">{file.type || "File"} · {(file.size / 1024 / 1024).toFixed(1)} MB · Tap to preview</span>
-                    </span>
-                  </button>
-                  <button type="button" onClick={() => { setFiles((current) => current.filter((item) => item !== file)); setPreviewFile((current) => current === file ? null : current); setAiAnalysis(null); setAiError(""); }} className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border text-muted-foreground hover:bg-accent hover:text-foreground" aria-label={`Remove ${file.name}`}>
+                <div key={`${file.name}-${file.lastModified}`} className="flex items-center gap-3 rounded-xl border bg-card px-3 py-2.5">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{file.name}</p>
+                    <p className="text-[11px] text-muted-foreground">{file.type || "File"} · {(file.size / 1024 / 1024).toFixed(1)} MB</p>
+                  </div>
+                  <button type="button" onClick={() => { setFiles((current) => current.filter((item) => item !== file)); setAiAnalysis(null); setAiError(""); }} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border text-muted-foreground hover:bg-accent hover:text-foreground" aria-label={`Remove ${file.name}`}>
                     <X className="h-4 w-4" />
                   </button>
                 </div>
@@ -357,24 +356,7 @@ export function UploadForm({
         {aiError && <div className="mt-2 rounded-lg border border-destructive/20 bg-destructive/5 p-2 text-xs text-destructive">{aiError}</div>}
       </div>
       <div className="space-y-2">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <Label htmlFor="title">Title</Label>
-            <p className="mt-1 text-xs text-muted-foreground">Use a clear title so students immediately know what this resource contains.</p>
-          </div>
-          <InfoButton slug="seller_upload" title="Resource Upload">
-            <div className="space-y-3">
-              <p>Choose the correct course, category and pricing before submitting.</p>
-              <ul className="space-y-2 pl-5" style={{ listStyleType: "disc" }}>
-                <li>Maximum 3 files per resource.</li>
-                <li>Each file can be up to 100MB.</li>
-                <li>ZIP, RAR and 7Z archives are not accepted.</li>
-                <li>Tap a selected file to preview it before you submit.</li>
-                <li>Paid resources keep the seller price separate from the platform fee.</li>
-              </ul>
-            </div>
-          </InfoButton>
-        </div>
+        <Label htmlFor="title">Title</Label>
         <Input id="title" name="title" required minLength={5} maxLength={150} placeholder="e.g. CSE303 Final Exam Notes — Complete" />
       </div>
 
@@ -546,6 +528,13 @@ export function UploadForm({
 
         {pricingType === "paid" && (
           <div className="pt-2 space-y-2">
+            {!hasBkash && !allowAdmin ? (
+              <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm leading-6 text-amber-800 dark:text-amber-200">
+                <p className="font-semibold">Paid Resource publish করতে bKash payout number লাগবে</p>
+                <p className="mt-1">আপনার Resource বিক্রি হলে যে bKash নম্বরে earnings পেতে চান, সেই নম্বরটি Payment Settings থেকে যোগ করুন। Free Resource upload করতে bKash number এখনই প্রয়োজন নেই.</p>
+                <Link href="/dashboard/payment-settings" className="mt-2 inline-flex font-semibold underline underline-offset-2">bKash Number যোগ করুন</Link>
+              </div>
+            ) : null}
             <Label>Price (৳)</Label>
             <div className="flex flex-wrap gap-2">
               {PRICE_PRESETS.map((p) => (
@@ -597,7 +586,5 @@ export function UploadForm({
         {submitting ? `Uploading ${uploadStatuses.filter((x) => x.status === "success").length}/${files.length}…` : "Submit for review"}
       </Button>
     </form>
-    {previewFile && <FilePreviewModal file={previewFile} onClose={() => setPreviewFile(null)} />}
-    </>
   );
 }

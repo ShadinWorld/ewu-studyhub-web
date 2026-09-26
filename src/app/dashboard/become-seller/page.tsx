@@ -23,7 +23,7 @@ export default async function BecomeSellerPage() {
     <div className="container max-w-lg py-10">
       <h1 className="text-2xl font-bold">Become a seller</h1>
       <p className="mb-8 text-muted-foreground">
-        Only verified EWU students can upload and sell resources — this keeps the marketplace trustworthy.
+        Verified sellers can upload Free Resources without payout setup. A bKash payout number is required before publishing Paid Resources so earnings can be sent to the number you choose.
       </p>
       <BecomeSellerForm profile={{ ...profile, account_email: user.email ?? null }} />
     </div>

@@ -56,7 +56,7 @@ export async function approveSeller(targetUserId: string) {
     title: "You're now a verified seller!",
     body: targetProfile?.seller_bkash_number
       ? "Your EWU student ID was approved and your bKash payout number was saved. You can start uploading resources."
-      : "Your EWU student ID was approved. Add your bKash payout number before requesting earnings.",
+      : "Your EWU student ID was approved. You can upload Free Resources now; add your bKash payout number before publishing Paid Resources or receiving earnings.",
     link: "/dashboard/upload",
   });
 

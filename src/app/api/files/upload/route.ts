@@ -48,30 +48,13 @@ export async function POST(request: Request) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("university_id, is_seller, role")
+    .select("university_id, is_seller, role, seller_bkash_number")
     .eq("id", user.id)
     .single();
 
   const isAdminUploader = profile?.role === "admin" || profile?.role === "super_admin";
   if (!profile?.is_seller && profile?.role !== "seller" && !isAdminUploader) {
     return NextResponse.json({ error: "You need to become a seller before uploading. Go to Dashboard → Become a Seller." }, { status: 403 });
-  }
-
-  if (!isAdminUploader) {
-    const { data: paymentSettings } = await supabase
-      .from("seller_payment_settings")
-      .select("bkash_number")
-      .eq("seller_id", user.id)
-      .maybeSingle();
-    if (!paymentSettings?.bkash_number) {
-      return NextResponse.json(
-        {
-          error:
-            "আপলোড করার আগে আপনার bKash পেআউট নম্বর যোগ করতে হবে — আপনার রিসোর্স বিক্রি হলে এই নম্বরেই টাকা পাঠানো হবে। Dashboard → Payment Settings এ গিয়ে নম্বরটি যোগ করুন।",
-        },
-        { status: 403 },
-      );
-    }
   }
 
   const formData = await request.formData();
@@ -126,6 +109,24 @@ export async function POST(request: Request) {
 
   const data = parsed.data;
   const tableOfContents = String(formData.get("tableOfContents") ?? "").trim().slice(0, 3000);
+
+  if (!isAdminUploader && data.pricingType === "paid") {
+    const { data: paymentSettings } = await supabase
+      .from("seller_payment_settings")
+      .select("bkash_number")
+      .eq("seller_id", user.id)
+      .maybeSingle();
+    const hasBkash = Boolean(paymentSettings?.bkash_number || profile?.seller_bkash_number);
+    if (!hasBkash) {
+      return NextResponse.json(
+        {
+          error:
+            "Paid Resource বিক্রি করে earnings পেতে আগে একটি bKash payout number যোগ করুন। Free Resource upload করতে bKash number এখনই প্রয়োজন নেই। Dashboard → Payment Settings থেকে bKash number যোগ করুন।",
+        },
+        { status: 403 },
+      );
+    }
+  }
   // Course/department may be completed by System AI after submission when Seller AI Autofill was not used.
   if (data.pricingType === "paid" && data.priceCents < 1000) return NextResponse.json({ error: "Paid resources must be priced at least ৳10." }, { status: 400 });
 

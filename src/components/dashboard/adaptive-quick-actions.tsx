@@ -79,11 +79,6 @@ export function AdaptiveQuickActions({ actions }: { actions: AdaptiveAction[] })
     history: "border-indigo-200 bg-gradient-to-br from-indigo-100 via-indigo-50 to-white text-indigo-950 dark:border-indigo-800/70 dark:from-indigo-950/70 dark:via-indigo-900/45 dark:to-indigo-950/20 dark:text-indigo-50",
     courses: "border-emerald-200 bg-gradient-to-br from-emerald-100 via-emerald-50 to-white text-emerald-950 dark:border-emerald-800/70 dark:from-emerald-950/70 dark:via-emerald-900/45 dark:to-emerald-950/20 dark:text-emerald-50",
     account: "border-slate-200 bg-gradient-to-br from-slate-100 via-slate-50 to-white text-slate-950 dark:border-slate-700 dark:from-slate-900 dark:via-slate-800/70 dark:to-slate-900/40 dark:text-slate-50",
-    downloads: "border-blue-200 bg-gradient-to-br from-blue-100 via-blue-50 to-white text-blue-950 dark:border-blue-800/70 dark:from-blue-950/70 dark:via-blue-900/45 dark:to-blue-950/20 dark:text-blue-50",
-    departments: "border-cyan-200 bg-gradient-to-br from-cyan-100 via-cyan-50 to-white text-cyan-950 dark:border-cyan-800/70 dark:from-cyan-950/70 dark:via-cyan-900/45 dark:to-cyan-950/20 dark:text-cyan-50",
-    trending: "border-pink-200 bg-gradient-to-br from-pink-100 via-pink-50 to-white text-pink-950 dark:border-pink-800/70 dark:from-pink-950/70 dark:via-pink-900/45 dark:to-pink-950/20 dark:text-pink-50",
-    support: "border-cyan-200 bg-gradient-to-br from-cyan-100 via-cyan-50 to-white text-cyan-950 dark:border-cyan-800/70 dark:from-cyan-950/70 dark:via-cyan-900/45 dark:to-cyan-950/20 dark:text-cyan-50",
-    "become-seller": "border-fuchsia-200 bg-gradient-to-br from-fuchsia-100 via-fuchsia-50 to-white text-fuchsia-950 dark:border-fuchsia-800/70 dark:from-fuchsia-950/70 dark:via-fuchsia-900/45 dark:to-fuchsia-950/20 dark:text-fuchsia-50",
     upload: "border-emerald-200 bg-gradient-to-br from-emerald-100 via-emerald-50 to-white text-emerald-950 dark:border-emerald-800/70 dark:from-emerald-950/70 dark:via-emerald-900/45 dark:to-emerald-950/20 dark:text-emerald-50",
     sales: "border-sky-200 bg-gradient-to-br from-sky-100 via-sky-50 to-white text-sky-950 dark:border-sky-800/70 dark:from-sky-950/70 dark:via-sky-900/45 dark:to-sky-950/20 dark:text-sky-50",
     "payment-settings": "border-amber-200 bg-gradient-to-br from-amber-100 via-amber-50 to-white text-amber-950 dark:border-amber-800/70 dark:from-amber-950/70 dark:via-amber-900/45 dark:to-amber-950/20 dark:text-amber-50",
@@ -102,11 +97,6 @@ export function AdaptiveQuickActions({ actions }: { actions: AdaptiveAction[] })
     history: "bg-indigo-500/18 text-indigo-700 dark:bg-indigo-400/15 dark:text-indigo-200",
     courses: "bg-emerald-500/18 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-200",
     account: "bg-slate-500/18 text-slate-700 dark:bg-slate-400/15 dark:text-slate-200",
-    downloads: "bg-blue-500/18 text-blue-700 dark:bg-blue-400/15 dark:text-blue-200",
-    departments: "bg-cyan-500/18 text-cyan-700 dark:bg-cyan-400/15 dark:text-cyan-200",
-    trending: "bg-pink-500/18 text-pink-700 dark:bg-pink-400/15 dark:text-pink-200",
-    support: "bg-cyan-500/18 text-cyan-700 dark:bg-cyan-400/15 dark:text-cyan-200",
-    "become-seller": "bg-fuchsia-500/18 text-fuchsia-700 dark:bg-fuchsia-400/15 dark:text-fuchsia-200",
     upload: "bg-emerald-500/18 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-200",
     sales: "bg-sky-500/18 text-sky-700 dark:bg-sky-400/15 dark:text-sky-200",
     "payment-settings": "bg-amber-500/18 text-amber-700 dark:bg-amber-400/15 dark:text-amber-200",
@@ -116,14 +106,14 @@ export function AdaptiveQuickActions({ actions }: { actions: AdaptiveAction[] })
     <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
       {actions.map((action) => {
         const Icon = ICONS[action.icon];
-        const cardTone = toneByAction[action.id] ?? "border-slate-200 bg-gradient-to-br from-slate-100 via-white to-slate-50 text-slate-950 dark:border-slate-700 dark:from-slate-900 dark:via-slate-800/70 dark:to-slate-900/40 dark:text-slate-50";
+        const cardTone = toneByAction[action.id] ?? "border-border bg-card text-foreground";
         const iconTone = iconByAction[action.id] ?? "bg-muted text-primary";
         return (
           <Link
             key={action.id}
             href={action.href}
             onClick={() => trackAction(action.id, action.href, action.label)}
-            className={`dashboard-action-card group relative min-h-[92px] overflow-hidden rounded-2xl border p-3 shadow-[0_12px_24px_-14px_rgba(15,23,42,0.42)] ring-1 ring-black/[0.03] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_30px_-14px_rgba(15,23,42,0.48)] active:translate-y-0 sm:min-h-[108px] sm:p-4 ${cardTone}`}
+            className={`group relative min-h-[92px] overflow-hidden rounded-2xl border p-3 shadow-[0_12px_24px_-14px_rgba(15,23,42,0.42)] ring-1 ring-black/[0.03] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_30px_-14px_rgba(15,23,42,0.48)] active:translate-y-0 sm:min-h-[108px] sm:p-4 ${cardTone}`}
           >
             <span className="absolute -right-5 -top-6 h-16 w-16 rounded-full bg-white/35 blur-2xl dark:bg-white/5" />
             <span className={`relative flex h-9 w-9 items-center justify-center rounded-xl ${iconTone} ring-1 ring-black/5 dark:ring-white/10`}>

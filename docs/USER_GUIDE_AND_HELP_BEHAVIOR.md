@@ -22,6 +22,3 @@ The `User Guide` trigger is available from the navbar for logged-in and logged-o
 ### Header placement update
 
 The primary **User Guide** entry point is available in the global site header for **Guest, Student, Seller, and Admin** sessions. On mobile it stays visible as a compact `Guide` button; on larger screens it expands to `User Guide`. The control is intentionally highlighted with a subtle primary tint so new users can discover it without taking over the header.
-
-
-V5 follow-up: the global route-wide contextual Help overlay was intentionally removed; existing page-level InfoButton placements remain. PWA install discoverability was improved with a user-menu install action and manifest hardening.

@@ -13,7 +13,7 @@ export async function requestSellerVerification(_prev: SellerFormState, formData
   if (file.size > 5 * 1024 * 1024) return { error: "ID card image must be 5 MB or smaller." };
   if (!file.type.startsWith("image/")) return { error: "Only image files are allowed for the student ID card." };
   const bkashNumber = String(formData.get("bkash_number") ?? "").trim();
-  if (!/^01\d{9}$/.test(bkashNumber)) return { error: "Enter a valid 11-digit bKash number." };
+  if (bkashNumber && !/^01\d{9}$/.test(bkashNumber)) return { error: "Enter a valid 11-digit bKash number." };
   const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
   const path = `${user.id}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
   const bytes = new Uint8Array(await file.arrayBuffer());

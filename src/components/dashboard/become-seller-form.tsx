@@ -19,7 +19,14 @@ export function BecomeSellerForm({ profile }: { profile: Profile }) {
  return <form action={formAction} className="space-y-5">
   <div className="space-y-2"><Label htmlFor="universityEmail">EWU student email</Label><Input id="universityEmail" name="universityEmail" placeholder="2022-3-60-070@std.ewubd.edu" defaultValue={profile?.university_email ?? ""} required /><p className="text-xs text-muted-foreground">Enter the EWU student email that matches the ID card you upload.</p></div>
   <div className="space-y-2"><Label htmlFor="studentIdDocument">EWU student ID card photo</Label><Input id="studentIdDocument" name="studentIdDocument" type="file" accept="image/*" required /><p className="text-xs text-muted-foreground">Choose a photo from your gallery or take a new photo with your camera. Maximum 5 MB. Admin will compare the card with your EWU email.</p></div>
-  <div className="space-y-2"><Label htmlFor="bkash_number">bKash number for payouts</Label><Input id="bkash_number" name="bkash_number" inputMode="numeric" placeholder="01XXXXXXXXX" pattern="01[0-9]{9}" maxLength={11} required /></div>
+  <div className="space-y-2">
+    <Label htmlFor="bkash_number">Earnings পাওয়ার bKash Number <span className="text-muted-foreground">(optional)</span></Label>
+    <Input id="bkash_number" name="bkash_number" inputMode="numeric" placeholder="01XXXXXXXXX" pattern="01[0-9]{9}" maxLength={11} />
+    <div className="rounded-xl border bg-muted/40 p-3 text-xs leading-5 text-muted-foreground">
+      <p><span className="font-semibold text-foreground">ⓘ এই নম্বরটি কেন লাগছে?</span> আপনার Resource বিক্রি হলে যে bKash নম্বরে earnings পেতে চান, সেই নম্বরটি দিতে পারেন। এখন না দিলেও Seller verification submit করা যাবে; Paid Resource publish করার আগে Payment Settings থেকে এটি যোগ করতে হবে।</p>
+      <p className="mt-2"><span className="font-semibold text-foreground">🔒 নিরাপত্তা:</span> bKash PIN, OTP বা password কখনোই এখানে দেবেন না।</p>
+    </div>
+  </div>
   {state?.error && <p role="alert" className="text-sm text-destructive">{state.error}</p>}{state?.success && <p className="rounded-md bg-accent p-3 text-sm text-accent-foreground">{state.success}</p>}
   {!state?.success && <SubmitButton />}
  </form>;

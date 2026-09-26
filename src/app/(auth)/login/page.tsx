@@ -35,6 +35,7 @@ function LoginForm() {
   const [state, formAction] = useFormState(signInWithGoogleAction, undefined);
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/";
+  const urlError = searchParams.get("error");
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4 py-12">
@@ -52,7 +53,15 @@ function LoginForm() {
             <p className="font-medium text-foreground">First time here?</p>
             <p className="mt-1">Google will provide your name, email and profile photo. We’ll ask for your phone number before you can use the account.</p>
           </div>
-          {state?.error && <p role="alert" className="mt-4 text-sm text-destructive">{state.error}</p>}
+          {(state?.error || urlError) && (
+            <p role="alert" className="mt-4 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
+              {state?.error || (urlError === "account_setup_failed"
+                ? "Google login completed, but your StudyHub account could not be prepared. Please try again."
+                : urlError === "auth_callback_failed"
+                  ? "Google login could not be completed. Please try again."
+                  : "Google login could not be completed. Please try again.")}
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>
