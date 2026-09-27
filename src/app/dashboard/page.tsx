@@ -7,6 +7,7 @@ import { MyUploadsList } from "@/components/files/my-uploads-list";
 import { formatBDT } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { AdaptiveQuickActions, type AdaptiveAction } from "@/components/dashboard/adaptive-quick-actions";
+import { DashboardGreeting } from "@/components/dashboard/dashboard-greeting";
 
 function actionCounts(rows: Array<{ metadata: unknown; created_at: string }>) {
   const counts = new Map<string, { count: number; lastSeen: number }>();
@@ -69,19 +70,10 @@ export default async function DashboardPage() {
     const completedCount = (purchases ?? []).filter((p) => p.status === "completed").length;
 
     return (
-      <div className="container py-8 sm:py-10">
-        <div className="rounded-3xl border bg-gradient-to-br from-primary/10 via-background to-background p-5 shadow-sm sm:p-7">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Your StudyHub</p>
-          <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{getGreeting()}, {profile?.full_name || "Student"} 👋</h1>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{pendingCount ? `You have ${pendingCount} pending payment${pendingCount === 1 ? "" : "s"} to check.` : savedCount ? `You have ${savedCount} saved resource${savedCount === 1 ? "" : "s"} ready when you need them.` : "Your study space is ready. Find something useful and keep moving."}</p>
-            </div>
-            <span className="text-xs font-medium text-muted-foreground">{new Date().toLocaleDateString("en-BD", { weekday: "long", month: "short", day: "numeric" })}</span>
-          </div>
-        </div>
+      <div className="container py-5 sm:py-7">
+        <DashboardGreeting name={profile?.full_name || "Student"} />
 
-        <section className="mt-6">
+        <section className="mt-4">
           <div className="mb-3 flex items-end justify-between gap-3">
             <div><p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Quick actions</p><h2 className="mt-1 text-lg font-bold">Pick up where you need</h2></div>
             <p className="text-xs text-muted-foreground">Adapts to your usage</p>
@@ -180,19 +172,10 @@ export default async function DashboardPage() {
   const totalDownloads = (myFiles ?? []).reduce((sum, f) => sum + f.downloads_count, 0);
 
   return (
-    <div className="container py-8 sm:py-10">
-      <div className="rounded-3xl border bg-gradient-to-br from-emerald-500/10 via-background to-background p-5 shadow-sm sm:p-7">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Seller workspace</p>
-        <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{getGreeting()}, {profile?.full_name || "Seller"} 👋</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{pendingPayoutCount ? `${pendingPayoutCount} payout${pendingPayoutCount === 1 ? " is" : "s are"} waiting for admin payment.` : actionNotifications?.some((n) => n.type === "upload_pending") ? "You have a resource waiting for approval." : totalDownloads ? `Your resources have reached ${totalDownloads} download${totalDownloads === 1 ? "" : "s"}. Keep building your library.` : "Your seller workspace is ready. Upload something useful or check your sales."}</p>
-          </div>
-          <span className="text-xs font-medium text-muted-foreground">Available {formatBDT(availableBalance)}</span>
-        </div>
-      </div>
+    <div className="container py-5 sm:py-7">
+      <DashboardGreeting name={profile?.full_name || "Seller"} />
 
-      <section className="mt-6">
+      <section className="mt-4">
         <div className="mb-3 flex items-end justify-between gap-3">
           <div><p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Quick actions</p><h2 className="mt-1 text-lg font-bold">Your most-used shortcuts</h2></div>
           <p className="text-xs text-muted-foreground">Adapts to your usage</p>
@@ -236,13 +219,6 @@ export default async function DashboardPage() {
       </div>
     </div>
   );
-}
-
-function getGreeting() {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 18) return "Good afternoon";
-  return "Good evening";
 }
 
 function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {

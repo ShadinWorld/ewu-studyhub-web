@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { searchQuerySchema } from "@/lib/validations";
 import { RecentSearches } from "@/components/search/recent-searches";
-import { AIResourceSearch } from "@/components/search/ai-resource-search";
+import { AIResourceSearch } from "@/components/search/ai-resource-search";import { InfoButton } from "@/components/ux/info-button";
+
 
 const PAGE_SIZE = 24;
 export const metadata = { title: "Search Resources | EWU StudyHub", description: "Search EWU courses and academic resources in one place." };
@@ -93,7 +94,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Recor
       <main className="container flex-1 py-8 pb-24 md:py-10 md:pb-10">
         <div className="max-w-3xl">
           <div className="flex items-center gap-2 text-sm font-semibold text-primary"><SearchIcon className="h-4 w-4" />Course & resource search</div>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">Find what you need faster.</h1>
+          <div className="flex items-center gap-3"><h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">Find what you need faster.</h1><InfoButton slug="search_resources" title="Search ও Filter" /></div>
           <p className="mt-2 text-muted-foreground">Search one box using a course code, course name, resource title, department, or keyword.</p>
         </div>
 

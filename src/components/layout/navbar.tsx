@@ -7,6 +7,7 @@ import { UserMenu } from "@/components/layout/user-menu";
 import type { UserRole } from "@/types/database.types";
 import { BackButton } from "@/components/navigation/back-button";
 import { UserGuideButton } from "@/components/guides/user-guide-button";
+import { PwaInstallMenuItem } from "@/components/pwa/pwa-install-menu-item";
 
 export async function Navbar() {
   const supabase = createClient();

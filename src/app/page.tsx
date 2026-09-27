@@ -6,7 +6,6 @@ import {
   BookOpen,
   FileText,
   Search,
-  Sparkles,
   ShoppingBag,
   Bookmark,
   LayoutDashboard,
@@ -475,16 +474,12 @@ export default function HomePage() {
 
         <AdminHomeActions />
 
-        <section className="border-y bg-background py-8 sm:py-10">
+        <section className="border-y bg-background py-6 sm:py-8">
           <div className="container">
-            <div className="mx-auto max-w-4xl text-center">
-              <div className="inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-xs font-semibold text-primary shadow-sm">
-                <Sparkles className="h-3.5 w-3.5" />
-                Built for EWU students
-              </div>
-              <h1 className="mx-auto mt-4 max-w-4xl text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">Your EWU courses. Your resources. One place.</h1>
-              <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">Find notes, question banks, slides, lab reports and projects by course. Save useful resources and share your own academic materials with the EWU community.</p>
-              <form action="/search" className="mx-auto mt-6 flex max-w-2xl gap-2 rounded-xl border bg-card p-1.5 shadow-sm">
+            <div className="mx-auto max-w-3xl text-center">
+              <h1 className="mx-auto max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">Upload. Share. Earn.</h1>
+              <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">Turn your academic resources into value.</p>
+              <form action="/search" className="mx-auto mt-4 flex max-w-2xl gap-2 rounded-xl border bg-card p-1.5 shadow-sm">
                 <div className="relative flex-1"><Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input name="q" placeholder="Search CSE303, Database Systems, notes…" className="h-11 border-0 pl-10 shadow-none focus-visible:ring-0" /></div>
                 <Button type="submit" size="lg" className="h-11 px-5">Search</Button>
               </form>
