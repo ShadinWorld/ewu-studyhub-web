@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, MessageSquare, ShoppingBag, Upload, Wallet, ExternalLink } from "lucide-react";
+import { ArrowLeft, MessageSquare, ShoppingBag, Upload, Wallet, ExternalLink, History } from "lucide-react";
 import { createAdminClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ export default async function AdminUserDetailPage({ params }: { params: { id: st
   ]);
   const whatsapp = user.phone_number ? `https://wa.me/${user.phone_number.replace(/\D/g, "")}` : null;
   return <div className="space-y-6">
-    <div className="flex flex-wrap items-center justify-between gap-3"><Button asChild variant="outline"><Link href="/admin/users"><ArrowLeft className="mr-2 h-4 w-4" />Back to users</Link></Button><div className="flex gap-2">{whatsapp && <Button asChild variant="outline"><a href={whatsapp} target="_blank" rel="noreferrer"><ExternalLink className="mr-2 h-4 w-4" />WhatsApp</a></Button>}</div></div>
+    <div className="flex flex-wrap items-center justify-between gap-3"><Button asChild variant="outline"><Link href="/admin/users"><ArrowLeft className="mr-2 h-4 w-4" />Back to users</Link></Button><div className="flex flex-wrap gap-2"><Button asChild variant="outline"><Link href={`/admin/users/${user.id}/activity`}><History className="mr-2 h-4 w-4" />Activity History</Link></Button>{whatsapp && <Button asChild variant="outline"><a href={whatsapp} target="_blank" rel="noreferrer"><ExternalLink className="mr-2 h-4 w-4" />WhatsApp</a></Button>}</div></div>
     <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
       <Card><CardHeader><CardTitle>User profile</CardTitle></CardHeader><CardContent className="space-y-5"><div className="flex items-center gap-4">{user.avatar_url ? <img src={user.avatar_url} alt="" className="h-16 w-16 rounded-full border object-cover" /> : <div className="h-16 w-16 rounded-full bg-muted" />}<div><h2 className="text-xl font-bold">{user.full_name}</h2><p className="text-sm text-muted-foreground">{user.university_email || "No EWU email"}</p></div></div><div className="grid grid-cols-2 gap-3 sm:grid-cols-4"><Metric label="Purchases" value={String(purchases ?? 0)} icon={<ShoppingBag className="h-4 w-4" />} /><Metric label="Resources" value={String(resources ?? 0)} icon={<Upload className="h-4 w-4" />} /><Metric label="Sales" value={String(completedSales ?? 0)} icon={<Wallet className="h-4 w-4" />} /><Metric label="Wallet" value={`৳${((user.wallet_balance_cents ?? 0) / 100).toFixed(0)}`} icon={<Wallet className="h-4 w-4" />} /></div><div className="grid gap-3 sm:grid-cols-2 text-sm"><Info label="Phone / WhatsApp" value={user.phone_number || "—"} /><Info label="Student ID" value={user.student_id || "—"} /><Info label="Role" value={user.role} /><Info label="Seller" value={user.is_seller ? "Verified seller" : "Student"} /><Info label="EWU verification" value={user.student_id_verification_status} /><Info label="Account status" value={user.account_status} /><Info label="Joined" value={new Date(user.created_at).toLocaleString()} /><Info label="Last updated" value={new Date(user.updated_at).toLocaleString()} /></div></CardContent></Card>
       <div className="space-y-4">

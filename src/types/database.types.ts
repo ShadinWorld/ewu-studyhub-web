@@ -645,6 +645,10 @@ export interface Database {
         Args: { p_file_id: string } & Record<string, unknown>;
         Returns: void;
       };
+      record_resource_view: {
+        Args: { p_file_id: string; p_visitor_key: string } & Record<string, unknown>;
+        Returns: boolean;
+      };
       recompute_file_rating: {
         Args: { p_file_id: string } & Record<string, unknown>;
         Returns: void;

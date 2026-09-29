@@ -16,7 +16,6 @@ const HELP_BY_PATH: Array<[string, string]> = [
   ["/purchases", "general-purchase"],
   ["/saved", "general-saved-requests"],
   ["/requests", "general-saved-requests"],
-  ["/history", "dashboard_overview"],
   ["/tools", "general-courses"],
   ["/notifications", "notifications"],
   ["/account", "general-account"],

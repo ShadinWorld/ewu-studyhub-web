@@ -35,7 +35,7 @@ import { FAQSection } from "@/components/faq/faq-section";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { SupportFormCard } from "@/components/support/support-form";
 import { HomepageBannerCarousel, type HomepageBanner } from "@/components/homepage/homepage-banner-carousel";
-import { AdminHomeActions, UserRecentActivity } from "@/components/homepage/admin-home-actions";
+import { AdminHomeActions } from "@/components/homepage/admin-home-actions";
 import { MinimizableSection } from "@/components/homepage/minimizable-section";
 
 /* -------------------------------------------------------------------------- */
@@ -487,7 +487,6 @@ export default function HomePage() {
           </div>
         </section>
 
-                <UserRecentActivity />
 
         <PersonalizedShortcuts />
         <SellerCongratulations />

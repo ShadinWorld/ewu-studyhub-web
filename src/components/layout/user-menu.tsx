@@ -74,11 +74,6 @@ export function UserMenu({ fullName, email, avatarUrl, role, isSeller }: UserMen
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/history" className="cursor-pointer">
-            Activity history
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
           <Link href="/notifications" className="cursor-pointer">
             <Bell className="mr-2 h-4 w-4" />
             Notifications

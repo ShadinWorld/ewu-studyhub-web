@@ -56,7 +56,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
   const safeFilename = /\.[a-z0-9]{1,6}$/i.test(safeTitle) || !sourceExt ? safeTitle : `${safeTitle}.${sourceExt}`;
   const { data: signed, error } = await admin.storage
     .from("files-private")
-    .createSignedUrl(file.storage_path, SIGNED_URL_TTL_SECONDS);
+    .createSignedUrl(file.storage_path, SIGNED_URL_TTL_SECONDS, { download: safeFilename });
 
   if (error || !signed?.signedUrl) {
     return NextResponse.json({ error: "Could not generate download link." }, { status: 500 });
@@ -74,19 +74,13 @@ export async function GET(request: Request, { params }: { params: { id: string }
     });
   }
 
-  await admin.rpc("increment_download_count", { p_file_id: file.id });
-
-  const upstream = await fetch(signed.signedUrl, { cache: "no-store" });
-  if (!upstream.ok || !upstream.body) {
-    return NextResponse.json({ error: "Could not download the file." }, { status: 502 });
+  const { error: downloadCountError } = await admin.rpc("increment_download_count", { p_file_id: file.id });
+  if (downloadCountError) {
+    return NextResponse.json({ error: "Could not record the download." }, { status: 500 });
   }
 
-  const headers = new Headers();
-  headers.set("Content-Disposition", `attachment; filename="${safeFilename.replace(/"/g, "")}"; filename*=UTF-8\'\'${encodeURIComponent(safeFilename)}`);
-  headers.set("Content-Type", upstream.headers.get("content-type") || "application/octet-stream");
-  const contentLength = upstream.headers.get("content-length");
-  if (contentLength) headers.set("Content-Length", contentLength);
-  headers.set("Cache-Control", "private, no-store, max-age=0");
-
-  return new NextResponse(upstream.body, { status: 200, headers });
+  // Let Supabase Storage serve the protected file directly with its download
+  // disposition. This avoids proxying the full file through the Next.js server
+  // and lets the browser save it through its normal local Downloads flow.
+  return NextResponse.redirect(signed.signedUrl);
 }

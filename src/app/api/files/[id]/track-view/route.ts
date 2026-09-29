@@ -1,11 +1,19 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 
-const DEDUPE_WINDOW_MS = 30 * 60 * 1000;
+const VIEW_COOKIE = "ewu_studyhub_viewer";
+const VIEW_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
+
+function safeVisitorKey(value: string) {
+  return value.replace(/[^a-zA-Z0-9:_-]/g, "").slice(0, 120);
+}
 
 export async function POST(request: Request, { params }: { params: { id: string } }) {
+  void request;
   const supabase = createClient();
   const admin = createAdminClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
   const { data: file } = await admin
     .from("files")
@@ -17,18 +25,29 @@ export async function POST(request: Request, { params }: { params: { id: string 
     return NextResponse.json({ tracked: false }, { status: 404 });
   }
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const store = cookies();
+  let viewerCookie = store.get(VIEW_COOKIE)?.value ?? "";
+  let shouldSetCookie = false;
 
-  // The browser performs a 30-minute client-side dedupe before calling this
-  // endpoint. Keeping the server endpoint intentionally small prevents the
-  // resource detail page from incrementing the counter during every RSC
-  // render/revalidation.
-  const { error: incrementError } = await admin.rpc("increment_view_count", { p_file_id: file.id });
+  if (!user && !viewerCookie) {
+    viewerCookie = crypto.randomUUID();
+    shouldSetCookie = true;
+  }
+
+  const visitorKey = user
+    ? `user:${user.id}`
+    : `guest:${safeVisitorKey(viewerCookie)}`;
+
+  const { data: counted, error: incrementError } = await admin.rpc("record_resource_view", {
+    p_file_id: file.id,
+    p_visitor_key: visitorKey,
+  });
+
   if (incrementError) {
     return NextResponse.json({ error: "Unable to record resource view." }, { status: 500 });
   }
 
-  if (user) {
+  if (counted && user) {
     await supabase
       .from("recently_viewed")
       .upsert({ profile_id: user.id, file_id: file.id, viewed_at: new Date().toISOString() });
@@ -43,5 +62,16 @@ export async function POST(request: Request, { params }: { params: { id: string 
     });
   }
 
-  return NextResponse.json({ tracked: true, nextAllowedAt: Date.now() + DEDUPE_WINDOW_MS }, { status: 200 });
+  const response = NextResponse.json({ tracked: Boolean(counted) }, { status: 200 });
+  if (shouldSetCookie) {
+    response.cookies.set(VIEW_COOKIE, viewerCookie, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: VIEW_COOKIE_MAX_AGE,
+      path: "/",
+    });
+  }
+
+  return response;
 }

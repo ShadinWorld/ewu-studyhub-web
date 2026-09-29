@@ -18,8 +18,8 @@ export const uploadFileSchema = z.object({
   tags: z.array(z.string().trim().min(1).max(30)).max(10).optional(),
 });
 
-// EWU student email format: 2022-3-60-070@std.ewubd.edu
-// Capture group 1 is the student ID portion (2022-3-60-070).
+// EWU student email format: 2025-3-60-010@std.ewubd.edu
+// Capture group 1 is the student ID portion (2025-3-60-010).
 export const EWU_STUDENT_EMAIL_REGEX = /^(\d{4}-\d-\d{2}-\d{3})@std\.ewubd\.edu$/i;
 
 export const universityEmailSchema = z.object({
@@ -27,7 +27,7 @@ export const universityEmailSchema = z.object({
     .string()
     .trim()
     .toLowerCase()
-    .regex(EWU_STUDENT_EMAIL_REGEX, "Use your EWU student email, e.g. 2022-3-60-070@std.ewubd.edu"),
+    .regex(EWU_STUDENT_EMAIL_REGEX, "Use your EWU student email, e.g. 2025-3-60-010@std.ewubd.edu"),
 });
 
 export const searchQuerySchema = z.object({
