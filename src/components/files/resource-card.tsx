@@ -20,6 +20,8 @@ export interface ResourceCardData {
   reviews_count: number;
   downloads_count: number;
   category: ResourceCategory;
+  semester?: string | null;
+  year?: number | string | null;
   course_code?: string | null;
   seller_name?: string | null;
   views_count?: number;
@@ -33,6 +35,16 @@ export interface ResourceCardData {
   upload_batch_id?: string | null;
   batchFileCount?: number;
   batchFileKinds?: string[];
+}
+
+function formatSemesterYear(semester: string | null | undefined, year: number | string | null | undefined) {
+  if (!semester || year === null || year === undefined || year === "") return null;
+  const normalized = String(semester).trim();
+  if (!normalized) return null;
+  const label = normalized.charAt(0).toUpperCase() + normalized.slice(1).toLowerCase();
+  const yearNumber = Number(year);
+  const shortYear = Number.isFinite(yearNumber) && yearNumber >= 1000 ? String(yearNumber).slice(-2) : String(year);
+  return `${label} ${shortYear}`;
 }
 
 function StatusBadge({ file }: { file: ResourceCardData }) {
@@ -65,7 +77,7 @@ export function ResourceCard({ file }: { file: ResourceCardData }) {
         {file.thumbnail_url && /\.(jpe?g|png|webp|gif)(\?|$)/i.test(file.thumbnail_url) ? <Image src={file.thumbnail_url} alt={file.title} fill className="object-cover transition-transform duration-300 group-hover:scale-105" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" /> : <div className="flex h-full items-center justify-center bg-gradient-to-br from-primary/10 via-accent/50 to-muted text-muted-foreground"><FileText className="h-10 w-10" /></div>}
       </Link>
       <div className="absolute inset-x-2 top-2 z-10 flex items-start justify-between gap-2">
-        <div className="flex min-w-0 max-w-[78%] flex-wrap gap-1.5"><StatusBadge file={file} />{file.downloads_count >= 100 && <Badge className="rounded-full bg-foreground/85 px-2.5 text-[10px] text-background shadow-sm hover:bg-foreground/85"><Sparkles className="mr-1 h-3 w-3" />POPULAR</Badge>}</div>
+        <div className="flex min-w-0 max-w-[82%] flex-wrap gap-1.5">{formatSemesterYear(file.semester, file.year) && <Badge variant="secondary" className="rounded-full bg-background/95 px-2.5 text-[10px] font-semibold text-foreground shadow-sm backdrop-blur">{formatSemesterYear(file.semester, file.year)}</Badge>}<StatusBadge file={file} />{file.downloads_count >= 100 && <Badge className="rounded-full bg-foreground/85 px-2.5 text-[10px] text-background shadow-sm hover:bg-foreground/85"><Sparkles className="mr-1 h-3 w-3" />POPULAR</Badge>}</div>
         {!file.isOwner && <SaveResourceButton fileId={file.id} saved={Boolean(file.saved)} />}
       </div>
       <div className="absolute bottom-2 left-2 right-2 z-10 flex items-end justify-between gap-2">
@@ -87,7 +99,8 @@ export async function ResourceCardGrid({ files, horizontalMobile = false }: { fi
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const seedIds = files.map((file) => file.id);
-  const { data: seedMeta } = seedIds.length ? await supabase.from("files").select("id,upload_batch_id").in("id", seedIds) : { data: [] as { id: string; upload_batch_id: string | null }[] };
+  const { data: seedMeta } = seedIds.length ? await supabase.from("files").select("id,upload_batch_id,semester,year").in("id", seedIds) : { data: [] as { id: string; upload_batch_id: string | null; semester: string | null; year: number | null }[] };
+  const seedMetaById = new Map((seedMeta ?? []).map((row) => [row.id, row]));
   const batchBySeed = new Map((seedMeta ?? []).map((row) => [row.id, row.upload_batch_id]));
   const batchIds = Array.from(new Set((seedMeta ?? []).map((row) => row.upload_batch_id).filter((id): id is string => Boolean(id))));
   const { data: batchFiles } = batchIds.length ? await supabase.from("files").select("id,upload_batch_id,file_kind").in("upload_batch_id", batchIds).eq("visibility", "published") : { data: [] as { id: string; upload_batch_id: string | null; file_kind: string | null }[] };
@@ -99,7 +112,8 @@ export async function ResourceCardGrid({ files, horizontalMobile = false }: { fi
     const key = batchBySeed.get(file.id) ?? file.id;
     if (representative.has(key)) continue;
     const members = batchBySeed.get(file.id) ? (filesByBatch.get(key) ?? [{ id: file.id, upload_batch_id: batchBySeed.get(file.id) ?? null, file_kind: file.file_kind ?? null }]) : [{ id: file.id, upload_batch_id: null, file_kind: file.file_kind ?? null }];
-    representative.set(key, { ...file, upload_batch_id: batchBySeed.get(file.id) ?? null, batchFileCount: members.length, batchFileKinds: Array.from(new Set(members.map((m) => String(m.file_kind ?? "file").toUpperCase()))) });
+    const metadata = seedMetaById.get(file.id);
+    representative.set(key, { ...file, semester: metadata?.semester ?? file.semester ?? null, year: metadata?.year ?? file.year ?? null, upload_batch_id: batchBySeed.get(file.id) ?? null, batchFileCount: members.length, batchFileKinds: Array.from(new Set(members.map((m) => String(m.file_kind ?? "file").toUpperCase()))) });
   }
 
   const grouped = Array.from(representative.values());

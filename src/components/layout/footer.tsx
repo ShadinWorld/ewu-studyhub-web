@@ -46,6 +46,7 @@ export function Footer() {
             <Link href="/departments" className={linkClass}>Departments</Link>
             <Link href="/trending" className={linkClass}>Trending</Link>
             <Link href="/saved" className={linkClass}>Saved resources</Link>
+            <Link href="/about" className={linkClass}>About EWU StudyHub</Link>
           </MobileFooterGroup>
 
           <MobileFooterGroup title="Community">
@@ -86,6 +87,7 @@ export function Footer() {
           <Link href="/departments" className={linkClass}>Departments</Link>
           <Link href="/trending" className={linkClass}>Trending</Link>
           <Link href="/saved" className={linkClass}>Saved resources</Link>
+          <Link href="/about" className={linkClass}>About EWU StudyHub</Link>
         </div>
 
         <div className="flex flex-col gap-2.5 text-sm">

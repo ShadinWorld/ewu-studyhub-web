@@ -47,6 +47,16 @@ export function WhatsAppSupportButton() {
   const selectedHelpItem = useMemo(() => supportCategories.find(([id]) => id === selectedHelp), [selectedHelp]);
 
   useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get("ask_ai") !== "help") return;
+    setOpen(true);
+    setMode("help");
+    const url = new URL(window.location.href);
+    url.searchParams.delete("ask_ai");
+    window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+  }, []);
+
+  useEffect(() => {
     const key = "ewu-studyhub-ask-ai-position";
     const defaultPosition = () => {
       const mobile = window.innerWidth < 768;

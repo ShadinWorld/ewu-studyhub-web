@@ -22,6 +22,7 @@ import { QualityIndicator } from "@/components/files/quality-indicator";
 import { PdfCanvasPreview } from "@/components/files/pdf-canvas-preview";
 import type { ResourceCardData } from "@/components/files/resource-card";
 import { ResourceCardGrid } from "@/components/files/resource-card";
+import { ResourceViewTracker } from "@/components/files/resource-view-tracker";
 import type { FilePricingType } from "@/types/database.types";
 
 function formatBytes(bytes: number | null) {
@@ -53,7 +54,6 @@ export default async function FileDetailPage({ params, searchParams }: { params:
     ? await supabase.from("files").select("id, storage_path, file_kind, file_size_bytes, page_count, visibility").eq("upload_batch_id", file.upload_batch_id).order("created_at", { ascending: true })
     : { data: [{ id: file.id, storage_path: "", file_kind: file.file_kind, file_size_bytes: file.file_size_bytes, page_count: file.page_count, visibility: file.visibility }] };
   const batchFileIds = Array.from(new Set((batchRows ?? []).map((row) => row.id)));
-  if (user) await supabase.from("recently_viewed").upsert({ profile_id: user.id, file_id: params.id, viewed_at: new Date().toISOString() });
   const course = Array.isArray(file.courses) ? file.courses[0] : file.courses;
   const archivedOwner = Boolean(user && file.seller_id === user.id);
   let purchaseRows: { id: string; status: string; rejection_reason: string | null; created_at: string }[] = [];
@@ -63,12 +63,6 @@ export default async function FileDetailPage({ params, searchParams }: { params:
   }
   const archivedPurchase = purchaseRows.find((row) => row.status === "completed") ?? null;
   if (file.visibility === "archived" && !archivedOwner && !archivedPurchase) notFound();
-  if (file.visibility === "published") {
-    await admin.rpc("increment_view_count", { p_file_id: params.id });
-    if (user) await admin.rpc("record_user_activity", { p_actor_id: user.id, p_action: "resource.view", p_entity_type: "resource", p_entity_id: file.id, p_description: `Viewed resource: ${file.title}`, p_metadata: {} });
-  }
-
-
   const [{ data: seller }, { data: purchase }, { data: department }, { data: sameCourseFiles }, { data: relatedFiles }] = await Promise.all([
     admin.from("profiles").select("id, full_name, avatar_url, university_email, university_email_verified, student_id_verification_status, seller_bio").eq("id", file.seller_id).maybeSingle(),
     Promise.resolve({ data: purchaseRows[0] ?? null }),
@@ -136,7 +130,7 @@ export default async function FileDetailPage({ params, searchParams }: { params:
     file.reviews_count > 0 ? `${Number(file.average_rating).toFixed(1)}★ from verified student feedback` : "Student feedback can help you judge quality",
   ].slice(0, 4);
 
-  return <div className="flex min-h-screen flex-col pb-20 lg:pb-0"><Navbar /><main className="container flex-1 py-6 sm:py-10">
+  return <div className="flex min-h-screen flex-col pb-20 lg:pb-0"><ResourceViewTracker fileId={file.id} /><Navbar /><main className="container flex-1 py-6 sm:py-10">
     <nav className="mb-5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground" aria-label="Breadcrumb"><Link href="/" className="hover:text-foreground">Home</Link><span>/</span><Link href="/courses" className="hover:text-foreground">Courses</Link><span>/</span>{course?.course_code && <><Link href={`/course/${file.course_id}`} className="font-mono hover:text-foreground">{course.course_code}</Link><span>/</span></>}<span className="truncate text-foreground">{file.title}</span></nav>
     <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start"><div className="min-w-0">
       <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">

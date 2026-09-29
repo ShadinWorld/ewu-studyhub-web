@@ -12,8 +12,6 @@ export async function requestSellerVerification(_prev: SellerFormState, formData
   if (!(file instanceof File) || file.size === 0) return { error: "Upload a clear photo of your EWU student ID card." };
   if (file.size > 5 * 1024 * 1024) return { error: "ID card image must be 5 MB or smaller." };
   if (!file.type.startsWith("image/")) return { error: "Only image files are allowed for the student ID card." };
-  const bkashNumber = String(formData.get("bkash_number") ?? "").trim();
-  if (!/^01\d{9}$/.test(bkashNumber)) return { error: "Enter a valid 11-digit bKash number." };
   const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
   const path = `${user.id}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
   const bytes = new Uint8Array(await file.arrayBuffer());
@@ -21,7 +19,7 @@ export async function requestSellerVerification(_prev: SellerFormState, formData
   if (uploadError) return { error: `Unable to upload ID card: ${uploadError.message}` };
   const { error } = await supabase.rpc("request_seller_verification", {
     p_university_email: parsed.data.universityEmail,
-    p_bkash_number: bkashNumber,
+    p_bkash_number: "",
     p_student_id_document_path: path,
   });
   if (error) { await admin.storage.from("student-id-docs").remove([path]); return { error: error.message }; }

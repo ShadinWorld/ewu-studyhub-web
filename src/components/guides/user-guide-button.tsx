@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { BookOpen, CheckCircle2, ChevronDown, ExternalLink, Info, Loader2, Search, ShieldCheck, Store, UserRound, X } from "lucide-react";
+import { BookOpen, ChevronDown, ExternalLink, Info, Loader2, Search, ShieldCheck, Store, UserRound, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MAX_UPLOAD_BATCH_FILES, MAX_UPLOAD_FILE_SIZE_MB } from "@/lib/constants";
 
@@ -209,18 +209,13 @@ export function UserGuideButton({ className = "", compact = false, iconOnlyOnMob
 
                 {!loading && !error && payload && (
                   <>
-                    <section className="rounded-3xl border border-primary/20 bg-primary/[0.035] p-4 sm:p-6">
-                      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2"><RoleIcon className="h-5 w-5 text-primary" /><p className="text-xs font-bold uppercase tracking-[0.14em] text-primary">Your access</p></div>
-                          <h3 className="mt-1 text-xl font-bold">আপনার account অনুযায়ী আপনি কী কী করতে পারবেন?</h3>
-                          <p className="mt-1 text-sm leading-6 text-muted-foreground">{role.badge}। নিচের overview-তে available ও locked feature আলাদা করে দেখা যাবে।</p>
-                        </div>
-                        <div className="rounded-2xl border bg-background px-4 py-3 text-sm shadow-sm"><div className="flex items-center gap-2 font-semibold"><CheckCircle2 className="h-4 w-4 text-emerald-500" />আপনার access</div><p className="mt-1 text-xs leading-5 text-muted-foreground">কোনো feature locked থাকলে কারণ ও পরের প্রয়োজনীয় action এখানেই দেখাবে।</p></div>
-                      </div>
-                    </section>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <RoleIcon className="h-4 w-4 text-primary" />
+                      <span className="rounded-full border bg-primary/5 px-3 py-1 text-xs font-semibold text-primary">{role.label}</span>
+                      <span className="text-xs text-muted-foreground">{role.badge}</span>
+                    </div>
 
-                    {groupedOverview.intro.length > 0 && <section className="rounded-3xl border bg-card p-4 sm:p-6"><div className="flex items-center gap-2"><Info className="h-5 w-5 text-primary" /><h3 className="text-xl font-bold">A–Z Quick Overview</h3></div><div className="mt-4 space-y-4">{groupedOverview.intro.map((item) => <div key={item.id} className="rounded-2xl border bg-muted/10 p-4"><p className="font-semibold">{item.title}</p><p className="mt-1 text-sm leading-6 text-muted-foreground">{hydrateText(item.summary)}</p>{item.benefit && <p className="mt-3 rounded-xl bg-emerald-500/5 px-3 py-2 text-sm leading-6"><span className="font-semibold">আপনার সুবিধা:</span> {hydrateText(item.benefit)}</p>}</div>)}</div></section>}
+                    {groupedOverview.intro.length > 0 && <section className="rounded-3xl border border-primary/20 bg-primary/[0.035] p-5 sm:p-7"><div className="flex items-center gap-2"><Info className="h-5 w-5 text-primary" /><h3 className="text-2xl font-bold">EWU StudyHub কী?</h3></div><div className="mt-4 space-y-4">{groupedOverview.intro.map((item) => <div key={item.id}><p className="text-sm leading-7 text-muted-foreground">{hydrateText(item.summary)}</p>{item.benefit && <p className="mt-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-3 py-2 text-sm leading-6"><span className="font-semibold">মূল সুবিধা:</span> {hydrateText(item.benefit)}</p>}{item.action_href && item.action_label && <div className="mt-4"><Button asChild size="sm"><a href={item.action_href}><ExternalLink className="mr-2 h-4 w-4" />{item.action_label}</a></Button></div>}</div>)}</div></section>}
 
                     {groupedOverview.capabilities.length > 0 && <section className="space-y-3"><div className="flex items-end justify-between gap-3"><div><h3 className="text-xl font-bold">আপনার জন্য available features</h3><p className="text-sm text-muted-foreground">প্রতিটি item-এর এক লাইনের summary আছে; বিস্তারিত দরকার হলে নিচের full section ব্যবহার করুন।</p></div></div><div className="grid gap-3 md:grid-cols-2">{groupedOverview.capabilities.map((item) => {
                       const canAct = allowed(item.required_access, payload);
@@ -240,6 +235,13 @@ export function UserGuideButton({ className = "", compact = false, iconOnlyOnMob
                         const canAct = allowed(section.required_access, payload);
                         return <article key={section.id} className="overflow-hidden rounded-2xl border bg-card shadow-sm"><button type="button" onClick={() => setExpanded((prev) => ({ ...prev, [section.id]: !prev[section.id] }))} className="flex w-full items-start justify-between gap-4 px-4 py-4 text-left hover:bg-accent/40 sm:px-5"><span className="min-w-0"><span className="block font-semibold">{section.title}</span><span className="mt-1 block text-xs leading-5 text-muted-foreground">{hydrateText(section.summary)}</span></span><ChevronDown className={`mt-1 h-5 w-5 shrink-0 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`} /></button>{isOpen && <div className="border-t px-4 py-5 sm:px-5"><div className="space-y-4 text-sm leading-6"><div><h4 className="font-semibold">মূল কথা</h4><p className="mt-1 whitespace-pre-wrap text-muted-foreground">{hydrateText(section.what_is)}</p></div>{section.how_to && <div><h4 className="font-semibold">কীভাবে ব্যবহার করবেন</h4><p className="mt-1 whitespace-pre-wrap text-muted-foreground">{hydrateText(section.how_to)}</p></div>}{section.benefits && <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3"><p className="font-semibold">আপনার সুবিধা</p><p className="mt-1 whitespace-pre-wrap text-muted-foreground">{hydrateText(section.benefits)}</p></div>}{section.notes && <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3"><p className="font-semibold">মনে রাখবেন</p><p className="mt-1 whitespace-pre-wrap text-muted-foreground">{hydrateText(section.notes)}</p></div>}{section.action_href && section.action_label && <div className="flex flex-wrap gap-2 pt-1">{canAct ? <Button asChild size="sm"><a href={section.action_href}><ExternalLink className="mr-2 h-4 w-4" />{section.action_label}</a></Button> : <Button type="button" size="sm" variant="outline" onClick={() => setLockedItem(section)}>{lockedForAuth(section.required_access, payload) ? "Login করে ব্যবহার করুন" : section.action_label}</Button>}</div>}</div></div>}</article>;
                       })}</div>)}
+                    </section>
+
+                    <section className="rounded-2xl border border-primary/20 bg-primary/[0.035] p-4 sm:p-5">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="min-w-0"><p className="font-semibold">কোনো সাহায্য দরকার?</p><p className="mt-1 text-sm leading-6 text-muted-foreground">Guide-এ উত্তর না পেলে Ask AI → Help থেকে StudyHub-এর feature বা process নিয়ে প্রশ্ন করতে পারেন।</p></div>
+                        <Button asChild size="sm" className="shrink-0"><a href="/?ask_ai=help"><ExternalLink className="mr-2 h-4 w-4" />Ask AI for Help</a></Button>
+                      </div>
                     </section>
                   </>
                 )}
