@@ -35,3 +35,11 @@ npm run build
 ```
 
 Then commit and deploy to Vercel.
+
+## Update 0072 — Admin Dashboard Quick Actions
+
+The Admin Dashboard now includes a complete one-click Quick Actions control center covering the current Admin module/route inventory, nested Academic Tools/Student Tools entry points, finance/moderation queues, storage, Help/Guide, settings, history and Admin Search.
+
+The buttons keep the existing Admin dashboard card format and semantic colors. Every configured control remains visible; frequently used actions automatically move upward for the current Admin account.
+
+Usage ranking is persisted in `public.admin_quick_action_usage` and recorded through the protected `record_admin_quick_action_use(text)` RPC. Apply migration `0052_admin_quick_action_usage.sql` before production use.

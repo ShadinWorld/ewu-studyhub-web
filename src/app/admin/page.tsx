@@ -20,6 +20,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatBDT } from "@/lib/utils";
+import { AdminQuickActions } from "@/components/admin/admin-quick-actions";
 
 function dayKey(date: Date) {
   return date.toISOString().slice(0, 10);
@@ -113,6 +114,7 @@ export default async function AdminOverviewPage() {
 
   return (
     <div className="space-y-6 sm:space-y-8">
+      <AdminQuickActions />
       <section>
         <div className="mb-3 flex items-end justify-between gap-3">
           <div>

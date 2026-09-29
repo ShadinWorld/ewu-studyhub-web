@@ -44,3 +44,9 @@ The user may move this project between ChatGPT accounts. The ZIP must be suffici
 
 
 V5 follow-up: the global route-wide contextual Help overlay was intentionally removed; existing page-level InfoButton placements remain. PWA install discoverability was improved with a user-menu install action and manifest hardening.
+
+## Update 0072 — Admin Dashboard Quick Actions
+- `/admin` now has a complete Quick Actions control center covering all current Admin operational modules/queues plus direct Academic/Student tool entry points.
+- Buttons reuse the existing Admin colored action-card style and all configured actions remain visible.
+- Frequent actions auto-rise to the top per Admin using `admin_quick_action_usage`.
+- Required migration: `supabase/migrations/0052_admin_quick_action_usage.sql`.

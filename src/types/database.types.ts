@@ -544,6 +544,14 @@ export interface UserActivityHistory {
   created_at: string;
 }
 
+export interface AdminQuickActionUsage {
+  profile_id: string;
+  action_key: string;
+  use_count: number;
+  last_used_at: string;
+  created_at: string;
+}
+
 export interface RecentSearch {
   profile_id: string;
   query: string;
@@ -633,6 +641,7 @@ export interface Database {
       resource_platform_fee_settings: Table<ResourcePlatformFeeSettings>;
       user_activity_history: Table<UserActivityHistory>;
       recent_searches: Table<RecentSearch>;
+      admin_quick_action_usage: Table<AdminQuickActionUsage>;
     };
     Views: Record<string, never>;
     Functions: {
@@ -721,6 +730,10 @@ export interface Database {
       };
       increment_preview_request: {
         Args: { p_file_id: string } & Record<string, unknown>;
+        Returns: void;
+      };
+      record_admin_quick_action_use: {
+        Args: { p_action_key: string } & Record<string, unknown>;
         Returns: void;
       };
       record_user_activity: {
