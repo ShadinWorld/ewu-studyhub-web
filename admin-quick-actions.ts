@@ -53,6 +53,4 @@ export const ADMIN_QUICK_ACTIONS: AdminQuickAction[] = [
   { key: "student-tool-grade-calculator", title: "Grade Calculator", href: "/admin/student-tools/grade-calculator", icon: "Calculator", tone: "border-teal-500/30 bg-teal-500/10 text-teal-700 dark:text-teal-300", order: 38 },
   { key: "student-tool-prerequisite-checker", title: "Prerequisite Checker", href: "/admin/student-tools/prerequisite-checker", icon: "ListChecks", tone: "border-indigo-500/30 bg-indigo-500/10 text-indigo-700 dark:text-indigo-300", order: 39 },
   { key: "student-tools-manager", title: "Student Academic Tool Manager", href: "/admin/academic-tools/student-tools", icon: "SlidersHorizontal", tone: "border-teal-500/30 bg-teal-500/10 text-teal-700 dark:text-teal-300", order: 40 },
-  { key: "student-tool-prerequisites-management", title: "Prerequisite Management", href: "/admin/academic-tools/prerequisites", icon: "ListChecks", tone: "border-indigo-500/30 bg-indigo-500/10 text-indigo-700 dark:text-indigo-300", order: 41 },
-  { key: "student-tool-grade-management", title: "Grade Calculator Management", href: "/admin/academic-tools/grade-calculator", icon: "Calculator", tone: "border-teal-500/30 bg-teal-500/10 text-teal-700 dark:text-teal-300", order: 42 },
 ];

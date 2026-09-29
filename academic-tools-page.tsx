@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarDays, Calculator, ChevronRight, Clock3, FileQuestion, ImagePlus, ListChecks, SlidersHorizontal } from "lucide-react";
+import { CalendarDays, ChevronRight, Clock3, FileQuestion, ImagePlus, SlidersHorizontal } from "lucide-react";
 import { createAdminClient } from "@/lib/supabase/server";
 import { Card } from "@/components/ui/card";
 
@@ -13,12 +13,10 @@ export default async function AdminAcademicToolsPage() {
   ]);
 
   const tiles = [
-    { href: "/admin/academic-tools/student-tools", icon: SlidersHorizontal, title: "Student Academic Tool Manager", description: "Add, remove and reopen Student Tools, then enter each tool to manage its own content where supported.", meta: "Manage visibility & tool data" },
+    { href: "/admin/academic-tools/student-tools", icon: SlidersHorizontal, title: "Student Academic Tool Manager", description: "Add new Student Tool links or remove tools from the Student Tools directory.", meta: "Manage visibility" },
     { href: "/admin/academic-tools/calendar", icon: CalendarDays, title: "Academic calendar & final exams", description: "Upload the academic calendar and final exam schedule PDFs.", meta: `${documentsCount ?? 0} documents` },
     { href: "/admin/academic-tools/deadlines", icon: Clock3, title: "Deadline tracker", description: "Registration, payment and academic deadlines shown to students.", meta: `${deadlinesCount ?? 0} deadlines` },
     { href: "/admin/academic-tools/requests", icon: FileQuestion, title: "Resource requests", description: "Student requests for resources that aren't on StudyHub yet.", meta: `${openRequestsCount ?? 0} open` },
-    { href: "/admin/academic-tools/prerequisites", icon: ListChecks, title: "Prerequisite Checker", description: "Add or remove course prerequisite mappings used by students.", meta: "Manage mappings" },
-    { href: "/admin/academic-tools/grade-calculator", icon: Calculator, title: "Grade Calculator", description: "Manage availability of the calculator and review its current non-persistent behavior.", meta: "Tool controls" },
     { href: "/admin/academic-tools/banners", icon: ImagePlus, title: "Giant Hero Banner Manager", description: "Homepage campaign banners — schedule, target and track performance.", meta: `${liveBannersCount ?? 0} live` },
   ];
 

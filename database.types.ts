@@ -436,12 +436,6 @@ export interface SupportTicket {
 }
 
 
-export interface CoursePrerequisite {
-  course_id: string;
-  prerequisite_course_id: string;
-  created_at: string;
-}
-
 export interface AcademicDocument {
   id: string;
   document_type: "academic_calendar" | "final_exam_schedule";
@@ -654,7 +648,6 @@ export interface Database {
       file_daily_stats: Table<FileDailyStat>;
       platform_daily_stats: Table<PlatformDailyStat>;
       admin_messages: Table<AdminMessage>;
-      course_prerequisites: Table<CoursePrerequisite>;
       academic_documents: Table<AcademicDocument>;
       deadlines: Table<Deadline>;
       resource_requests: Table<ResourceRequest>;

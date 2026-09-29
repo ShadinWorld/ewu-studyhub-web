@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { uploadAcademicDocument } from "../actions";
+import { deleteAcademicDocument, uploadAcademicDocument } from "../actions";
+import { DeleteAcademicDocumentButton } from "@/components/admin/academic-tools/delete-academic-document-button";
 
 export default async function AcademicCalendarAdminPage({ searchParams }: { searchParams?: { saved?: string } }) {
   const admin = createAdminClient();
@@ -14,7 +15,7 @@ export default async function AcademicCalendarAdminPage({ searchParams }: { sear
     .select("id,document_type,term,year,title,mime_type,file_size_bytes,created_at")
     .order("year", { ascending: false })
     .order("created_at", { ascending: false })
-    .limit(20);
+    .limit(50);
 
   return (
     <div className="space-y-6">
@@ -40,7 +41,7 @@ export default async function AcademicCalendarAdminPage({ searchParams }: { sear
             {documents?.map((d) => (
               <div key={d.id} className="flex flex-col gap-1 rounded-xl border p-3 sm:flex-row sm:items-center sm:justify-between">
                 <div><p className="text-sm font-medium">{d.title}</p><p className="text-xs text-muted-foreground">{d.document_type.replaceAll("_", " ")} · {d.term} {d.year} · {d.mime_type === "application/pdf" ? "PDF" : "Image"}{d.file_size_bytes ? ` · ${(d.file_size_bytes / 1024 / 1024).toFixed(1)} MB` : ""}</p></div>
-                <span className="text-xs text-muted-foreground">{new Date(d.created_at).toLocaleDateString()}</span>
+                <div className="flex items-center gap-2 sm:shrink-0"><span className="text-xs text-muted-foreground">{new Date(d.created_at).toLocaleDateString()}</span><form action={deleteAcademicDocument}><input type="hidden" name="id" value={d.id} /><DeleteAcademicDocumentButton title={d.title} /></form></div>
               </div>
             ))}
           </div>

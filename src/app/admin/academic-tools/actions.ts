@@ -9,6 +9,53 @@ async function requireAdmin(){const supabase=createClient();const {data:{user}}=
 
 export async function uploadAcademicDocument(formData:FormData){const user=await requireAdmin();const type=String(formData.get("document_type")??"") as "academic_calendar"|"final_exam_schedule";const termRaw=String(formData.get("term")??"").toLowerCase();const term=(["spring","summer","fall"] as const).includes(termRaw as "spring"|"summer"|"fall") ? termRaw as "spring"|"summer"|"fall" : null;const year=Number(formData.get("year"));const title=String(formData.get("title")??"").trim();const file=formData.get("file");if(!['academic_calendar','final_exam_schedule'].includes(type)||!term||!year||!title||!(file instanceof File)||file.size===0) throw new Error("Please complete all document fields.");type AcademicDocumentMimeType="application/pdf"|"image/jpeg"|"image/png"|"image/webp"|"image/gif";const allowedTypes=["application/pdf","image/jpeg","image/png","image/webp","image/gif"] as const;const isAcademicDocumentMimeType=(value:string):value is AcademicDocumentMimeType => allowedTypes.includes(value as AcademicDocumentMimeType);if(!isAcademicDocumentMimeType(file.type)) throw new Error("Only PDF or image files are allowed.");if(file.size>30*1024*1024) throw new Error("File must be 30MB or smaller.");const admin=createAdminClient();const {data:oldDoc}=await admin.from("academic_documents").select("storage_path").eq("document_type",type).eq("term",term).eq("year",year).maybeSingle();const ext=(file.name.split(".").pop()||"bin").toLowerCase().replace(/[^a-z0-9]/g,"")||"bin";const path=`${type}/${term}-${year}-${Date.now()}.${ext}`;const bytes=new Uint8Array(await file.arrayBuffer());const {error:uploadError}=await admin.storage.from("admin-documents").upload(path,bytes,{contentType:file.type,upsert:false});if(uploadError) throw new Error(uploadError.message);const {error:dbError}=await admin.from("academic_documents").upsert({document_type:type,term:term as any,year,title,storage_path:path,mime_type:file.type,file_size_bytes:file.size,uploaded_by:user.id,is_active:true},{onConflict:"document_type,term,year"});if(dbError){await admin.storage.from("admin-documents").remove([path]);throw new Error(dbError.message);}if(oldDoc?.storage_path&&oldDoc.storage_path!==path) await admin.storage.from("admin-documents").remove([oldDoc.storage_path]);revalidatePath("/admin/academic-tools/calendar");revalidatePath("/tools/academic-calendar");revalidatePath("/tools/final-exams"); redirect("/admin/academic-tools/calendar?saved=Academic%20document%20saved");}
 
+export async function deleteAcademicDocument(formData:FormData) {
+  const user = await requireAdmin();
+  const admin = createAdminClient();
+  const id = String(formData.get("id") ?? "").trim();
+  if (!id) throw new Error("Document id is required.");
+
+  const { data: current, error: readError } = await admin
+    .from("academic_documents")
+    .select("id,title,document_type,storage_path")
+    .eq("id", id)
+    .maybeSingle();
+  if (readError || !current) throw new Error(readError?.message ?? "Academic document not found.");
+
+  const { error: deleteError } = await admin.from("academic_documents").delete().eq("id", id);
+  if (deleteError) throw new Error(deleteError.message);
+
+  if (current.storage_path) {
+    const { error: storageError } = await admin.storage.from("admin-documents").remove([current.storage_path]);
+    if (storageError) {
+      // The database row is already gone; keep the admin informed through the audit trail.
+      await admin.rpc("record_user_activity", {
+        p_actor_id: user.id,
+        p_action: "academic_document.delete_storage_warning",
+        p_entity_type: "academic_document",
+        p_entity_id: id,
+        p_description: `Deleted Academic Tool document record, but storage cleanup failed: ${current.title}`,
+        p_metadata: { storage_path: current.storage_path, storage_error: storageError.message },
+      });
+      throw new Error(`Document deleted, but stored file cleanup failed: ${storageError.message}`);
+    }
+  }
+
+  await admin.rpc("record_user_activity", {
+    p_actor_id: user.id,
+    p_action: "academic_document.delete",
+    p_entity_type: "academic_document",
+    p_entity_id: id,
+    p_description: `Deleted ${current.document_type === "academic_calendar" ? "Academic Calendar" : "Final Exam Schedule"}: ${current.title}`,
+    p_metadata: { document_type: current.document_type },
+  });
+
+  revalidatePath("/admin/academic-tools/calendar");
+  revalidatePath("/tools/academic-calendar");
+  revalidatePath("/tools/final-exams");
+  redirect("/admin/academic-tools/calendar?saved=Academic%20document%20deleted");
+}
+
 export async function createDeadline(formData:FormData){const user=await requireAdmin();const admin=createAdminClient();const title=String(formData.get("title")??"").trim();const description=String(formData.get("description")??"").trim();const category=String(formData.get("category")??"Academic").trim();const term=String(formData.get("term")??"").trim().toLowerCase()||null;const yearRaw=String(formData.get("year")??"").trim();const dueAt=String(formData.get("due_at")??"").trim();const link=String(formData.get("link")??"").trim();if(title.length<3||!dueAt) throw new Error("Title and due date are required.");const {error}=await admin.from("deadlines").insert({title,description:description||null,category,term:term as any,year:yearRaw?Number(yearRaw):null,due_at:new Date(dueAt).toISOString(),link:link||null,is_active:true,created_by:user.id});if(error) throw new Error(error.message);revalidatePath("/admin/academic-tools/deadlines");revalidatePath("/tools/deadlines"); redirect("/admin/academic-tools/deadlines?saved=Deadline%20saved");}
 
 export async function deleteDeadline(formData:FormData){await requireAdmin();const admin=createAdminClient();const id=String(formData.get("id")??"");await admin.from("deadlines").delete().eq("id",id);revalidatePath("/admin/academic-tools/deadlines");revalidatePath("/tools/deadlines"); redirect("/admin/academic-tools/deadlines?saved=Deadline%20deleted");}

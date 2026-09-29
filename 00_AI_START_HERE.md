@@ -50,3 +50,10 @@ V5 follow-up: the global route-wide contextual Help overlay was intentionally re
 - Buttons reuse the existing Admin colored action-card style and all configured actions remain visible.
 - Frequent actions auto-rise to the top per Admin using `admin_quick_action_usage`.
 - Required migration: `supabase/migrations/0052_admin_quick_action_usage.sql`.
+
+## Update 0074 — Admin-managed Student Academic Tools
+- Admin can manage the Student Tools directory from `/admin/academic-tools/student-tools`.
+- Built-in tools are hidden/re-enabled via `is_active`; they are not permanently deleted.
+- Admin can add custom internal or HTTPS tool links and delete custom entries.
+- `/tools` and Home `Study Essentials` share the same active catalog.
+- Required migration: `supabase/migrations/0053_admin_managed_student_tools.sql`.
